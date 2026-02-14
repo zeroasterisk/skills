@@ -1,0 +1,6 @@
+{
+  "name": "storybook",
+  "version": "1.0.0",
+  "description": "Write and test Storybook stories for React components",
+  "instructions": "GEMINI.md"
+}

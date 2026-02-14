@@ -1,0 +1,6 @@
+{
+  "name": "cuj-screenshots",
+  "version": "1.0.0",
+  "description": "Capture Critical User Journey screenshots and GIFs from web apps using headless Chromium",
+  "contextFileName": "GEMINI.md"
+}
