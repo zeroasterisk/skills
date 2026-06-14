@@ -11,6 +11,20 @@ Reusable skills for AI coding agents. Works with OpenClaw, Gemini CLI, and other
 | [elixir-best-practices](./elixir-best-practices/) | Elixir coding standards — pattern matching, error handling, Phoenix conventions |
 | [ui-developer](./ui-developer/) | Full-stack UI development workflow with testing and docs |
 
+## Scion Templates
+
+Agent templates for [Scion](https://scion.ai) — each directory contains a `scion-agent.yaml`, system prompt, and agent instructions.
+
+| Template | Description |
+|----------|-------------|
+| [elixir-dev](./templates/elixir-dev/) | Elixir SWE agent with Postgres, SQLite, Redis — for AgentMsg and a2a-elixir development |
+| [project-lead](./templates/project-lead/) | Project lead — sub-coordinator for sustained project work, delegates to SWE/verifier agents |
+| [researcher](./templates/researcher/) | Research agent — investigates questions, reads docs, analyzes code, produces findings |
+| [swe](./templates/swe/) | Senior software engineer — implements features, fixes bugs, writes tests |
+| [verifier](./templates/verifier/) | Skeptical verifier — independently checks that work actually produces correct outcomes |
+
+Also included: [elixir-best-practices.md](./templates/elixir-best-practices.md) — Elixir coding standards and conventions for SWE agents.
+
 ## Usage
 
 ### OpenClaw

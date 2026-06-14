@@ -1,0 +1,20 @@
+schema_version: "1"
+description: "Elixir SWE agent with Postgres, SQLite, Redis — for AgentMsg and a2a-elixir development"
+agent_instructions: agents.md
+system_prompt: system-prompt.md
+image: ghcr.io/zeroasterisk/scion-elixir-image:latest
+services:
+  - name: postgresql
+    command: ["sudo", "pg_ctlcluster", "15", "main", "start"]
+    restart: always
+    ready_check:
+      type: tcp
+      target: "localhost:5432"
+      timeout: "10s"
+  - name: redis
+    command: ["sudo", "redis-server", "--daemonize", "yes"]
+    restart: always
+    ready_check:
+      type: tcp
+      target: "localhost:6379"
+      timeout: "5s"

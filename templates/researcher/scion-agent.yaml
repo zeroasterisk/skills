@@ -1,0 +1,4 @@
+schema_version: "1"
+description: "Research agent — investigates questions, reads docs, analyzes code, produces findings"
+agent_instructions: agents.md
+system_prompt: system-prompt.md
