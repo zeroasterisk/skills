@@ -1,0 +1,6 @@
+{
+  "name": "elixir-best-practices",
+  "version": "1.0.0",
+  "description": "Elixir coding standards and best practices — pattern matching, error handling, Phoenix conventions",
+  "contextFileName": "GEMINI.md"
+}
