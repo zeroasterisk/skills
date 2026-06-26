@@ -1,4 +1,7 @@
-# Intent Refinement (NDD) for Gemini
+# Intent Refinement (NDD) for Gemini (Deprecated)
+
+> [!WARNING]  
+> `gemini` CLI is deprecated in favor of `agy` (Antigravity) externally and `jetski` internally. Please use `SKILL.md` for `agy` and `jetski`.
 
 You have access to the Intent Refinement skill using Narrative-Driven Development (NDD). Use it to collaborate with humans to define robust, regression-resistant specifications before writing code.
 

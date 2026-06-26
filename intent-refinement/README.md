@@ -22,19 +22,20 @@ NDD structures software intent into four layers:
 
 ## Contents
 
--   [SKILL.md](./SKILL.md): The agent-facing skill instructions (OpenClaw compatible).
--   [GEMINI.md](./GEMINI.md): Gemini CLI agent instructions.
--   [gemini-extension.json](./gemini-extension.json): Gemini extension manifest defining the `/refine-intent` slash command.
+-   [SKILL.md](./SKILL.md): The primary agent-facing skill instructions (used by `agy`, `jetski`, and `OpenClaw`).
 -   [specification.md](./specification.md): The draft open standard specification for NDD.
 -   [validate.py](./validate.py): A CLI tool to validate NDD YAML and JSON specifications.
 -   [aaif_proposal.md](./aaif_proposal.md): A proposal to donate NDD as an open standard to the Agentic AI Foundation (AAIF).
 -   [examples/](./examples/): Example NDD specification files.
+-   [GEMINI.md](./GEMINI.md) & [gemini-extension.json](./gemini-extension.json): Legacy Gemini CLI definitions (Deprecated).
 
 ## Usage
 
-### Slash Command
+### Antigravity (`agy`) & Jetski
 
-If using Gemini with `gemini-extension.json` loaded, you can trigger intent refinement instantly:
+`agy` (Antigravity - external) and `jetski` (internal) automatically discover this skill when placed in your customization root (`~/.gemini/config/skills/intent-refinement/` or `.agents/skills/intent-refinement/`).
+
+Once installed, you can trigger intent refinement instantly via the slash command:
 ```
 /refine-intent
 ```

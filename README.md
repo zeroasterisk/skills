@@ -28,6 +28,22 @@ Also included: [elixir-best-practices.md](./templates/elixir-best-practices.md) 
 
 ## Usage
 
+### Antigravity (`agy`) / Jetski
+
+`agy` (Antigravity - external) and `jetski` (internal) auto-discover skills placed in your customization root (e.g., `~/.gemini/config/skills/` or project `.agents/skills/`).
+
+Copy a skill folder to your skills directory:
+
+```bash
+# External (Antigravity)
+cp -r cuj-screenshots ~/.gemini/config/skills/
+
+# Internal (Jetski)
+cp -r cuj-screenshots ~/.gemini/config/skills/
+```
+
+Both platforms automatically discover the skill from the `SKILL.md` frontmatter and instructions.
+
 ### OpenClaw
 
 Copy a skill folder to `~/.openclaw/workspace/skills/`:
@@ -38,7 +54,10 @@ cp -r cuj-screenshots ~/.openclaw/workspace/skills/
 
 OpenClaw auto-discovers skills from the `SKILL.md` description.
 
-### Gemini CLI
+### Gemini CLI (Deprecated)
+
+> [!WARNING]  
+> `gemini` CLI is deprecated in favor of `agy` (Antigravity) externally and `jetski` internally.
 
 Point Gemini to the skill's `GEMINI.md`:
 
