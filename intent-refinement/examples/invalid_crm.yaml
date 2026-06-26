@@ -1,0 +1,19 @@
+domain: CRM
+# Missing description (should trigger warning)
+narratives:
+  - name: "Sales rep follows up on active opportunities"
+    # Missing goal (should trigger warning)
+    scenes:
+      - name: "Follow-up remains visible while deal stages change"
+        # Missing outcome (should trigger warning)
+        moments:
+          - name: "Rep advances deal stage"
+            type: InvalidType # Should trigger error
+            description: "Rep changes the stage of a deal"
+            rules:
+              - text: "Stage changes must not remove active follow-up reminders."
+                examples:
+                  - name: "Reminder survives stage advancement"
+                    # Missing given, when, then (should trigger errors)
+          - name: "Another Moment"
+            # Missing type (should trigger error)

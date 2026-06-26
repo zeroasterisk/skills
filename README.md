@@ -9,6 +9,7 @@ Reusable skills for AI coding agents. Works with OpenClaw, Gemini CLI, and other
 | [cuj-screenshots](./cuj-screenshots/) | Capture Critical User Journey screenshots and GIFs |
 | [storybook](./storybook/) | Write and test Storybook stories for React components |
 | [elixir-best-practices](./elixir-best-practices/) | Elixir coding standards — pattern matching, error handling, Phoenix conventions |
+| [intent-refinement](./intent-refinement/) | Draft, validate, and refine product intent using Narrative-Driven Development (NDD) |
 | [ui-developer](./ui-developer/) | Full-stack UI development workflow with testing and docs |
 
 ## Scion Templates

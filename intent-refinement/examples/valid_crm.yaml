@@ -1,0 +1,22 @@
+domain: CRM
+description: Customer Relationship Management
+narratives:
+  - name: "Sales rep follows up on active opportunities"
+    goal: "Ensure reps don't lose track of follow-ups"
+    scenes:
+      - name: "Follow-up remains visible while deal stages change"
+        outcome: "Follow-ups are preserved across stage transitions"
+        moments:
+          - name: "Rep advances deal stage"
+            type: Command
+            description: "Rep changes the stage of a deal"
+            rules:
+              - text: "Stage changes must not remove active follow-up reminders."
+                examples:
+                  - name: "Reminder survives stage advancement"
+                    given: "A deal has stage 'Discovery' and an active follow-up reminder for tomorrow"
+                    when: "The rep changes the deal stage to 'Proposal'"
+                    then: "The deal stage is 'Proposal' and the follow-up reminder remains active"
+          - name: "View deal details"
+            type: Query
+            description: "Rep views the deal details page"
