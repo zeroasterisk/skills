@@ -1,3 +1,8 @@
+---
+name: intent-refinement
+description: Identify, draft, validate, and refine product intent and plan specifications using Narrative-Driven Development (NDD) taxonomy. Use when designing new features, refining requirements, or preparing specs for AI agents.
+---
+
 # Skill: Intent Refinement (NDD)
 
 Identify, draft, validate, and refine product intent and plan specifications using Narrative-Driven Development (NDD) taxonomy.
@@ -6,8 +11,9 @@ Identify, draft, validate, and refine product intent and plan specifications usi
 
 This skill enables the agent to collaborate with humans to define robust, regression-resistant specifications. By modeling software as a structured "product story" (Domain -> Narrative -> Scene -> Moment) with explicit rules and examples, we ensure the AI agent builds the right thing and doesn't lose intent during iteration.
 
-## Prompt Triggers
+## Prompt Triggers & Slash Commands
 
+-   `/refine-intent` (Slash command)
 -   "Help me design a new feature..."
 -   "Refine the requirements for..."
 -   "Draft a spec for..."
@@ -44,10 +50,10 @@ Ensure the specification is cohesive:
 
 If the user requests a change to an existing system or a draft:
 1.  Update the NDD specification file *first*.
-2.  Validate the updated specification.
+2.  Validate the updated specification using `validate.py`.
 3.  Only proceed to generating code or plans once the specification is aligned and valid.
 
-## Specification Format (YAML)
+## Specification Format (YAML or JSON)
 
 Recommend the user to keep specifications in this format:
 

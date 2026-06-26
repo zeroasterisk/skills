@@ -1,0 +1,13 @@
+{
+  "name": "intent-refinement",
+  "version": "1.0.0",
+  "description": "Draft, validate, and refine product intent and plan specifications using Narrative-Driven Development (NDD)",
+  "contextFileName": "GEMINI.md",
+  "slashCommands": [
+    {
+      "name": "/refine-intent",
+      "description": "Draft, validate, or refine a product intent specification using Narrative-Driven Development (NDD)",
+      "prompt": "Help me draft, validate, or refine my product intent specification using Narrative-Driven Development (NDD). Please review my current goals or spec, structure them into Domain -> Narrative -> Scene -> Moment, ensure moments are typed (Command/Query/React/Experience), check for business rules and Given/When/Then examples, and verify cohesion (Data Completeness and Read/Write balance)."
+    }
+  ]
+}

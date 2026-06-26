@@ -22,20 +22,34 @@ NDD structures software intent into four layers:
 
 ## Contents
 
--   [SKILL.md](./SKILL.md): The agent-facing skill instructions.
+-   [SKILL.md](./SKILL.md): The agent-facing skill instructions (OpenClaw compatible).
+-   [GEMINI.md](./GEMINI.md): Gemini CLI agent instructions.
+-   [gemini-extension.json](./gemini-extension.json): Gemini extension manifest defining the `/refine-intent` slash command.
 -   [specification.md](./specification.md): The draft open standard specification for NDD.
--   [validate.py](./validate.py): A CLI tool to validate NDD YAML specifications.
+-   [validate.py](./validate.py): A CLI tool to validate NDD YAML and JSON specifications.
 -   [aaif_proposal.md](./aaif_proposal.md): A proposal to donate NDD as an open standard to the Agentic AI Foundation (AAIF).
 -   [examples/](./examples/): Example NDD specification files.
 
 ## Usage
 
+### Slash Command
+
+If using Gemini with `gemini-extension.json` loaded, you can trigger intent refinement instantly:
+```
+/refine-intent
+```
+
 ### Validating a Specification
 
-You can validate an NDD specification file (YAML) using the provided Python script:
+You can validate an NDD specification file (YAML or JSON) using the provided Python script:
 
 ```bash
 python3 validate.py examples/valid_crm.yaml
+```
+
+You can also pass JSON files or pipe content directly via stdin:
+```bash
+cat examples/valid_crm.yaml | python3 validate.py
 ```
 
 The validator checks:

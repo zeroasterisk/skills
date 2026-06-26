@@ -3,16 +3,16 @@
 
 import sys
 import os
+import json
+import argparse
 
 try:
     import yaml
 except ImportError:
-    print("Error: 'pyyaml' is required to parse YAML files.")
-    print("Please install it using: pip install pyyaml")
-    print("Or convert your specification to JSON and use a JSON validator.")
-    sys.exit(1)
+    yaml = None
 
 VALID_MOMENT_TYPES = {"Command", "Query", "React", "Experience"}
+
 
 def validate_spec(data):
     errors = []
@@ -166,24 +166,58 @@ def validate_spec(data):
 
     return errors, warnings
 
+
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python3 validate.py <path_to_spec.yaml>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="Validate Narrative-Driven Development (NDD) specifications.")
+    parser.add_argument("file", nargs="?", help="Path to the NDD specification file (.yaml, .yml, .json). If omitted, reads from stdin.")
+    parser.add_argument("--format", choices=["yaml", "json"], help="Force specific format parsing (default: auto-detect from extension).")
+    args = parser.parse_args()
 
-    file_path = sys.argv[1]
-    if not os.path.exists(file_path):
-        print(f"Error: File not found: {file_path}")
-        sys.exit(1)
+    data = None
+    content = None
+    file_name = "<stdin>"
 
-    try:
-        with open(file_path, "r") as f:
-            data = yaml.safe_load(f)
-    except Exception as e:
-        print(f"Error parsing YAML: {e}")
-        sys.exit(1)
+    if args.file:
+        file_name = args.file
+        if not os.path.exists(args.file):
+            print(f"Error: File not found: {args.file}", file=sys.stderr)
+            sys.exit(1)
+        with open(args.file, "r") as f:
+            content = f.read()
+    else:
+        # Read from stdin
+        if sys.stdin.isatty():
+            parser.print_help()
+            sys.exit(1)
+        content = sys.stdin.read()
 
-    print(f"Validating {file_path}...")
+    # Determine format
+    fmt = args.format
+    if not fmt:
+        if args.file and args.file.endswith(".json"):
+            fmt = "json"
+        else:
+            fmt = "yaml"
+
+    if fmt == "json":
+        try:
+            data = json.loads(content)
+        except json.JSONDecodeError as e:
+            print(f"Error parsing JSON in {file_name}: {e}", file=sys.stderr)
+            sys.exit(1)
+    else:
+        if yaml is None:
+            print("Error: 'pyyaml' is required to parse YAML files.", file=sys.stderr)
+            print("Please install it using: pip install pyyaml", file=sys.stderr)
+            print("Or pass a JSON file / use --format json.", file=sys.stderr)
+            sys.exit(1)
+        try:
+            data = yaml.safe_load(content)
+        except yaml.YAMLError as e:
+            print(f"Error parsing YAML in {file_name}: {e}", file=sys.stderr)
+            sys.exit(1)
+
+    print(f"Validating {file_name}...")
     errors, warnings = validate_spec(data)
 
     if warnings:
@@ -195,13 +229,14 @@ def main():
         print("\nErrors:")
         for error in errors:
             print(f"  - [ERROR] {error}")
-        print(f"\nValidation failed with {len(errors)} errors and {len(warnings)} warnings.")
+        print(f"\nValidation failed with {len(errors)} errors and {len(warnings)} warnings.", file=sys.stderr)
         sys.exit(1)
     else:
         print("\nValidation successful! Specification is valid NDD.")
         if warnings:
             print(f"Passed with {len(warnings)} warnings.")
         sys.exit(0)
+
 
 if __name__ == "__main__":
     main()
