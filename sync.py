@@ -34,13 +34,29 @@ REGISTRY_DIR = Path(__file__).resolve().parent
 REGISTRY_FILE = REGISTRY_DIR / "registry.toml"
 CATALOG_FILE = REGISTRY_DIR / "ai-catalog.json"
 
-# Defaults; override in registry.toml [targets]
+# Defaults; override in registry.toml [targets].
+# cloudcode_config falls back through common locations (dotfiles-managed
+# first, then XDG) so the same registry works across machines.
+CLOUDCODE_CANDIDATES = [
+    "~/dotfiles/config/cloudcode/cloudcode.json",
+    "~/.config/cloudcode/cloudcode.json",
+]
 DEFAULT_TARGETS = {
-    "cloudcode_config": "~/dotfiles/config/cloudcode/cloudcode.json",
+    "cloudcode_config": "",  # empty = auto-discover from CLOUDCODE_CANDIDATES
     "gemini_skills_dir": "~/.gemini/config/skills",
 }
-CLOUDCODE_CONFIG = Path()  # set in main() from [targets]
+CLOUDCODE_CONFIG: Path | None = None  # set in main() from [targets]
 GEMINI_SKILLS_DIR = Path()  # set in main() from [targets]
+
+
+def find_cloudcode_config(configured: str) -> Path | None:
+    if configured:
+        return Path(configured).expanduser()
+    for candidate in CLOUDCODE_CANDIDATES:
+        p = Path(candidate).expanduser()
+        if p.is_file():
+            return p
+    return None
 
 ARD_SPEC_VERSION = "1.0"
 SKILL_MEDIA_TYPE = "application/ai-skill+md"
@@ -181,8 +197,9 @@ def discover(source: dict, overrides: dict) -> list[dict]:
 
 def sync_cloudcode(skills: list[dict]) -> None:
     paths = [str(s["path"]) for s in skills if "cloudcode" in s["agents"]]
-    if not CLOUDCODE_CONFIG.is_file():
-        log(f"cloudcode: config not found at {CLOUDCODE_CONFIG}, skipping")
+    if CLOUDCODE_CONFIG is None or not CLOUDCODE_CONFIG.is_file():
+        log("cloudcode: no cloudcode.json found "
+            f"(looked in {', '.join(CLOUDCODE_CANDIDATES)}), skipping")
         return
     config = json.loads(CLOUDCODE_CONFIG.read_text())
     config.setdefault("skills", {})["paths"] = paths
@@ -335,7 +352,7 @@ def main() -> int:
     registry = tomllib.loads(REGISTRY_FILE.read_text())
 
     targets = DEFAULT_TARGETS | registry.get("targets", {})
-    CLOUDCODE_CONFIG = Path(targets["cloudcode_config"]).expanduser()
+    CLOUDCODE_CONFIG = find_cloudcode_config(targets["cloudcode_config"])
     GEMINI_SKILLS_DIR = Path(targets["gemini_skills_dir"]).expanduser()
 
     host = registry.get("host", {"displayName": "Skills Registry"})

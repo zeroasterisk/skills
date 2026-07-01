@@ -17,9 +17,11 @@
 displayName = "Alan Blount — Agent Skills"
 identifier = "github.com/zeroasterisk"
 
-# Where sync.py writes agent wiring. Override per machine if needed.
+# Where sync.py writes agent wiring. cloudcode_config auto-discovers
+# (~/dotfiles/config/cloudcode/, then ~/.config/cloudcode/) when empty;
+# set it explicitly to pin a machine-specific location.
 [targets]
-cloudcode_config = "~/dotfiles/config/cloudcode/cloudcode.json"
+cloudcode_config = ""
 gemini_skills_dir = "~/.gemini/config/skills"
 
 # ---------------------------------------------------------------------------
