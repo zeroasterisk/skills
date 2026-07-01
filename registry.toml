@@ -1,0 +1,97 @@
+# Skills Registry
+# ----------------
+# Single source of truth for federated skills across all sources and machines.
+# Parsed by sync.py (stdlib tomllib — no dependencies).
+#
+# Model:
+#   [host]      — ARD catalog host identity (who publishes this catalog)
+#   [[source]]  — a skill bundle: a directory tree scanned for */SKILL.md
+#   [skill.X]   — optional per-skill overrides (tags, active, agents)
+#
+# Sources are auto-discovered: every directory containing a SKILL.md under
+# `path` becomes a skill. Use `include` / `exclude` (glob patterns matched
+# against the path relative to `path`) to scope large upstream repos.
+# If a source path doesn't exist on this machine it is silently skipped.
+
+[host]
+displayName = "Alan Blount — Agent Skills"
+identifier = "github.com/zeroasterisk"
+
+# Where sync.py writes agent wiring. Override per machine if needed.
+[targets]
+cloudcode_config = "~/dotfiles/config/cloudcode/cloudcode.json"
+gemini_skills_dir = "~/.gemini/config/skills"
+
+# ---------------------------------------------------------------------------
+# Personal skills — this repo (github.com/zeroasterisk/skills)
+# ---------------------------------------------------------------------------
+[[source]]
+name = "zeroasterisk/skills"
+repo = "git@github.com:zeroasterisk/skills.git"
+url_base = "https://github.com/zeroasterisk/skills/tree/main"
+publisher = "github.com"
+namespace = "zeroasterisk"
+path = "."
+audience = "personal"
+agents = ["cloudcode", "gemini"]
+exclude = ["templates/**", "google-skills/**"]
+
+# ---------------------------------------------------------------------------
+# Google public skills — github.com/google/skills
+# Cloned into ./google-skills (gitignored, independent git repo).
+# Curated subset via `include`; widen or set ["**"] to take everything.
+# ---------------------------------------------------------------------------
+[[source]]
+name = "google/skills"
+repo = "https://github.com/google/skills.git"
+clone_to = "google-skills"          # enables ./sync.py --clone-missing
+url_base = "https://github.com/google/skills/tree/main/skills"
+publisher = "github.com"
+namespace = "google"
+path = "google-skills/skills"
+audience = "public"
+agents = ["cloudcode"]
+include = [
+  "cloud/gcloud",
+  "cloud/gemini-api",
+  "cloud/gemini-agents-api",
+  "cloud/cloud-run-basics",
+  "cloud/bigquery-basics",
+  "cloud/agent-platform-deploy",
+]
+
+# ---------------------------------------------------------------------------
+# Team / google3 sources — silently skipped on machines without access.
+# ---------------------------------------------------------------------------
+# [[source]]
+# name = "google3"
+# publisher = "google.com"
+# namespace = "google3"
+# path = "google3"
+# audience = "team"
+# agents = ["cloudcode"]
+
+# ---------------------------------------------------------------------------
+# Per-skill overrides (key = skill directory name)
+# ---------------------------------------------------------------------------
+[skill.elixir-best-practices]
+tags = ["elixir", "phoenix", "liveview", "language"]
+
+[skill.cuj-screenshots]
+tags = ["testing", "ui", "screenshots", "automation"]
+
+[skill.intent-refinement]
+tags = ["product", "ndd", "planning", "requirements"]
+
+[skill.storybook]
+tags = ["ui", "react", "testing", "storybook"]
+
+[skill.ui-developer]
+tags = ["ui", "react", "typescript", "frontend"]
+
+[skill.gcloud]
+tags = ["gcloud", "devops", "google-cloud"]
+
+# Example: disable a discovered skill without touching include/exclude
+# [skill.some-skill]
+# active = false

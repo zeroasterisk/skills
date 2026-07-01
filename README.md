@@ -29,69 +29,84 @@ Also included: [elixir-best-practices.md](./templates/elixir-best-practices.md) 
 ## Registry & Sync
 
 This repo is the **canonical source** for personal skills and the **registry** for
-federated skills from other sources (team repos, internal tooling, etc.).
+federated skills from other sources (team repos, google/skills, internal tooling).
 
 ### How federation works
 
 External skill sources are cloned as independent git repos into gitignored
-subdirectories alongside the personal skills:
+subdirectories alongside the personal skills. `registry.toml` declares each
+**source** once; skills within a source are **auto-discovered** by scanning
+for `SKILL.md` files (scoped by `include`/`exclude` globs):
 
 ```
 skills/                        # this repo
-  registry.yaml                # index of all skills across all sources
-  sync.sh                      # reconciles registry → agent config + catalogs
+  registry.toml                # source declarations + per-skill overrides
+  sync.py                      # reconciles registry → agent config + catalogs
+  sync.sh                      # thin wrapper around sync.py
   elixir-best-practices/       # personal skill (tracked by this repo)
   ui-developer/                # personal skill (tracked by this repo)
-  some-team-skills/            # external repo, gitignored — independent .git
-  another-source/              # external repo, gitignored — independent .git
-  ai-catalog.json              # generated: aggregate of all resolved skills
-  ai-catalog.zeroasterisk-skills.json  # generated: this bundle only
+  google-skills/               # github.com/google/skills clone — gitignored
+  ai-catalog.json              # generated: ARD aggregate of resolved skills
+  ai-catalog.<source>.json     # generated: one ARD catalog per source
 ```
 
 Each external directory is its own git repo. This repo never tracks their
-contents — only `registry.yaml` knows they exist. On machines that don't have
-access to a source, that directory simply won't be present and those skills are
-silently skipped.
+contents — only `registry.toml` knows they exist. On machines without a given
+source, that directory simply isn't present and its skills are silently
+skipped. New skills added upstream appear automatically after `git pull` +
+`./sync.py` — no per-skill registry edits needed.
+
+### Replicating on a new machine
+
+```bash
+git clone git@github.com:zeroasterisk/skills.git ~/Workspaces/skills
+cd ~/Workspaces/skills
+./sync.py --clone-missing     # clones declared external sources, then syncs
+```
+
+Sources declared with `repo` + `clone_to` in `registry.toml` are cloned
+automatically by `--clone-missing`; anything else (e.g. google3 paths) is
+skipped silently on machines without access. Agent wiring destinations are
+configurable per machine via `[targets]` in `registry.toml`.
 
 ### Adding an external skill source
 
 ```bash
-# 1. Clone the external repo into this directory
-git clone <remote-url> ~/path/to/skills/source-name
+# 1. Add ONE [[source]] block to registry.toml:
+#    repo = "https://github.com/google/skills.git"
+#    clone_to = "google-skills"        # gitignore this dir
+#    path = "google-skills/skills"
+#    include = ["cloud/gcloud", ...]   # curate, or omit for everything
 
-# 2. Add entries to registry.yaml pointing at paths inside it
-#    e.g.  path: source-name/some-skill
-
-# 3. Sync
-./sync.sh
+# 2. Clone + sync
+./sync.py --clone-missing
 ```
 
-The external repo updates independently — `git pull` inside its directory.
-Your registry entry keeps working as long as the path exists.
+### sync.py
 
-### sync.sh
+Reads `registry.toml` (stdlib `tomllib`, no dependencies) and on each run:
 
-Reads `registry.yaml` and on each run:
-
-1. Resolves which skill paths actually exist on this machine
+1. Auto-discovers `*/SKILL.md` under each source path present on this machine
 2. Updates `cloudcode.json` `skills.paths` (CloudCode agent)
 3. Creates/cleans symlinks in `~/.gemini/config/skills/` (Gemini/AGY)
-4. Writes `ai-catalog.json` per source bundle + an aggregate
+4. Writes ARD-compliant `ai-catalog.json` per source + an aggregate
 
 ```bash
-./sync.sh               # normal sync
-./sync.sh --dry-run     # preview without changes
-./sync.sh --verbose     # show skipped skills too
+./sync.py               # normal sync (sync.sh still works)
+./sync.py --dry-run     # preview without changes
+./sync.py --verbose     # show skipped skills too
 ```
 
-### ai-catalog.json
+### ai-catalog.json (ARD)
 
-Machine-readable skill catalog emitted by `sync.sh`. Contains all skills
-resolved on the current machine with per-agent views (`by_agent.cloudcode`,
-`by_agent.gemini`). Does not contain local filesystem paths or machine
-identifiers — safe to commit and publish.
-
-Intended as a future interface point for skill discovery services.
+Catalogs follow the [Agentic Resource Discovery](https://agenticresourcediscovery.org/)
+`ai-catalog` spec (specVersion 1.0, validated against the
+[official schema](https://github.com/ards-project/ard-spec/blob/main/spec/schemas/ai-catalog.schema.json)).
+Each skill is an entry of type `application/ai-skill+md` with a
+domain-anchored URN (`urn:air:github.com:zeroasterisk:<skill>`), public
+GitHub URL, tags, and metadata. No local filesystem paths — safe to commit,
+and publishable at `/.well-known/ai-catalog.json` for ARD registries to
+crawl once we want public discovery.
 
 ### Usage
 
