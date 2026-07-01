@@ -1,0 +1,284 @@
+{
+  "generated_at": "2026-07-01T20:30:47Z",
+  "host": "alanblount",
+  "bundle": "zeroasterisk/skills",
+  "total": 5,
+  "skills": [
+    {
+      "name": "elixir-best-practices",
+      "description": "Elixir coding standards and best practices. Use when writing, reviewing, or refactoring Elixir code to ensure idiomatic patterns, proper error handling, and Phoenix conventions.",
+      "audience": "personal",
+      "source": "zeroasterisk/skills",
+      "tags": [
+        "elixir",
+        "phoenix",
+        "liveview",
+        "language"
+      ],
+      "agents": [
+        "cloudcode",
+        "gemini"
+      ],
+      "path": "/usr/local/google/home/alanblount/Workspaces/skills/elixir-best-practices",
+      "registry_name": "elixir-best-practices"
+    },
+    {
+      "name": "cuj-screenshots",
+      "description": "Capture Critical User Journey (CUJ) screenshots and GIFs from web apps using headless Chromium. Use when you need to create visual demos, verify UI changes, or document user flows.",
+      "audience": "personal",
+      "source": "zeroasterisk/skills",
+      "tags": [
+        "testing",
+        "ui",
+        "screenshots",
+        "automation"
+      ],
+      "agents": [
+        "cloudcode",
+        "gemini"
+      ],
+      "path": "/usr/local/google/home/alanblount/Workspaces/skills/cuj-screenshots",
+      "registry_name": "cuj-screenshots"
+    },
+    {
+      "name": "intent-refinement",
+      "description": "Identify, draft, validate, and refine product intent and plan specifications using Narrative-Driven Development (NDD) taxonomy. Use when designing new features, refining requirements, or preparing specs for AI agents.",
+      "audience": "personal",
+      "source": "zeroasterisk/skills",
+      "tags": [
+        "product",
+        "ndd",
+        "planning",
+        "requirements"
+      ],
+      "agents": [
+        "cloudcode",
+        "gemini"
+      ],
+      "path": "/usr/local/google/home/alanblount/Workspaces/skills/intent-refinement",
+      "registry_name": "intent-refinement"
+    },
+    {
+      "name": "storybook",
+      "description": "Write and test Storybook stories for React components. Use for component isolation, visual testing, and documentation.",
+      "audience": "personal",
+      "source": "zeroasterisk/skills",
+      "tags": [
+        "ui",
+        "react",
+        "testing",
+        "storybook"
+      ],
+      "agents": [
+        "cloudcode",
+        "gemini"
+      ],
+      "path": "/usr/local/google/home/alanblount/Workspaces/skills/storybook",
+      "registry_name": "storybook"
+    },
+    {
+      "name": "ui-developer",
+      "description": "Full-stack UI development workflow with component isolation, testing, visual documentation, and CUJ capture. Use for React/TypeScript frontend development.",
+      "audience": "personal",
+      "source": "zeroasterisk/skills",
+      "tags": [
+        "ui",
+        "react",
+        "typescript",
+        "frontend"
+      ],
+      "agents": [
+        "cloudcode",
+        "gemini"
+      ],
+      "path": "/usr/local/google/home/alanblount/Workspaces/skills/ui-developer",
+      "registry_name": "ui-developer"
+    }
+  ],
+  "by_agent": {
+    "cloudcode": [
+      {
+        "name": "elixir-best-practices",
+        "description": "Elixir coding standards and best practices. Use when writing, reviewing, or refactoring Elixir code to ensure idiomatic patterns, proper error handling, and Phoenix conventions.",
+        "audience": "personal",
+        "source": "zeroasterisk/skills",
+        "tags": [
+          "elixir",
+          "phoenix",
+          "liveview",
+          "language"
+        ],
+        "agents": [
+          "cloudcode",
+          "gemini"
+        ],
+        "path": "/usr/local/google/home/alanblount/Workspaces/skills/elixir-best-practices",
+        "registry_name": "elixir-best-practices"
+      },
+      {
+        "name": "cuj-screenshots",
+        "description": "Capture Critical User Journey (CUJ) screenshots and GIFs from web apps using headless Chromium. Use when you need to create visual demos, verify UI changes, or document user flows.",
+        "audience": "personal",
+        "source": "zeroasterisk/skills",
+        "tags": [
+          "testing",
+          "ui",
+          "screenshots",
+          "automation"
+        ],
+        "agents": [
+          "cloudcode",
+          "gemini"
+        ],
+        "path": "/usr/local/google/home/alanblount/Workspaces/skills/cuj-screenshots",
+        "registry_name": "cuj-screenshots"
+      },
+      {
+        "name": "intent-refinement",
+        "description": "Identify, draft, validate, and refine product intent and plan specifications using Narrative-Driven Development (NDD) taxonomy. Use when designing new features, refining requirements, or preparing specs for AI agents.",
+        "audience": "personal",
+        "source": "zeroasterisk/skills",
+        "tags": [
+          "product",
+          "ndd",
+          "planning",
+          "requirements"
+        ],
+        "agents": [
+          "cloudcode",
+          "gemini"
+        ],
+        "path": "/usr/local/google/home/alanblount/Workspaces/skills/intent-refinement",
+        "registry_name": "intent-refinement"
+      },
+      {
+        "name": "storybook",
+        "description": "Write and test Storybook stories for React components. Use for component isolation, visual testing, and documentation.",
+        "audience": "personal",
+        "source": "zeroasterisk/skills",
+        "tags": [
+          "ui",
+          "react",
+          "testing",
+          "storybook"
+        ],
+        "agents": [
+          "cloudcode",
+          "gemini"
+        ],
+        "path": "/usr/local/google/home/alanblount/Workspaces/skills/storybook",
+        "registry_name": "storybook"
+      },
+      {
+        "name": "ui-developer",
+        "description": "Full-stack UI development workflow with component isolation, testing, visual documentation, and CUJ capture. Use for React/TypeScript frontend development.",
+        "audience": "personal",
+        "source": "zeroasterisk/skills",
+        "tags": [
+          "ui",
+          "react",
+          "typescript",
+          "frontend"
+        ],
+        "agents": [
+          "cloudcode",
+          "gemini"
+        ],
+        "path": "/usr/local/google/home/alanblount/Workspaces/skills/ui-developer",
+        "registry_name": "ui-developer"
+      }
+    ],
+    "gemini": [
+      {
+        "name": "elixir-best-practices",
+        "description": "Elixir coding standards and best practices. Use when writing, reviewing, or refactoring Elixir code to ensure idiomatic patterns, proper error handling, and Phoenix conventions.",
+        "audience": "personal",
+        "source": "zeroasterisk/skills",
+        "tags": [
+          "elixir",
+          "phoenix",
+          "liveview",
+          "language"
+        ],
+        "agents": [
+          "cloudcode",
+          "gemini"
+        ],
+        "path": "/usr/local/google/home/alanblount/Workspaces/skills/elixir-best-practices",
+        "registry_name": "elixir-best-practices"
+      },
+      {
+        "name": "cuj-screenshots",
+        "description": "Capture Critical User Journey (CUJ) screenshots and GIFs from web apps using headless Chromium. Use when you need to create visual demos, verify UI changes, or document user flows.",
+        "audience": "personal",
+        "source": "zeroasterisk/skills",
+        "tags": [
+          "testing",
+          "ui",
+          "screenshots",
+          "automation"
+        ],
+        "agents": [
+          "cloudcode",
+          "gemini"
+        ],
+        "path": "/usr/local/google/home/alanblount/Workspaces/skills/cuj-screenshots",
+        "registry_name": "cuj-screenshots"
+      },
+      {
+        "name": "intent-refinement",
+        "description": "Identify, draft, validate, and refine product intent and plan specifications using Narrative-Driven Development (NDD) taxonomy. Use when designing new features, refining requirements, or preparing specs for AI agents.",
+        "audience": "personal",
+        "source": "zeroasterisk/skills",
+        "tags": [
+          "product",
+          "ndd",
+          "planning",
+          "requirements"
+        ],
+        "agents": [
+          "cloudcode",
+          "gemini"
+        ],
+        "path": "/usr/local/google/home/alanblount/Workspaces/skills/intent-refinement",
+        "registry_name": "intent-refinement"
+      },
+      {
+        "name": "storybook",
+        "description": "Write and test Storybook stories for React components. Use for component isolation, visual testing, and documentation.",
+        "audience": "personal",
+        "source": "zeroasterisk/skills",
+        "tags": [
+          "ui",
+          "react",
+          "testing",
+          "storybook"
+        ],
+        "agents": [
+          "cloudcode",
+          "gemini"
+        ],
+        "path": "/usr/local/google/home/alanblount/Workspaces/skills/storybook",
+        "registry_name": "storybook"
+      },
+      {
+        "name": "ui-developer",
+        "description": "Full-stack UI development workflow with component isolation, testing, visual documentation, and CUJ capture. Use for React/TypeScript frontend development.",
+        "audience": "personal",
+        "source": "zeroasterisk/skills",
+        "tags": [
+          "ui",
+          "react",
+          "typescript",
+          "frontend"
+        ],
+        "agents": [
+          "cloudcode",
+          "gemini"
+        ],
+        "path": "/usr/local/google/home/alanblount/Workspaces/skills/ui-developer",
+        "registry_name": "ui-developer"
+      }
+    ]
+  }
+}
