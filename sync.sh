@@ -21,9 +21,20 @@ set -euo pipefail
 REGISTRY_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REGISTRY_FILE="$REGISTRY_DIR/registry.yaml"
 CATALOG_FILE="$REGISTRY_DIR/ai-catalog.json"
-CLOUDCODE_CONFIG="$HOME/dotfiles/config/cloudcode/cloudcode.json"
 GEMINI_SKILLS_DIR="$HOME/.gemini/config/skills"
 AGENTS_SKILLS_DIR="$HOME/.agents/skills"
+
+# CloudCode config — check common locations, skip if not found
+CLOUDCODE_CONFIG=""
+for candidate in \
+    "$HOME/dotfiles/config/cloudcode/cloudcode.json" \
+    "$HOME/.config/cloudcode/cloudcode.json" \
+    "${XDG_CONFIG_HOME:-$HOME/.config}/cloudcode/cloudcode.json"; do
+    if [[ -f "$candidate" ]]; then
+        CLOUDCODE_CONFIG="$candidate"
+        break
+    fi
+done
 
 DRY_RUN=false
 VERBOSE=false
