@@ -11,6 +11,9 @@ Reusable skills for AI coding agents. Works with OpenClaw, Gemini CLI, and other
 | [elixir-best-practices](./elixir-best-practices/) | Elixir coding standards — pattern matching, error handling, Phoenix conventions |
 | [intent-refinement](./intent-refinement/) | Draft, validate, and refine product intent using Narrative-Driven Development (NDD) |
 | [ui-developer](./ui-developer/) | Full-stack UI development workflow with testing and docs |
+| [verification-before-completion](./verification-before-completion/) | Two-lane verification (scrutiny + real-surface) before any completion claim. Adapted from [superpowers](https://github.com/obra/superpowers) + [zenith](https://github.com/Intelligent-Internet/zenith) |
+| [systematic-debugging](./systematic-debugging/) | Four-phase root cause debugging: trace → analyze → hypothesize → fix. Adapted from [superpowers](https://github.com/obra/superpowers) |
+| [contract-driven-validation](./contract-driven-validation/) | VAL-* assertions: Surface/Needs/Behavior/Evidence for every capability. Adapted from [zenith](https://github.com/Intelligent-Internet/zenith) |
 
 ## Scion Templates
 
