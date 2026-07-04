@@ -97,3 +97,8 @@ tags = ["gcloud", "devops", "google-cloud"]
 # Example: disable a discovered skill without touching include/exclude
 # [skill.some-skill]
 # active = false
+
+# Per-skill overrides
+[skill.engineering-discipline]
+tags = ["methodology", "verification", "debugging", "discipline"]
+agents = ["cloudcode", "gemini", "scion"]

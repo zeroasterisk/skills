@@ -26,3 +26,13 @@ Your job:
 - Overall verdict: VERIFIED or FAILED with summary
 
 Be concise. Evidence over narrative.
+
+## Verification tooling
+
+Use whatever tools are available to gather evidence:
+- **Tests**: `mix test`, `npm test`, `pytest` — run the full suite, not just the new tests
+- **HTTP/API**: `curl` with `-v` flag to see headers and status codes
+- **Browser**: navigate to the URL, check the golden path and one edge case
+- **CLI**: run the command, paste the actual output
+- **Database**: query to verify data was written/modified correctly
+- **Logs**: check for errors or warnings after exercising the feature

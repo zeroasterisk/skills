@@ -184,8 +184,7 @@ export const Interactive: Story = {
 ### Play Functions (Interaction Testing)
 
 ```tsx
-import { within, userEvent } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
+import { within, userEvent, expect } from '@storybook/test';
 
 export const Filled: Story = {
   play: async ({ canvasElement }) => {
@@ -237,7 +236,7 @@ import '../src/index.css'; // Global styles
 
 const preview: Preview = {
   parameters: {
-    actions: { argTypesRegex: '^on[A-Z].*' },
+    // Note: argTypesRegex is deprecated in Storybook 8. Use explicit args instead.
     controls: {
       matchers: {
         color: /(background|color)$/i,
@@ -250,50 +249,17 @@ const preview: Preview = {
 export default preview;
 ```
 
-## Batch Screenshot Capture
+## Screenshot Capture
+
+For batch screenshot capture of Storybook stories, use the [cuj-screenshots](../cuj-screenshots/) skill's Playwright patterns. Point the capture URL at your Storybook iframe:
 
 ```python
-#!/usr/bin/env python3
-"""Capture all Storybook stories as screenshots."""
-
-import asyncio
-import json
-from playwright.async_api import async_playwright
-
-STORYBOOK_URL = "http://localhost:6006"
-
-async def get_stories(page):
-    """Fetch story list from Storybook."""
-    await page.goto(f"{STORYBOOK_URL}/index.json")
-    content = await page.content()
-    # Parse JSON from page
-    data = json.loads(await page.evaluate("() => document.body.innerText"))
-    return [
-        story_id for story_id, story in data.get("entries", {}).items()
-        if story.get("type") == "story"
-    ]
-
-async def capture_all():
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        page = await browser.new_page(viewport={"width": 1280, "height": 720})
-        
-        stories = await get_stories(page)
-        
-        for story_id in stories:
-            url = f"{STORYBOOK_URL}/iframe.html?id={story_id}&viewMode=story"
-            await page.goto(url)
-            await page.wait_for_timeout(500)
-            
-            filename = story_id.replace("--", "-").replace("/", "-")
-            await page.screenshot(path=f"screenshots/{filename}.png")
-            print(f"Captured: {story_id}")
-        
-        await browser.close()
-
-if __name__ == "__main__":
-    asyncio.run(capture_all())
+# Capture a specific story
+await page.goto("http://localhost:6006/iframe.html?id=components-button--primary&viewMode=story")
+await page.screenshot(path="screenshots/button-primary.png")
 ```
+
+For capturing ALL stories automatically, fetch the story list from `http://localhost:6006/index.json` and iterate. See the cuj-screenshots skill for the full Playwright setup pattern.
 
 ## Tips
 
@@ -303,15 +269,6 @@ if __name__ == "__main__":
 - **Mock API**: Use MSW addon for mocking API calls in stories
 - **Viewport addon**: Configure common viewports in preview.ts
 - **Backgrounds**: Add background switcher for light/dark mode testing
-
-## Integration with CUJ Screenshots
-
-Storybook stories can be captured as part of CUJ workflows:
-
-```python
-# In your CUJ script
-await page.goto("http://localhost:6006/iframe.html?id=components-taskcard--default")
-await page.screenshot(path="docs/screenshots/taskcard.png")
-```
+- **test-storybook**: Use `npx test-storybook` in CI to run all play functions as tests
 
 This gives you both isolated component shots and full-app journey shots.

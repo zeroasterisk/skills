@@ -149,13 +149,13 @@ await page.evaluate("window.scrollBy(0, 300)")
 await page.keyboard.press("Escape")
 ```
 
-## Full Workflow Example
+## Full Workflow Checklist
 
-See `scripts/capture-cujs.py` for a complete example that:
-- Starts backend + frontend servers
-- Captures multiple CUJs
-- Generates GIFs
-- Updates CUJs.md
+A complete CUJ capture session should:
+- Start backend + frontend servers
+- Capture each CUJ as a sequence of screenshots
+- Generate GIFs from screenshot sequences
+- Update CUJs.md with the new captures
 
 ## Tips
 
@@ -215,7 +215,7 @@ After making UI changes:
 # 1. Make UI changes
 # 2. Start servers
 # 3. Capture CUJs
-uv run --with playwright python scripts/capture-cujs.py
+# Run your Playwright capture script (see examples above)
 
 # 4. Review screenshots (agent can view these)
 # 5. Create GIFs

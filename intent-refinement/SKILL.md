@@ -50,8 +50,18 @@ Ensure the specification is cohesive:
 
 If the user requests a change to an existing system or a draft:
 1.  Update the NDD specification file *first*.
-2.  Validate the updated specification using `validate.py`.
+2.  Validate the updated specification: check that every Command has at least one rule with an example, and every Query's data sources trace to Commands/Reacts.
 3.  Only proceed to generating code or plans once the specification is aligned and valid.
+
+### 5. When to Stop Refining
+
+The spec is ready for implementation when:
+- Every `Command` has at least one business rule with a concrete example
+- Every `Query`'s data sources trace to `Commands` or `Reacts`
+- At least one edge case or failure scenario is documented per narrative
+- The user has reviewed and confirmed the specification
+
+Don't over-refine. A spec with clear rules and examples is better than a spec with exhaustive coverage of unlikely scenarios.
 
 ## Specification Format (YAML or JSON)
 

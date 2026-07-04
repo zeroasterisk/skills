@@ -21,7 +21,7 @@ def process(%{role: :admin} = user), do: admin_action(user)
 def process(user), do: regular_action(user)
 ```
 
-`cond` is acceptable for complex boolean chains. `if` is only acceptable for simple nil/truthy checks with no else branch.
+`cond` is acceptable for complex boolean chains. `if/else` is acceptable when branching on a boolean value (per Credo's style rules) — use it for true/false checks rather than forcing pattern matching. `if` without `else` is fine for simple nil/truthy guards.
 
 ## With for Happy-Path Pipelines
 
