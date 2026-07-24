@@ -131,27 +131,81 @@ whereas GEAP is oriented toward developers building internal or API-exposed agen
 
 ---
 
-## Critical Name Translations
+## Complete Rename Chain (from release notes BQ table)
 
-| You see this in configs/APIs/docs | Meaning | Notes |
+Source: `bigquery-public-data.google_cloud_release_notes.release_notes`
+
+### GEAP / Vertex AI lineage
+```
+UCAIP (very old)
+  → Vertex AI (product name ~2020–2026, release notes end Mar 2026)
+  → Generative AI on Vertex AI (release notes for AI/agent features, end May 2026)
+  → Gemini Enterprise Agent Platform (Apr 2026 onwards, current)
+```
+
+### Agent Engine / Reasoning Engine
+```
+LangChain on Vertex AI (renamed Mar 2025)
+  → Vertex AI Agent Engine (Mar 2025 → Apr 2026)
+  → Agent Runtime (Apr 2026 rename, part of GEAP)
+API resource: reasoningEngines.* — STABLE, will not change with brand
+```
+
+### Agent Builder → the most confusing chain
+```
+Vertex AI Agent Builder (original product = search/retrieval, pre-Apr 2025)
+  → renamed to AI Applications (Apr 2025)
+  → renamed to Vertex AI Search (Oct 2025)
+  → renamed to Agent Search (Apr 2026)
+  (Note: API endpoints unchanged throughout)
+
+Simultaneously in Apr 2025: the label "Vertex AI Agent Builder" was repurposed
+in docs to refer to a suite of agent-building features (ADK, Agent Garden, etc.)
+in Vertex AI. This caused massive confusion — the name pointed at two different things.
+By Apr 2026, this disambiguation resolved: GEAP is the platform, Agent Search
+is the search product.
+```
+
+### GE App / Agentspace
+```
+Agentspace (early name)
+  → Gemini Enterprise app (current)
+  → release notes appear under product name "Gemini Enterprise"
+Agent Designer lives in "Gemini Enterprise" release notes = GE App context (confirmed)
+```
+
+### CX / Dialogflow lineage
+```
+Dialogflow (2017→present, still active for CX)
+  → CCAI / Contact Center AI
+  → Customer Engagement Suite (CES)
+  → Gemini Enterprise for Customer Experience (GE CX)
+CX Agent Studio: GA Feb 2026, release notes appear as "CX Agent Studio" product name
+```
+
+### Critical Name Translations
+
+| You see | Meaning | Stable? |
 |---|---|---|
-| `ReasoningEngine` | Agent Runtime (GEAP) | API resource — will not change even though brand did |
-| `Agent Engine` | Agent Runtime (GEAP) | Intermediate brand; still in Concord table names |
-| `reasoningEngines` | Agent Runtime (GEAP) | REST resource path prefix — stable |
-| `Vertex AI` | Gemini Enterprise Agent Platform | Marketing rename Apr 2026 |
-| `UCAIP` | Agent Platform broadly | Very old; still in raw GWS log table names |
-| `GEAP` | Gemini Enterprise Agent Platform | Internal acronym; still used in configs |
-| `Agent Builder` | **Retired brand name** | Ambiguous — do not assume it means anything specific |
-| `Agentspace` | Gemini Enterprise app | Full rebrand of the GE App product |
-| `GAAB` | Gemini Enterprise app backend | In raw log table names (`ucs_gaab_gwslog_*`) |
-| `LowcodeAgentService` | Unclear — likely Agent Designer | Sawmill/console event name; exact mapping unconfirmed |
-| `CCAI` | GE CX lineage | Contact Center AI — predecessor brand |
-| `CES` | GE CX API service | Customer Engagement Suite; `ces.googleapis.com` |
-| `aiplatform` | `aiplatform.googleapis.com` | Stable — the service name does not change |
-| `ces` | `ces.googleapis.com` | GE CX service name — stable |
-| `Agent Studio` (GEAP) | Low-code builder in Cloud console | Different from CX Agent Studio |
-| `CX Agent Studio` | GE CX drag-drop canvas | Different from Agent Studio in GEAP |
-| `Agent Designer` (GE App) | No-code for knowledge workers | May or may not be same as GEAP `AGENT_DESIGNER_AGENT` |
+| `ReasoningEngine` / `reasoningEngines` | Agent Runtime (GEAP) | ✅ API resource name is stable |
+| `Agent Engine` | Agent Runtime (GEAP) | Old brand, still in Concord table names |
+| `Vertex AI` | GEAP (pre-Apr 2026) | Retired from release notes Mar 2026 |
+| `Generative AI on Vertex AI` | GEAP features | Retired from release notes May 2026 |
+| `UCAIP` | Agent Platform broadly | Very old, still in raw log table names |
+| `GEAP` | Gemini Enterprise Agent Platform | Internal acronym, still used in configs |
+| `Agent Builder` | **Ambiguous retired label** | Was: search product. Then: suite label. Now: neither specifically |
+| `AI Applications` | Now: Vertex AI Search → Agent Search | Search/retrieval product, NOT agents |
+| `Agentspace` | Gemini Enterprise app | Rebrand to GE App |
+| `GAAB` | GE App backend | `ucs_gaab_gwslog_*` raw log table names |
+| `CCAI` | GE CX lineage | Contact Center AI predecessor |
+| `CES` | GE CX API service | `ces.googleapis.com` |
+| `aiplatform` | `aiplatform.googleapis.com` | ✅ Stable — service name does not change |
+| `ces` | `ces.googleapis.com` | ✅ Stable GE CX service name |
+| `Agent Studio` (in GEAP) | Low-code builder in Cloud console for GEAP | Different from CX Agent Studio |
+| `CX Agent Studio` | GE CX drag-drop canvas (GA Feb 2026) | `ces.googleapis.com` service |
+| `Agent Designer` | No-code for GE App knowledge workers | Release notes confirm this is GE App, NOT GEAP |
+| `Agent Designer agent` / `AGENT_DESIGNER_AGENT` | In GEAP Agent Registry | May be agents *built with* GE App Agent Designer and *registered* in GEAP — relationship TBD |
+| `LowcodeAgentService` | Sawmill console event | Likely Agent Designer in GE App; exact mapping unconfirmed |
 
 ---
 
@@ -203,6 +257,40 @@ The `x-goog-api-client` HTTP header. In Concord: `tool_name` / `client_library_n
 | NULL + NULL | UNKNOWN | Direct HTTP / curl / custom stacks |
 
 ---
+
+## Querying Release Notes (Primary Research Tool)
+
+The public BigQuery table `bigquery-public-data.google_cloud_release_notes.release_notes`
+is the most reliable source for product renames, GA announcements, and deprecations.
+Use it to disambiguate product names or trace rename chains.
+
+**Requires standard BigQuery client, NOT F1/PLX** (F1 can't access public BQ datasets):
+
+```bash
+uv run --with google-cloud-bigquery python3 -c "
+from google.cloud import bigquery
+import re
+client = bigquery.Client(project='alanblount-sandbox')
+query = '''
+SELECT published_at, product_name, release_note_type,
+  REGEXP_REPLACE(description, r'<[^>]+>', '') AS description
+FROM \`bigquery-public-data.google_cloud_release_notes.release_notes\`
+WHERE (LOWER(description) LIKE \"%renamed%\" OR LOWER(description) LIKE \"%agent builder%\")
+  AND LOWER(product_name) LIKE \"%agent%\"
+ORDER BY published_at DESC LIMIT 20
+'''
+for row in client.query(query).result():
+    print(f'{row.published_at} | {row.product_name}')
+    print(f'  {row.description[:250]}')
+    print()
+"
+```
+
+**Useful query patterns:**
+- Find all product names: `SELECT DISTINCT product_name, COUNT(*) as c, MAX(published_at) as last FROM ... GROUP BY 1 ORDER BY last DESC`
+- Find renames: `WHERE LOWER(description) LIKE '%renamed%' OR LOWER(description) LIKE '%now called%'`
+- Find a specific product history: `WHERE product_name = 'CX Agent Studio' ORDER BY published_at`
+- Find when a product name was last active: `SELECT MAX(published_at) FROM ... WHERE product_name = 'Vertex AI'`
 
 ## Sources for Staying Current
 
