@@ -264,20 +264,27 @@ A self-contained script is bundled at `scripts/release_notes.py` relative to thi
 Run it directly — it self-installs its only dependency (`google-cloud-bigquery`) via `uv`.
 
 ```bash
-# From the skill directory:
-./scripts/release_notes.py                        # recent agent/Gemini/Vertex notes
-./scripts/release_notes.py products              # all product names + activity timeline
-./scripts/release_notes.py renames               # all rename/rebrand announcements
-./scripts/release_notes.py product "CX Agent"    # history for one product (partial match)
-./scripts/release_notes.py search "agent builder" # search description text
-./scripts/release_notes.py --since 2024-01-01    # override date range
-./scripts/release_notes.py --project my-project  # override GCP project for billing
+# Recommended (auto-installs deps, works anywhere uv is installed):
+uv run ./scripts/release_notes.py
+uv run ./scripts/release_notes.py products
+uv run ./scripts/release_notes.py renames
+uv run ./scripts/release_notes.py product "CX Agent"    # partial match ok
+uv run ./scripts/release_notes.py search "agent builder"
+uv run ./scripts/release_notes.py --since 2024-01-01
+uv run ./scripts/release_notes.py --project my-gcp-project
+
+# No uv? Install it first:
+#   curl -LsSf https://astral.sh/uv/install.sh | sh
+# Or install the dep manually and run with python3:
+#   pip install google-cloud-bigquery
+#   python3 ./scripts/release_notes.py products
 ```
 
-Output is compact TOON-style: `published_at | product_name | type` then description.
-Each command prints `hint:` lines suggesting logical next steps.
+If neither `uv` nor the dep is installed, the script prints actionable `fix:` lines
+and exits cleanly — no tracebacks, no interactive prompts.
 
-If the script isn't on PATH, find it relative to this SKILL.md using the skill's base directory.
+Output is compact: `published_at | product_name | type\n  description (truncated)`.
+Each command ends with `hint:` lines suggesting logical next steps.
 
 ## Querying Release Notes (Manual / Fallback)
 

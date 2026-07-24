@@ -1,8 +1,26 @@
-#!/usr/bin/env -S uv run --with google-cloud-bigquery
+#!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.10"
 # dependencies = ["google-cloud-bigquery"]
 # ///
+#
+# Run with:
+#   uv run ./release_notes.py          (recommended — auto-installs deps)
+#   python3 ./release_notes.py         (requires: pip install google-cloud-bigquery)
+#
+# No uv? Install it: curl -LsSf https://astral.sh/uv/install.sh | sh
+# Or just: pip install google-cloud-bigquery  then run with python3 directly.
+#
+import sys
+
+try:
+    from google.cloud import bigquery
+except ImportError:
+    print("error: google-cloud-bigquery not installed.")
+    print("fix:   uv run ./release_notes.py          # auto-installs deps (recommended)")
+    print("fix:   pip install google-cloud-bigquery   # then re-run with python3")
+    print("fix:   curl -LsSf https://astral.sh/uv/install.sh | sh  # install uv first")
+    sys.exit(1)
 """
 Google Cloud Release Notes — agent-ergonomic query tool.
 
@@ -198,7 +216,6 @@ def main():
     args = parser.parse_args()
 
     try:
-        from google.cloud import bigquery
         client = bigquery.Client(project=args.project)
     except Exception as e:
         print(f"error: Failed to initialize BigQuery client: {e}")
