@@ -258,7 +258,28 @@ The `x-goog-api-client` HTTP header. In Concord: `tool_name` / `client_library_n
 
 ---
 
-## Querying Release Notes (Primary Research Tool)
+## Release Notes Script (Primary Research Tool)
+
+A self-contained script is bundled at `scripts/release_notes.py` relative to this skill.
+Run it directly — it self-installs its only dependency (`google-cloud-bigquery`) via `uv`.
+
+```bash
+# From the skill directory:
+./scripts/release_notes.py                        # recent agent/Gemini/Vertex notes
+./scripts/release_notes.py products              # all product names + activity timeline
+./scripts/release_notes.py renames               # all rename/rebrand announcements
+./scripts/release_notes.py product "CX Agent"    # history for one product (partial match)
+./scripts/release_notes.py search "agent builder" # search description text
+./scripts/release_notes.py --since 2024-01-01    # override date range
+./scripts/release_notes.py --project my-project  # override GCP project for billing
+```
+
+Output is compact TOON-style: `published_at | product_name | type` then description.
+Each command prints `hint:` lines suggesting logical next steps.
+
+If the script isn't on PATH, find it relative to this SKILL.md using the skill's base directory.
+
+## Querying Release Notes (Manual / Fallback)
 
 The public BigQuery table `bigquery-public-data.google_cloud_release_notes.release_notes`
 is the most reliable source for product renames, GA announcements, and deprecations.
