@@ -52,16 +52,32 @@ STATE: dict = {}
 # Pair scheduling
 # ---------------------------------------------------------------------------
 
-def build_pairs(clip_files: list[str], seed: int) -> list[dict]:
-    """All unique pairs, shuffled, with left/right assignment randomized."""
+def build_pairs(clip_files: list[str], seed: int,
+                designed: list[dict] | None = None) -> list[dict]:
+    """Pair queue, with left/right assignment randomized per pair.
+
+    Designed pairs beat a round-robin. A full round-robin over heterogeneous
+    clips wastes the reviewer on foregone conclusions — measured on a real
+    session, 69% of judgments were decided in a median 8.7s and carried no
+    information, while the genuinely close pairs took 42.7s and produced
+    every useful note. Prefer an explicit list where each pair isolates one
+    variable and the answer is not already known.
+    """
     rng = random.Random(seed)
-    pairs = list(combinations(sorted(clip_files), 2))
-    rng.shuffle(pairs)
+    if designed:
+        raw = [(d["a"], d["b"]) for d in designed]
+        notes = {f'{min(d["a"],d["b"])}|{max(d["a"],d["b"])}': d.get("why", "")
+                 for d in designed}
+    else:
+        raw = list(combinations(sorted(clip_files), 2))
+        rng.shuffle(raw)
+        notes = {}
     out = []
-    for a, b in pairs:
+    for a, b in raw:
         left, right = (a, b) if rng.random() < 0.5 else (b, a)
-        out.append({"pair_id": f"{min(a,b)}|{max(a,b)}",
-                    "left": left, "right": right})
+        pid = f"{min(a,b)}|{max(a,b)}"
+        out.append({"pair_id": pid, "left": left, "right": right,
+                    "why": notes.get(pid, "")})
     return out
 
 
@@ -167,10 +183,17 @@ class Handler(BaseHTTPRequestHandler):
         i = next_index(results, pairs)
         done = len(results["judgments"])
         total = len(pairs)
+        # Session cap: keep any single sitting short. Long queues are how a
+        # reviewer ends up rushing the pairs that actually needed thought.
+        cap = STATE.get("max_pairs")
+        if cap and (done - STATE["done_at_start"]) >= cap:
+            return {"done": done, "total": total, "question": QUESTION,
+                    "current": None, "finished": True, "batch_done": True,
+                    "out": str(STATE["out"])}
         cur = pairs[i] if i < total else None
         return {"done": done, "total": total, "question": QUESTION,
                 "current": cur, "finished": cur is None,
-                "out": str(STATE["out"])}
+                "batch_done": False, "out": str(STATE["out"])}
 
     # -- routes -------------------------------------------------------------
     def do_GET(self):
@@ -272,6 +295,7 @@ PAGE = r"""<!doctype html>
 
 <header>
   <div id="q">…</div>
+  <div id="why" style="color:var(--dim);font-size:13px"></div>
   <div id="prog"></div>
 </header>
 <div id="bar"><div id="barfill"></div></div>
@@ -319,6 +343,8 @@ async function load() {
   S = await (await fetch('/api/state')).json();
   document.getElementById('q').textContent = S.question;
   document.getElementById('prog').textContent = S.done + ' / ' + S.total;
+  document.getElementById('why').textContent =
+    (S.current && S.current.why) ? '— ' + S.current.why : '';
   document.getElementById('barfill').style.width =
     (S.total ? (100 * S.done / S.total) : 0) + '%';
 
@@ -326,7 +352,8 @@ async function load() {
     document.getElementById('app').style.display = 'none';
     document.getElementById('done').style.display = 'block';
     document.getElementById('donemsg').innerHTML =
-      S.done + ' judgments saved to <code>' + S.out + '</code>';
+      S.done + ' judgments saved to <code>' + S.out + '</code>' +
+      (S.batch_done ? '<br><br>Batch complete. Re-run to continue.' : '');
     return;
   }
   document.getElementById('app').style.display = '';
@@ -387,6 +414,11 @@ def main() -> int:
                     help="results file (default: <corpus>/judgments.json)")
     ap.add_argument("--port", type=int, default=8765)
     ap.add_argument("--seed", type=int, default=7)
+    ap.add_argument("--max", type=int, default=10, dest="max_pairs",
+                    help="max pairs served this sitting (0 = no cap)")
+    ap.add_argument("--pairs", type=Path, default=None,
+                    help="JSON list of designed pairs: "
+                         "[{a, b, why}] — strongly preferred over round-robin")
     ap.add_argument("--no-open", action="store_true")
     args = ap.parse_args()
 
@@ -403,10 +435,14 @@ def main() -> int:
 
     out = (args.out or corpus / "judgments.json").expanduser().resolve()
 
+    designed = json.loads(args.pairs.read_text()) if args.pairs else None
+    results = load_results(out)
     STATE.update({
         "corpus": corpus, "out": out, "file2id": file2id,
-        "pairs": build_pairs(files, args.seed),
-        "results": load_results(out),
+        "pairs": build_pairs(files, args.seed, designed),
+        "results": results,
+        "max_pairs": args.max_pairs or None,
+        "done_at_start": len(results["judgments"]),
     })
     STATE["results"]["corpus_manifest"] = str(man_path)
     STATE["results"]["pair_seed"] = args.seed
@@ -415,7 +451,10 @@ def main() -> int:
     total = len(STATE["pairs"])
     url = f"http://127.0.0.1:{args.port}/"
 
-    print(f"\n  {len(files)} clips  ->  {total} pairs")
+    kind = "designed" if designed else "round-robin"
+    cap = args.max_pairs or total
+    print(f"\n  {len(files)} clips  ->  {total} {kind} pairs "
+          f"(serving up to {min(cap, total - done)} this sitting)")
     if done:
         print(f"  resuming: {done} already judged")
     print(f"  results: {out}")

@@ -1,0 +1,3 @@
+# Manim render output from the generator scripts.
+scripts/media/
+__pycache__/
