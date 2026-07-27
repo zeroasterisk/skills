@@ -148,19 +148,45 @@ render is an incomplete artifact; do not tune its pacing as if it were final.
 
 ### TTS notes
 
-Available here: `gemini-2.5-pro-tts`, `gemini-2.5-flash-tts` (Vertex/GEAP;
-no 3.x TTS exposed in this project as of 2026-07). Request
-`response_modalities=["AUDIO"]` with a `speech_config` voice; output is raw
-24 kHz mono 16-bit PCM, so wrap it in a WAV container yourself.
+Use **`gemini-3.1-flash-tts-preview`** via the **Cloud Text-to-Speech API**
+(`google-cloud-texttospeech>=2.31.0`). Two reasons to prefer that surface over
+the Vertex `generate_content` path: it takes `prompt` and `text` as separate
+fields, so styling never leaks into what is spoken; and it returns real
+encodings (LINEAR16/MP3) rather than headerless raw PCM you must wrap yourself.
 
-Default delivery is far slower than the reference. Style-prompt to fix it —
-measured on one line:
+Default delivery is far slower than the reference. Measured on one 20-word
+line, voice Charon:
 
-| prompt prefix | rate |
-|---|---|
-| *(none)* | 134–148 wpm |
-| "Read this as an enthusiastic technical explainer, speaking quickly…" | 183 wpm |
-| **"Say this briskly and energetically, at a fast pace:"** | **214 wpm** ✓ |
+| | plain | "brisk" prompt | `[fast]` | `[extremely fast]` |
+|---|---|---|---|---|
+| **gemini-3.1-flash-tts-preview** | 159 | **204** | **204** | 233 |
+| gemini-2.5-flash-tts | 148 | 194 | 143 | 119 |
+
+Target is ~205 wpm. **3.1 honours inline pace markup; 2.5 does not** — on 2.5
+the markup made delivery *slower*, so it is being mis-parsed. Prefer 3.1 with
+either `[fast]` or a brisk style prompt.
+
+### Audio-first pipeline
+
+`scripts/narrate.py` synthesizes each line, measures what actually came back,
+and writes `narration.json` (per-beat measured durations) plus a single
+concatenated `narration.wav`. `variant_scene.py` reads that manifest via
+`NARRATION=...` and times every beat to the measured audio.
+
+```bash
+python3 scripts/narrate.py --script script.json --out ./narration
+NARRATION=./narration/narration.json TEXT=anchor \
+  manim -qh --fps 60 scripts/variant_scene.py VariantScene
+ffmpeg -i render.mp4 -i narration/narration.wav -c:v copy -c:a aac -shortest out.mp4
+```
+
+Do not predict durations from wpm and hope. Observed rate varied 171–216 wpm
+across lines in a single run at one setting, so a predicted timeline drifts
+audibly out of sync. Generate, measure, then animate to the measurement.
+
+Verified end to end: generated narration came out at 197.8 wpm with 92% speech
+density, against a reference of ~205 wpm and ~90% — i.e. this pipeline
+reproduces the reference pacing profile.
 
 ## Hard-won facts
 

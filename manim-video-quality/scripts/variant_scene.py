@@ -68,6 +68,7 @@ from manim import (
 
 WPM = int(os.environ.get("WPM", "205"))
 TEXT = os.environ.get("TEXT", "anchor").strip()
+NARRATION = os.environ.get("NARRATION", "").strip()
 
 if WPM not in (175, 205, 235):
     raise SystemExit(f"WPM={WPM} must be 175|205|235  (reference median ~205)")
@@ -76,6 +77,18 @@ if TEXT not in {"none", "anchor", "caption"}:
 
 WPS = WPM / 60.0
 TAIL = {175: 0.55, 205: 0.40, 235: 0.28}[WPM]  # ~10% silence, per reference
+
+# Audio-first mode. If a narrate.py manifest is supplied, beat length comes
+# from the MEASURED audio rather than a predicted rate. Always prefer this
+# when the video will ship with narration: observed TTS rate varies between
+# identical calls, so a predicted duration drifts out of sync with the track.
+MEASURED: dict[str, float] = {}
+if NARRATION:
+    import json
+    from pathlib import Path
+    _man = json.loads(Path(NARRATION).read_text())
+    MEASURED = {b["id"]: b["audio_s"] for b in _man["beats"]}
+    TAIL = _man.get("breath_s", TAIL)
 
 BG = "#0E0E10"
 FG = "#FFFFFF"
@@ -104,7 +117,13 @@ SCRIPT = {
 
 
 def say(key: str) -> float:
-    """Seconds this beat's narration takes at the current speaking rate."""
+    """Seconds this beat occupies.
+
+    Measured audio if a narration manifest was supplied, otherwise predicted
+    from the script at the configured speaking rate.
+    """
+    if key in MEASURED:
+        return MEASURED[key] + TAIL
     words = len(SCRIPT[key][0].split())
     return words / WPS + TAIL
 
@@ -169,11 +188,13 @@ class VariantScene(Scene):
         self.beat_text("carry", budget - anim)
 
         # ---- close --------------------------------------------------------
+        budget = MEASURED.get("closer", 9 / WPS) + TAIL
         closer = Text("Identity belongs to the process, not the caller.",
                       font=FONT, font_size=22, color=FG)
         closer.move_to(DOWN * 2.5)
-        self.play(FadeIn(closer, run_time=min(1.5, 6 / WPS)))
-        self.wait(max(0.8, 9 / WPS))
+        fade = min(1.2, budget * 0.35)
+        self.play(FadeIn(closer, run_time=fade))
+        self.wait(max(0.4, budget - fade))
 
         # Group, not VGroup: Flash and friends leave plain Mobjects behind.
         self.play(FadeOut(Group(*self.mobjects), run_time=1.0))
