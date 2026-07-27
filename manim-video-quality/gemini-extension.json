@@ -1,0 +1,6 @@
+{
+  "name": "manim-video-quality",
+  "version": "1.0.0",
+  "description": "Define, create, and validly measure quality of Manim explainer videos — visual style system, testable quality spec, and evaluation datasets for validating LLM video graders",
+  "contextFileName": "GEMINI.md"
+}
