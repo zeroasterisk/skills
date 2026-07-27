@@ -73,16 +73,46 @@ be talked out of a verdict by a context file, and have no variance.
 > This is the block the LLM grader is *least* able to see (1 FPS sampling).
 > It is also almost entirely computable from source. Do not ask the LLM.
 
+**Pacing is derived from the narration script, not chosen.** A beat lasts as
+long as its line takes to say. Reference measurements, from subtitle analysis
+of 10 videos in the target style (`../scripts/harvest_reference_pacing.py`):
+
+| quantity | measured | use |
+|---|---|---|
+| speaking rate | **~205 wpm** (188–222) | `beat_s = words / (wpm/60) + breath` |
+| speech density | **~90%** (87–93%) | silence is ~10% of runtime — punctuation, not default |
+| median spoken unit | **~3.5s** (p90 ≈ 4.5s) | natural length of one visual beat |
+| wall-clock rate | ~181 wpm | sanity-check total runtime vs script length |
+
+> **The trap.** The reference style *feels* unhurried, so the intuitive
+> inference is "slow down, add silence." That is wrong about the audio: it is
+> near-continuous fast narration. What is slow is the *picture*. Copy the calm
+> visuals without the narration and fixed 2–4s holds become dead air — which
+> viewers reliably report as "too slow," not "patient."
+
 | ID | Rule (creation) | Check (review) | Type | Sev |
 |---|---|---|---|---|
-| D1 | Readable beats ≥ 1.5s | Every `run_time` on an animation involving `Text` ≥ 1.5 | `SRC` | BLOCK |
+| D0 | A narration script exists before the animation | Script present; every beat maps to a line | `SRC` | BLOCK |
+| D1 | Beat length matches its spoken line (±25%) | measured beat vs `words/(wpm/60)+breath` | `SRC` | BLOCK |
 | D2 | No sub-second micro-transitions | No `run_time` < 0.5 anywhere | `SRC` | WARN |
-| D3 | Stillness after each key beat | A `self.wait(≥2.0)` follows each tagged key beat | `SRC` | WARN |
+| D3 | Silence budget respected | Un-narrated time ≤ 20% of runtime (ref ~10%) | `SRC` | WARN |
+| D3b | No beat far exceeds one spoken unit | No beat > 6s without a sub-beat or a second line | `SRC` | WARN |
 | D4 | Prefer morph over cut | Ratio of `Transform`/`ReplacementTransform` to `FadeOut`+`FadeIn` pairs ≥ 1.0 | `SRC` | WARN |
 | D5 | Smooth easing only | `rate_func` ∈ {smooth, linear, ease_in/out}; no bounce/elastic/wiggle | `SRC` | WARN |
 | D6 | One thing moves at a time | ≤ 2 concurrent animations in any `self.play` (excluding `LaggedStart`) | `SRC` | WARN |
 | D7 | Generous stagger | `LaggedStart` `lag_ratio` ≥ 0.25 | `SRC` | INFO |
 | D8 | Total duration is honest | Rendered duration matches sum of source timeline (catches silent drops) | `SRC`+`FRAME` | INFO |
+| D9 | **A silent render is an incomplete artifact** | If no audio track, flag that pacing and text-density judgments will not transfer to the narrated version | `SRC` | WARN |
+
+### If the video will be narrated (assume yes unless told otherwise)
+
+On-screen text is not the explanation — the voice is. Text exists to anchor
+terms the ear cannot spell, and to keep the frame legible when muted. This
+modifies section C: prefer short **anchors** (2–5 words, the term being
+introduced) over full sentences, and never ask the viewer to read one
+sentence while listening to a different one. Full-sentence captions are for
+accessibility, and should then match the narration verbatim rather than
+paraphrase it.
 
 ## E. Narrative *(the genuinely perceptual layer)*
 

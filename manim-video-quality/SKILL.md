@@ -61,6 +61,8 @@ Zero-dependency stdlib where possible; PEP 723 headers so `uv run` works too.
 | `scripts/score_ranking.py` | Bradley-Terry ranking from the judgments, with honesty diagnostics: coverage, graph connectivity, intransitive triads, position bias. |
 | `scripts/ablation_scene.py` | Dataset B generator — one scene, 8 injectable defects, one flag each. |
 | `scripts/exp_metadata_leakage.py` | The metadata-leakage experiment. |
+| `scripts/harvest_reference_pacing.py` | Measure narration pacing (wpm, speech density, beat length) from reference videos' subtitles. Downloads subtitles only — kilobytes, no video. |
+| `scripts/variant_scene.py` | Narration-timed pacing x on-screen-text sweep, for finding the human optimum on choices that have no known-correct answer. |
 
 ```bash
 # 1. build a blinded, normalized corpus
@@ -71,6 +73,12 @@ python3 scripts/judge_ui.py --corpus ./corpus
 
 # 3. rank + diagnose
 python3 scripts/score_ranking.py ./corpus/judgments.json
+
+# learn pacing from reference videos (subtitles only)
+python3 scripts/harvest_reference_pacing.py --list refs.txt --out ./ref_pacing
+
+# sweep pacing x text density (WPM 175|205|235, TEXT none|anchor|caption)
+WPM=205 TEXT=anchor manim -qh --fps 60 scripts/variant_scene.py VariantScene
 
 # ablations
 ABLATION=none          manim -qh --fps 60 scripts/ablation_scene.py AblationScene
@@ -104,6 +112,55 @@ back close or intransitive.
 3. `FRAME` checks: overlap, negative-space ratio, colors-per-frame, contrast.
 4. `LLM`: only narrative/perceptual questions (spec section E).
 5. `HUMAN`: the actual ship decision.
+
+## Narration is the timing source
+
+Assume the video will be narrated unless told otherwise. That single fact
+resolves the pacing argument, because a beat should last as long as its line
+takes to say — which is measurable, not a matter of taste.
+
+**Measured from 10 reference videos** (`scripts/harvest_reference_pacing.py`,
+subtitles only, no video downloaded):
+
+| quantity | measured | spread |
+|---|---|---|
+| speaking rate | **~205 wpm** | 188–222 |
+| speech density | **~90% of runtime** | 87–93% |
+| median spoken unit | **~3.5s** | p90 ≈ 4.5s |
+| wall-clock rate | ~181 wpm | 179–183 |
+
+**The trap this corrects.** The reference style *feels* unhurried, so the
+intuitive move is "slow everything down and add silence." That is wrong about
+the audio — it is near-continuous, fast narration with only ~10% silence.
+What is slow is the *picture*: one object, held, while the voice works. Copy
+the calm visuals but drop the narration and fixed 2–4s holds become dead air,
+which viewers reliably report as "too slow" rather than "patient." A silent
+render is an incomplete artifact; do not tune its pacing as if it were final.
+
+### Recommended workflow (audio-first)
+
+1. Write the narration script. It is the timing source, so it comes first.
+2. Generate audio per line and **measure the actual duration** — do not trust
+   a predicted wpm; observed TTS rate varied 134–148 wpm across identical
+   default calls.
+3. Time each animation beat to its measured audio length.
+4. Mux. Keep un-narrated time near ~10% of runtime.
+
+### TTS notes
+
+Available here: `gemini-2.5-pro-tts`, `gemini-2.5-flash-tts` (Vertex/GEAP;
+no 3.x TTS exposed in this project as of 2026-07). Request
+`response_modalities=["AUDIO"]` with a `speech_config` voice; output is raw
+24 kHz mono 16-bit PCM, so wrap it in a WAV container yourself.
+
+Default delivery is far slower than the reference. Style-prompt to fix it —
+measured on one line:
+
+| prompt prefix | rate |
+|---|---|
+| *(none)* | 134–148 wpm |
+| "Read this as an enthusiastic technical explainer, speaking quickly…" | 183 wpm |
+| **"Say this briskly and energetically, at a fast pace:"** | **214 wpm** ✓ |
 
 ## Hard-won facts
 

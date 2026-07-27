@@ -36,15 +36,20 @@ style_prompt_full: >
   green) are used SUBTLY and ONLY where the content is literally about the
   Google product or a semantic status that maps directly to those exact
   roles (confirmed/success = Google green, blocked/error = Google red) —
-  never as a general accent applied broadly. Motion is slow and deliberate:
-  favor Transform/ReplacenentTransform morphs over cuts, camera pans/zooms
-  over hard scene changes, run_times in the 1.5-3s range for anything the
-  viewer needs to read or understand (not the 0.3-0.6s "UI micro-interaction"
-  speed of software product demos), and at least one full beat (2-4s) of
-  stillness after each idea lands before moving on. Avoid: opaque rounded
-  rectangles that look like app UI components, drop shadows, gradients,
-  multiple simultaneous competing animations, dense multi-panel dashboards,
-  marketing-style bold headline text, more than ~3 colors visible at once.
+  never as a general accent applied broadly. Motion is visually calm but NOT
+  temporally slow: favor Transform/ReplacementTransform morphs over cuts and
+  camera pans/zooms over hard scene changes, hold one clear object steady
+  rather than cutting between many. Critically, calm visuals are not the same
+  thing as dead air — measured across 10 reference videos, the source style
+  is ~90% wall-to-wall narration at ~205 words per minute, with a natural
+  beat of ~3.5s. The stillness is in the PICTURE, not the soundtrack. So beat
+  length is set by how long its narration line takes to speak, not by a fixed
+  run_time; and if a render has no narration, long holds read as empty rather
+  than patient. Avoid: opaque rounded rectangles that look like app UI
+  components, drop shadows, gradients, multiple simultaneous competing
+  animations, dense multi-panel dashboards, marketing-style bold headline
+  text, more than ~3 colors visible at once, and silent renders paced as if
+  narration were present.
 
 colors:
   primary:
@@ -118,15 +123,23 @@ motion:
     - "Camera pan/zoom (MovingCameraScene) to reveal new context, rather than a hard scene cut"
     - "Slow LaggedStart with generous lag_ratio (0.3+) instead of near-simultaneous fades"
   animation_style: >
-    Slow, deliberate, one-thing-moves-at-a-time. Ease functions are smooth
-    (rate_func=smooth), never bouncy or elastic. An object earns its
-    on-screen time — let it sit still and be looked at before the next beat.
+    One-thing-moves-at-a-time, smooth easing (rate_func=smooth), never bouncy
+    or elastic. The frame is calm: an object holds steady and is looked at
+    while the narration does the explaining. Calm picture, dense audio.
   pacing: >
-    Patient. run_time 1.5-3s for anything meant to be understood, not
-    glanced at. wait(2)-wait(4) after key reveals. This is the opposite of
-    software-demo pacing (0.2-0.4s micro-transitions) — if it feels "slow"
-    compared to a product demo, it's probably closer to correct.
-  audio_cues: []
+    Narration-derived, not fixed. MEASURED from 10 reference videos:
+    ~205 wpm while speaking, ~90% speech density (only ~10% of runtime is
+    silent), ~181 wpm wall-clock, median spoken unit ~3.5s.
+    Time each beat as words / (wpm/60) plus a short breath, so the visual
+    holds exactly as long as its line takes to say. A beat much longer than
+    ~4s needs a sub-beat or a second sentence, not a longer hold.
+    WARNING — the most common failure when imitating this style is to copy
+    the calm visuals but drop the narration, leaving fixed 2-4s holds over a
+    static frame. That is dead air, not patience. If the render is silent,
+    on-screen text must carry the line, and holds must shorten accordingly.
+  audio_cues:
+    - "Assume narration exists; script first, then animate to the script."
+    - "Silence is ~10% of runtime and is punctuation, not a default state."
 
 mood:
   keywords:
@@ -182,11 +195,18 @@ generic framework nodes, abstract network lines, illustrative shapes — uses
 the softer 3b1b palette so the Google colors keep their signal value instead
 of blending into general decoration.
 
-Patience is a feature. The single biggest gap between our current renders
-and 3b1b's actual pacing is speed: our transitions and waits are tuned like
-a software product demo (get to the point fast, cram information density
-per second). 3b1b's videos feel unhurried because they trust the viewer to
-sit with an idea for 2-4 seconds before moving on. When in doubt, slow down.
+Calm picture, dense audio. This is the rule most easily gotten backwards,
+and we got it backwards first: 3b1b videos *feel* unhurried, so the obvious
+inference is "slow everything down and leave silence." Measurement says the
+opposite about the soundtrack — ~205 wpm, ~90% speech density, almost no
+dead air. What is slow is the PICTURE: one object, held, while the voice
+works. Copying the visual calm without the narration produces a render that
+is merely empty, and viewers correctly read that as too slow.
+
+Script first, then animate. Because beat length is set by its spoken line,
+the script is the timing source and must exist before the animation. This
+is also the only way the pacing question has an objective answer instead of
+being an endless matter of taste.
 
 ## Connectors
 
