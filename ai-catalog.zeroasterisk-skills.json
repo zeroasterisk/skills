@@ -63,6 +63,20 @@
       "url": "https://github.com/zeroasterisk/skills/tree/main/intent-refinement"
     },
     {
+      "identifier": "urn:air:github.com:zeroasterisk:manim-video-quality",
+      "displayName": "manim-video-quality",
+      "type": "application/ai-skill+md",
+      "description": "Define, create, and validly measure the quality of Manim explainer videos. Use when producing technical explainer videos, defining a visual style, reviewing a render, or building/validating an LLM-based video quality grader. Covers the 3Blue1Brown-inspired visual style system, shared storytelling vocabulary, a testable quality spec, and evaluation datasets that measure whether your grader can actually see what it claims to judge.",
+      "tags": [],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "manim-video-quality"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/manim-video-quality"
+    },
+    {
       "identifier": "urn:air:github.com:zeroasterisk:storybook",
       "displayName": "storybook",
       "type": "application/ai-skill+md",
