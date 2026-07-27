@@ -50,15 +50,41 @@ the validation bars in `reference/gemini-video-analysis.md` §8.
 | `datasets/B_ablation_pairs.md` | **By construction** | Can it tell a clean render from the same render with one injected defect? Chance = 50%. |
 | `datasets/C_defect_probes.md` | Verifiable | Can it *see* specific objective defects? Includes a sycophancy probe. |
 
-Generator: `scripts/ablation_scene.py` — one scene, 8 injectable defects, one
-flag each. Baseline = all off.
+## Scripts
+
+Zero-dependency stdlib where possible; PEP 723 headers so `uv run` works too.
+
+| Script | Does |
+|---|---|
+| `scripts/prep_corpus.py` | Cuts excerpts and normalizes every clip to an identical encode (720p30, no audio, opaque filenames + manifest). Prevents metadata leaking into judgments. Needs `ffmpeg`; `yt-dlp` only for remote refs. |
+| `scripts/judge_ui.py` | Localhost pairwise judging UI. Randomized left/right, keyboard-driven, resumable, saves after every judgment. |
+| `scripts/score_ranking.py` | Bradley-Terry ranking from the judgments, with honesty diagnostics: coverage, graph connectivity, intransitive triads, position bias. |
+| `scripts/ablation_scene.py` | Dataset B generator — one scene, 8 injectable defects, one flag each. |
+| `scripts/exp_metadata_leakage.py` | The metadata-leakage experiment. |
 
 ```bash
+# 1. build a blinded, normalized corpus
+python3 scripts/prep_corpus.py --spec corpus_spec.json --out ./corpus
+
+# 2. collect human ground truth  (~1 min/pair; 8 clips = 28 pairs)
+python3 scripts/judge_ui.py --corpus ./corpus
+
+# 3. rank + diagnose
+python3 scripts/score_ranking.py ./corpus/judgments.json
+
+# ablations
 ABLATION=none          manim -qh --fps 60 scripts/ablation_scene.py AblationScene
 ABLATION=font_ttc_bug  manim -qh --fps 60 scripts/ablation_scene.py AblationScene
 # flags: font_ttc_bug rushed_pacing card_itis color_spray
 #        text_flood light_bg cut_not_morph overlap_nodes
 ```
+
+**On sample size:** one judgment per pair is the minimum and is only
+sufficient when items are clearly separated. Verified against synthetic data
+with known ground truth: at ~3 comparisons per pair with close strengths the
+fitted order is wrong; by ~40 it is exact. Practical approach — judge every
+pair once, read the diagnostics, then add repeats only on the pairs that came
+back close or intransitive.
 
 ## Workflow
 
