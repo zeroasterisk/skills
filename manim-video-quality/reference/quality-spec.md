@@ -45,7 +45,7 @@ be talked out of a verdict by a context file, and have no variance.
 | A4 | No drop shadows / gradients | No shadow or gradient constructs present | `SRC` | BLOCK |
 | A5 | Generous negative space | ≥ 60% of pixels equal background color, median across sampled frames | `FRAME` | WARN |
 | A6 | One focal object per beat | ≤ 3 top-level mobject groups added per beat | `SRC` | WARN |
-| A7 | No node/label overlap | **Not statically checkable — known gap.** Layout collisions arise from post-`arrange()` shifts, so detecting them needs layout simulation or reliable frame CV. Validated: the deterministic checker catches 7 of 8 injected defect classes; this is the one it misses. Route to visual review. | `HUMAN` | BLOCK |
+| A7 | No node/label overlap | Not statically checkable (collisions come from post-`arrange()` shifts). **Route to the LLM: measured 100% on this defect** — it is the one class where the model beats the deterministic checker, which misses it entirely. | `LLM` | BLOCK |
 
 ## B. Color
 

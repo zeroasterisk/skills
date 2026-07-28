@@ -146,6 +146,41 @@ than faked.
 The clean baseline warns C2 by design — Roboto at 15/BOLD measures 0.64 of a
 space, which is visibly loose at 4K. A true positive, not noise.
 
+## LLM grader blindness map (measured)
+
+Scored on the same fixtures, forced-choice, both orders, `scripts/eval_grader.py`.
+Chance is 50%.
+
+| defect | LLM | deterministic | route to |
+|---|---|---|---|
+| rushed pacing | 100% | yes | either |
+| opaque cards | 100% | yes | deterministic (free) |
+| unreserved colour | 100% | yes | deterministic (free) |
+| text flood | 100% | yes | deterministic (free) |
+| wrong background | 100% | yes | deterministic (free) |
+| **spatial overlap** | **100%** | **no** | **LLM** |
+| **cuts vs morphs** | **0%** | **yes** | **deterministic** |
+| **phantom word gaps** | **no signal** | **yes** | **deterministic** |
+
+**The two methods are complementary. Together they cover 8/8; neither covers
+it alone.** Deterministic catches 7 and misses spatial overlap; the LLM
+catches 6 including overlap, and is worse than useless on the other two.
+
+Two failures worth knowing in detail, because both look like competence:
+
+- **Phantom word gaps: pure position bias.** Across 10 trials the model chose
+  the second video every time regardless of which one it was. Worse, its
+  stated reason inverted the defect — *"Video B correctly renders the word
+  'LangChain' with a space as 'Lang Chain'"*. It read the broken render and
+  called it correct, fluently. This is the same defect it scored
+  `text_readability: 9/10` on. Never ask a model about typography.
+- **Cuts vs morphs: reliably wrong, 0/5.** Not noise and not position bias —
+  it consistently prefers the cut, reasoning the extra fade is "more
+  complete". Its aesthetic is simply opposite to the spec here.
+
+Practical rule: run the deterministic checker first and for free; call the
+model only for spatial layout and narrative judgment, where it earns its cost.
+
 ## Narration is the timing source
 
 Assume the video will be narrated unless told otherwise. That single fact
