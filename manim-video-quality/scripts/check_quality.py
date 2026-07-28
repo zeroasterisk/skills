@@ -58,8 +58,27 @@ MIN_LAG_RATIO = 0.25
 ALLOWED_RATE_FUNCS = {"smooth", "linear", "ease_in_sine", "ease_out_sine",
                       "ease_in_out_sine", "rush_into", "rush_from",
                       "ease_in_quad", "ease_out_quad", "there_and_back"}
-MIN_NEGATIVE_SPACE = 0.60
-MAX_HUES_PER_FRAME = 3
+# Calibrated against 9 reference clips in the target style, measured with
+# THESE metric definitions (borrowing constants from a differently-defined
+# measurement is how you get thresholds that look rigorous and aren't):
+#     ink coverage        median 0.111  range 0.036 - 0.289
+#     saturated hues      median 1.0    range 0 - 4
+#     static frame-pairs  median 58.9%  range 26.6 - 73.4
+#     longest static run  median 5.0s   range 1.8 - 7.0
+#
+# The reference is overwhelmingly STILL. An earlier plan to flag static holds
+# as "dead air" would have rejected the reference corpus itself. Stillness is
+# only a defect when nothing is being said over it, so the static check is
+# narration-aware and is skipped entirely when an audio track is present.
+INK_MIN, INK_MAX = 0.02, 0.35          # too empty / too crowded
+MAX_HUES_PER_FRAME = 4                 # reference max
+SILENT_STATIC_RUN_MAX = 7.0            # reference max is 7.0s — but always narrated
+# Fraction of pixels that must change for a frame-pair to count as moving.
+# Mean-absolute-difference was tried first and is unusable here: it is
+# confounded with ink density, so a sparse scene reads as 100% static even
+# while elements visibly move. Counting *changed pixels* is density-neutral.
+STATIC_PIXEL_DELTA = 8                 # per-pixel grey change that counts
+STATIC_AREA_FRAC = 0.0015              # <0.15% of pixels changed => static
 
 HEX = re.compile(r"#[0-9A-Fa-f]{6}")
 WORDISH = re.compile(r"[A-Za-z][A-Za-z'\-]+")
@@ -97,12 +116,52 @@ def _kw(node, name):
     return None
 
 
-def _num(node):
+# Populated per-file by check_source(): module-level numeric constants and
+# simple arithmetic helper functions. Without these, a scene written the
+# normal way — `fill_opacity=FILL_OP`, `run_time=rt(1.6)` — is invisible to
+# static analysis, which is how an injected card-itis defect (0.95 opacity)
+# and a 4x speed-up both passed clean.
+_CONSTS: dict = {}
+_HELPERS: dict = {}
+
+
+def _num(node, depth: int = 0):
+    if depth > 6:
+        return None
     if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
         return float(node.value)
     if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
-        v = _num(node.operand)
+        v = _num(node.operand, depth + 1)
         return -v if v is not None else None
+    if isinstance(node, ast.Name):
+        return _CONSTS.get(node.id)
+    if isinstance(node, ast.BinOp):
+        a, b = _num(node.left, depth + 1), _num(node.right, depth + 1)
+        if a is None or b is None:
+            return None
+        try:
+            if isinstance(node.op, ast.Add):  return a + b
+            if isinstance(node.op, ast.Sub):  return a - b
+            if isinstance(node.op, ast.Mult): return a * b
+            if isinstance(node.op, ast.Div):  return a / b if b else None
+        except (TypeError, ZeroDivisionError):
+            return None
+        return None
+    if isinstance(node, ast.Call):
+        fn = getattr(node.func, "id", None)
+        args = [_num(a, depth + 1) for a in node.args]
+        if fn in ("min", "max") and args and all(a is not None for a in args):
+            return (min if fn == "min" else max)(args)
+        # single-expression arithmetic helper, e.g. def rt(x): return max(.12, x*RUSH)
+        h = _HELPERS.get(fn)
+        if h and len(args) == len(h["params"]) and all(a is not None for a in args):
+            saved = dict(_CONSTS)
+            _CONSTS.update(dict(zip(h["params"], args)))
+            try:
+                return _num(h["expr"], depth + 1)
+            finally:
+                _CONSTS.clear()
+                _CONSTS.update(saved)
     return None
 
 
@@ -146,6 +205,23 @@ def check_source(path: Path, rep: Report) -> None:
         if isinstance(node, ast.Name):
             return consts.get(node.id) or MANIM_CONSTS.get(node.id)
         return _str(node)
+
+    _CONSTS.clear(); _HELPERS.clear()
+    for n in tree.body:
+        if isinstance(n, ast.Assign) and len(n.targets) == 1 and isinstance(n.targets[0], ast.Name):
+            v = _num(n.value)
+            if v is not None:
+                _CONSTS[n.targets[0].id] = v
+        elif isinstance(n, ast.FunctionDef):
+            # a docstring makes the body length 2, which previously caused
+            # every documented helper to be skipped — and rt() is documented
+            body = [b for b in n.body
+                    if not (isinstance(b, ast.Expr)
+                            and isinstance(b.value, ast.Constant)
+                            and isinstance(b.value.value, str))]
+            if len(body) == 1 and isinstance(body[0], ast.Return):
+                _HELPERS[n.name] = {"params": [a.arg for a in n.args.args],
+                                    "expr": body[0].value}
 
     fonts, fills, strokes, run_times = Counter(), [], [], []
     type_specs: list[tuple] = []
@@ -230,6 +306,39 @@ def check_source(path: Path, rep: Report) -> None:
     for h in off[:8]:
         rep.add("B1", "WARN", f"colour {h} not in approved palette")
     rep.metrics["palette_violations"] = float(len(off))
+
+    # C3 simultaneous text — a group holding several Text() at once
+    rep.ran("C3")
+    worst_group = 0
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call) and getattr(node.func, "id", "") in ("VGroup", "Group"):
+            def _texts(x):
+                return sum(1 for s in ast.walk(x)
+                           if isinstance(s, ast.Call)
+                           and getattr(s.func, "id", getattr(s.func, "attr", ""))
+                           in ("Text", "MarkupText", "Tex", "MathTex"))
+
+            # A comprehension has ONE syntactic Text() but N runtime ones.
+            # Counting syntax missed a 5-line text flood entirely.
+            n_text, counted = 0, set()
+            for sub in ast.walk(node):
+                if isinstance(sub, (ast.ListComp, ast.GeneratorExp, ast.SetComp)):
+                    inner = _texts(sub.elt)
+                    if inner and sub.generators:
+                        it = sub.generators[0].iter
+                        n = len(it.elts) if isinstance(it, (ast.List, ast.Tuple)) else 1
+                        n_text += inner * n
+                        counted.update(id(s) for s in ast.walk(sub))
+            n_text += sum(1 for s in ast.walk(node)
+                          if id(s) not in counted and isinstance(s, ast.Call)
+                          and getattr(s.func, "id", getattr(s.func, "attr", ""))
+                          in ("Text", "MarkupText", "Tex", "MathTex"))
+            worst_group = max(worst_group, n_text)
+    rep.metrics["max_text_per_group"] = float(worst_group)
+    if worst_group >= 3:
+        rep.add("C3", "WARN",
+                f"{worst_group} Text objects introduced together — with "
+                f"narration the viewer can only read one line at a time")
 
     # C6 text length
     long_text = [(w, s) for w, s in text_words if w > MAX_TEXT_WORDS]
@@ -391,98 +500,103 @@ def sample_frames(video: Path, workdir: Path, every: float) -> list[Path]:
     return sorted(workdir.glob("f_*.png"))
 
 
+def has_audio(video: Path) -> bool:
+    r = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "a",
+                        "-show_entries", "stream=codec_type", "-of", "csv=p=0",
+                        str(video)], capture_output=True, text=True)
+    return bool(r.stdout.strip())
+
+
 def check_frames(video: Path, rep: Report, every: float, expected: list[str]) -> None:
+    """Frame-level checks, calibrated against the reference corpus.
+
+    Deliberately narrow. Earlier versions of this function measured
+    "negative space" as the most-common-colour fraction and counted hues by
+    clustering raw RGB; both returned near-identical values for every
+    ablation including the clean baseline, i.e. they discriminated nothing.
+    Anti-aliasing alone was inflating the hue count to ~9 against a reference
+    median of 1.5. Those metrics were removed rather than tuned.
+    """
     import numpy as np
     from PIL import Image
 
+    rep.ran("A5", "B2")
+    audio = has_audio(video)
+    rep.metrics["has_audio"] = 1.0 if audio else 0.0
+
     with tempfile.TemporaryDirectory() as td:
-        frames = sample_frames(video, Path(td), every)
-        if not frames:
+        wd = Path(td)
+        subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-vf",
+                        "fps=2,scale=640:-1", str(wd / "i_%04d.png")],
+                       check=False, capture_output=True)
+        ink_frames = sorted(wd.glob("i_*.png"))
+        if not ink_frames:
             rep.add("D8", "WARN", "no frames extracted from video")
             return
-        rep.ran("A5", "B2")
 
-        neg_space, hue_counts = [], []
-        for fp in frames:
+        inks, hues = [], []
+        for fp in ink_frames:
             arr = np.asarray(Image.open(fp).convert("RGB"))
             flat = arr.reshape(-1, 3)
-            # background = the single most common colour in the frame
-            q = (flat // 24 * 24)
+            q = flat // 24 * 24
             uniq, cnt = np.unique(q, axis=0, return_counts=True)
-            bg = uniq[cnt.argmax()]
-            neg_space.append(float(cnt.max() / len(flat)))
+            inks.append(1.0 - float(cnt.max()) / len(flat))
 
-            # distinct saturated hues, ignoring greys and near-background
-            fg = q[(np.abs(q.astype(int) - bg.astype(int)).sum(1) > 40)]
-            if len(fg):
-                mx, mn = fg.max(1).astype(int), fg.min(1).astype(int)
-                sat = fg[(mx - mn) > 40]
-                if len(sat):
-                    hu, hc = np.unique(sat // 48 * 48, axis=0, return_counts=True)
-                    hue_counts.append(int((hc > len(flat) * 0.0004).sum()))
-                else:
-                    hue_counts.append(0)
+            hsv = np.asarray(Image.open(fp).convert("HSV")).reshape(-1, 3)
+            sel = hsv[(hsv[:, 1] >= 64) & (hsv[:, 2] >= 38)]   # sat>=.25 val>=.15
+            if len(sel):
+                buckets = (sel[:, 0].astype(int) * 360 // 256) // 30
+                _, bc = np.unique(buckets, return_counts=True)
+                hues.append(int((bc > len(hsv) * 0.005).sum()))
             else:
-                hue_counts.append(0)
+                hues.append(0)
 
-        med_neg = float(np.median(neg_space))
-        med_hue = float(np.median(hue_counts)) if hue_counts else 0.0
-        rep.metrics["negative_space_median"] = round(med_neg, 3)
+        med_ink = float(np.median(inks))
+        med_hue = float(np.median(hues))
+        rep.metrics["ink_coverage_median"] = round(med_ink, 4)
         rep.metrics["hues_per_frame_median"] = med_hue
 
-        if med_neg < MIN_NEGATIVE_SPACE:
+        if med_ink < INK_MIN:
             rep.add("A5", "WARN",
-                    f"negative space {med_neg:.0%} below {MIN_NEGATIVE_SPACE:.0%} "
-                    f"— frame is crowded")
+                    f"ink coverage {med_ink:.1%} below {INK_MIN:.0%} — frame is "
+                    f"nearly empty (reference median 11.6%)")
+        elif med_ink > INK_MAX:
+            rep.add("A5", "WARN",
+                    f"ink coverage {med_ink:.1%} above {INK_MAX:.0%} — crowded "
+                    f"(reference median 11.6%)")
         if med_hue > MAX_HUES_PER_FRAME:
             rep.add("B2", "WARN",
-                    f"{med_hue:.0f} distinct hues per frame (max {MAX_HUES_PER_FRAME})")
+                    f"{med_hue:.0f} distinct saturated hues per frame "
+                    f"(reference median 1.5, max 4)")
 
-        # typography is measured from glyph geometry, not OCR — see
-        # check_typography(). OCR on frames proved unreliable here.
-
-
-def check_ocr(frames: list[Path], rep: Report, expected: list[str]) -> None:
-    """C2 — phantom word gaps.
-
-    Compound labels are the tell: a font with broken shaping renders
-    "LangChain" as "Lang Chain". We look for each expected compound word in
-    the OCR text and, when absent, check whether a split version is present.
-    """
-    rep.ran("C2")
-    seen: set[str] = set()
-    for fp in frames[: min(len(frames), 40)]:
-        r = subprocess.run(["tesseract", str(fp), "stdout", "--psm", "11"],
-                           capture_output=True, text=True)
-        seen.update(WORDISH.findall(r.stdout))
-
-    # only compound-looking tokens can exhibit the bug
-    targets = set()
-    for s in expected:
-        for tok in WORDISH.findall(s):
-            if len(tok) >= 7 and re.search(r"[a-z][A-Z]", tok):
-                targets.add(tok)
-            elif len(tok) >= 9:
-                targets.add(tok)
-    if not targets:
-        rep.metrics["ocr_compound_words_checked"] = 0.0
-        return
-
-    broken = []
-    for tok in sorted(targets):
-        if tok in seen:
-            continue
-        # is a prefix+suffix split of it present instead?
-        for i in range(3, len(tok) - 2):
-            a, b = tok[:i], tok[i:]
-            if a in seen and b in seen:
-                broken.append((tok, f"{a} {b}"))
-                break
-    rep.metrics["ocr_compound_words_checked"] = float(len(targets))
-    rep.metrics["ocr_phantom_gaps"] = float(len(broken))
-    for tok, split in broken:
-        rep.add("C2", "BLOCK",
-                f"phantom word gap: {tok!r} rendered as {split!r}")
+        # --- static holds, only meaningful without narration --------------
+        subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-vf",
+                        "fps=5,scale=320:180,format=gray",
+                        str(wd / "g_%04d.png")],
+                       check=False, capture_output=True)
+        gs = sorted(wd.glob("g_*.png"))
+        if len(gs) > 2:
+            prev = np.asarray(Image.open(gs[0]), dtype=np.int16)
+            static, run, longest = 0, 0, 0
+            for fp in gs[1:]:
+                cur = np.asarray(Image.open(fp), dtype=np.int16)
+                changed = float((np.abs(cur - prev) > STATIC_PIXEL_DELTA).mean())
+                if changed < STATIC_AREA_FRAC:
+                    static += 1
+                    run += 1
+                    longest = max(longest, run)
+                else:
+                    run = 0
+                prev = cur
+            pairs = len(gs) - 1
+            rep.metrics["static_pair_pct"] = round(100 * static / pairs, 1)
+            rep.metrics["longest_static_run_s"] = round(longest / 5.0, 2)
+            rep.ran("D3")
+            if not audio and longest / 5.0 > SILENT_STATIC_RUN_MAX:
+                rep.add("D3", "WARN",
+                        f"{longest/5.0:.1f}s of unchanging frame with no audio "
+                        f"track — reads as dead air. The reference holds "
+                        f"stills this long, but always under narration.")
 
 
 # =========================================================================

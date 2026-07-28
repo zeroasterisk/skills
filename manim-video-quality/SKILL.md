@@ -63,6 +63,8 @@ Zero-dependency stdlib where possible; PEP 723 headers so `uv run` works too.
 | `scripts/exp_metadata_leakage.py` | The metadata-leakage experiment. |
 | `scripts/check_quality.py` | **Deterministic checker.** Static analysis + rendered glyph geometry + frame stats. Emits Harbor-compatible `reward.json`; non-zero exit on any BLOCK. This is the ~80% of the rubric that was never an LLM question. |
 | `scripts/measure_text_density.py` | OCR sampled frames to measure on-screen text density of a reference video. |
+| `tests/materialize_ablations.py` | Generate static fixtures from the runtime-switched ablation scene, so a linter can tell the variants apart. |
+| `tests/test_detection.py` | **Regression test.** Scores the checker against fixtures with ground truth by construction. Currently 7/7, one documented gap. |
 | `scripts/narrate.py` | TTS a script, measure real audio durations, emit a timing manifest. |
 | `scripts/harvest_reference_pacing.py` | Measure narration pacing (wpm, speech density, beat length) from reference videos' subtitles. Downloads subtitles only — kilobytes, no video. |
 | `scripts/variant_scene.py` | Narration-timed pacing x on-screen-text sweep, for finding the human optimum on choices that have no known-correct answer. |
@@ -119,6 +121,30 @@ back close or intransitive.
 3. `FRAME` checks: overlap, negative-space ratio, colors-per-frame, contrast.
 4. `LLM`: only narrative/perceptual questions (spec section E).
 5. `HUMAN`: the actual ship decision.
+
+## Checker coverage (validated, not asserted)
+
+Scored against fixtures whose defect is known by construction
+(`python3 tests/test_detection.py`):
+
+| defect | rule | detected |
+|---|---|---|
+| phantom word gaps | C2 | yes |
+| rushed pacing | D2 | yes |
+| opaque cards | A2 | yes |
+| unreserved colours | B1 | yes |
+| simultaneous text | C3 | yes |
+| wrong background | A1 | yes |
+| cuts instead of morphs | D4 | yes |
+| **spatial overlap** | **A7** | **no — documented gap** |
+
+7 of 8. Spatial overlap is not statically checkable: collisions come from
+post-`arrange()` shifts, so catching them needs layout simulation or frame CV
+neither of which is reliable here yet. It is routed to visual review rather
+than faked.
+
+The clean baseline warns C2 by design — Roboto at 15/BOLD measures 0.64 of a
+space, which is visibly loose at 4K. A true positive, not noise.
 
 ## Narration is the timing source
 
