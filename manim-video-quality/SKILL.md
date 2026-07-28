@@ -61,6 +61,9 @@ Zero-dependency stdlib where possible; PEP 723 headers so `uv run` works too.
 | `scripts/score_ranking.py` | Bradley-Terry ranking from the judgments, with honesty diagnostics: coverage, graph connectivity, intransitive triads, position bias. |
 | `scripts/ablation_scene.py` | Dataset B generator — one scene, 8 injectable defects, one flag each. |
 | `scripts/exp_metadata_leakage.py` | The metadata-leakage experiment. |
+| `scripts/check_quality.py` | **Deterministic checker.** Static analysis + rendered glyph geometry + frame stats. Emits Harbor-compatible `reward.json`; non-zero exit on any BLOCK. This is the ~80% of the rubric that was never an LLM question. |
+| `scripts/measure_text_density.py` | OCR sampled frames to measure on-screen text density of a reference video. |
+| `scripts/narrate.py` | TTS a script, measure real audio durations, emit a timing manifest. |
 | `scripts/harvest_reference_pacing.py` | Measure narration pacing (wpm, speech density, beat length) from reference videos' subtitles. Downloads subtitles only — kilobytes, no video. |
 | `scripts/variant_scene.py` | Narration-timed pacing x on-screen-text sweep, for finding the human optimum on choices that have no known-correct answer. |
 
@@ -73,6 +76,10 @@ python3 scripts/judge_ui.py --corpus ./corpus
 
 # 3. rank + diagnose
 python3 scripts/score_ranking.py ./corpus/judgments.json
+
+# deterministic checks — run these before ever invoking a model
+python3 scripts/check_quality.py --scene scene.py --video render.mp4 \
+        --reward /logs/verifier/reward.json
 
 # learn pacing from reference videos (subtitles only)
 python3 scripts/harvest_reference_pacing.py --list refs.txt --out ./ref_pacing
@@ -190,12 +197,20 @@ reproduces the reference pacing profile.
 
 ## Hard-won facts
 
-- **Font:** macOS `.ttc` collections (Helvetica Neue, Arial, Times) inject
-  phantom spaces inside compound words in ManimCE/Pango at some size+weight
-  combos — `LangChain` → `Lang Chain`, `Pydantic` → `Pyd antic`. **Roboto is
-  clean.** Always spot-check a new font by rendering
-  `LangChain Pydantic OpenClaw BigQuery Antigravity` at your actual node size
-  and weight, at high resolution.
+- **Typography:** there is no such thing as a safe font, only a safe
+  (font, size, weight) *combination*. Measured worst intra-word gap as a
+  fraction of a real space:
+
+  | | 15 BOLD | 20 BOLD | 20 NORMAL | 28 BOLD |
+  |---|---|---|---|---|
+  | Roboto | 0.64 | 0.70 | **0.78** | 0.39 |
+  | Helvetica Neue | **1.03** | 0.42 | 0.35 | 0.55 |
+
+  Helvetica Neue at 15/BOLD renders `LangChain` as `Lang Chain`; the same
+  font at 20/BOLD is fine, and Roboto at 20/NORMAL is *worse* than it. So do
+  not maintain a font blocklist — run `scripts/check_quality.py`, which
+  measures the exact combinations your scene uses. ≥0.75 of a space reads as
+  two words; ≤0.6 is merely loose kerning.
 - **Pacing:** software-demo timing (0.2–0.6s) reads as frantic for idea-first
   explainer content. 1.5–3s for anything readable; 2–4s of stillness after a
   key beat.

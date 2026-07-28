@@ -60,8 +60,8 @@ be talked out of a verdict by a context file, and have no variance.
 
 | ID | Rule (creation) | Check (review) | Type | Sev |
 |---|---|---|---|---|
-| C1 | Font is Roboto (never a macOS `.ttc`: Helvetica Neue, Arial, Times) | Every `Text(font=…)` equals approved font | `SRC` | BLOCK |
-| C2 | **No phantom word gaps** | OCR each rendered label; normalized OCR text == source string (whitespace-sensitive) | `OCR` | BLOCK |
+| C1 | Font choice is justified by measurement, not by blocklist | see C2 — the font alone is not the unit of risk | `SRC` | INFO |
+| C2 | **No phantom word gaps** | Measure rendered glyph geometry per (font,size,weight): max intra-word gap ÷ real space width. ≥0.75 BLOCK, ≥0.60 WARN | `SRC` | BLOCK |
 | C3 | ≤ 1 text element introduced per beat | Count `Text` mobjects added per `self.play` | `SRC` | WARN |
 | C4 | Text appears *after* its visual resolves, never simultaneously | No `play()` containing both a `Text` creation and a non-text creation | `SRC` | WARN |
 | C5 | Any text on screen ≥ 1.5s | Per-text on-screen duration from source timeline | `SRC` | BLOCK |
