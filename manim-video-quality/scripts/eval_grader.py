@@ -294,12 +294,16 @@ def main() -> int:
     args = ap.parse_args()
 
     try:
+        import os
         from google import genai
         from google.genai import types
     except ImportError:
         sys.exit("pip install google-genai")
 
-    client = genai.Client()
+    if os.environ.get('GOOGLE_APPLICATION_CREDENTIALS'):
+        client = genai.Client(vertexai=True, project="alanblount-sandbox", location="us-central1")
+    else:
+        client = genai.Client()
 
     if args.corpus:
         return mode_detect(client, types, args)

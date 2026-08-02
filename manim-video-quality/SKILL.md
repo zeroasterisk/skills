@@ -35,10 +35,11 @@ the validation bars in `reference/gemini-video-analysis.md` §8.
 
 ## Reference files
 
-| File | Use |
+|| File | Use |
 |---|---|
 | `reference/quality-spec.md` | **The core.** Every quality rule with a check, typed `SRC`/`FRAME`/`OCR`/`LLM`/`HUMAN`. Read as creation rules when building; as probes when reviewing. |
 | `reference/gemini-video-analysis.md` | How to run Gemini video analysis so the result is valid — 1 FPS limits, metadata stripping, forced choice, counterbalancing, blinding, banned context phrases, validation bars. |
+| `reference/multi-model-evaluation.md` | **Multi-Model Grader Blindness Map.** Head-to-head comparison of Gemini 2.5 vs Claude 3.5/Opus 5 showing Claude's 75% accuracy. |
 | `reference/storytelling-vocabulary.md` | Shared terms: beat, vignette, pillar, aha moment, payoff, persistence contract, chaos-to-order arc, morph, camera reveal, reserved color, card-itis. Use these in feedback so iterations converge. |
 | `reference/style-3b1b-google.visual-style.md` | A concrete `visual-style.md` instance: 3Blue1Brown grammar with Google brand colors reserved for semantic meaning. Swap for your own style file; the spec and datasets are style-agnostic. |
 
@@ -67,7 +68,9 @@ Zero-dependency stdlib where possible; PEP 723 headers so `uv run` works too.
 | `tests/test_detection.py` | **Regression test.** Scores the checker against fixtures with ground truth by construction. Currently 7/7, one documented gap. |
 | `scripts/narrate.py` | TTS a script, measure real audio durations, emit a timing manifest. |
 | `scripts/harvest_reference_pacing.py` | Measure narration pacing (wpm, speech density, beat length) from reference videos' subtitles. Downloads subtitles only — kilobytes, no video. |
-| `scripts/variant_scene.py` | Narration-timed pacing x on-screen-text sweep, for finding the human optimum on choices that have no known-correct answer. |
+|| `scripts/variant_scene.py` | Narration-timed pacing x on-screen-text sweep, for finding the human optimum on choices that have no known-correct answer. |
+|| `scripts/eval_grader.py` | **Gemini video-native grader.** Runs forced-choice queries on raw defect clips to evaluate blindness. |
+|| `scripts/eval_grader_claude.py` | **Claude keyframe-based grader.** Runs base64 keyframe-based forced-choice queries to evaluate spacing, card-itis, and layout. |
 
 ```bash
 # 1. build a blinded, normalized corpus

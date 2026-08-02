@@ -54,8 +54,12 @@ def fired(fixture: Path) -> set[str]:
     r = subprocess.run([sys.executable, str(CHECK), "--scene", str(fixture),
                         "--json"], capture_output=True, text=True)
     try:
-        d = json.loads(r.stdout)
+        text = r.stdout
+        if "{" in text:
+            text = text[text.find("{"):]
+        d = json.loads(text)
     except json.JSONDecodeError:
+        print(f"DEBUG: JSONDecodeError on {fixture.name}. Raw stdout:\n{r.stdout}")
         return set()
     return {f["rule"] for f in d["findings"]
             if f["severity"] in ("BLOCK", "WARN")}
