@@ -113,12 +113,27 @@ for step in ['STEP 1', 'STEP 2', 'STEP 3']:
 - **Tab 2: "The Complete Suite"**: Multi-scenario progressive disclosure, opt-out handling, and E2E verification.
 - **Companion Artifact**: High-contrast, zoomable Mermaid.js decision flowchart.
 
+### Step 6: Automated Skill Verification
+Run the built-in unit and integration test suite to verify PTY geometry, prompt synchronization, redaction, and `.cast` schema validity:
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+---
+
+## 📚 Advanced Documentation & Research
+
+- [Competitive Analysis & Ecosystem Patterns](file:///usr/local/google/home/alanblount/Workspaces/skills/asciinema-explainer-walkthroughs/docs/competitive_analysis_and_patterns.md): In-depth comparison of Asciinema v2/v3, Charm VHS, Pexpect, `agg`, and high-value patterns.
+- [Lessons Learned & Common Pitfalls](file:///usr/local/google/home/alanblount/Workspaces/skills/asciinema-explainer-walkthroughs/docs/lessons_learned_and_pitfalls.md): Guidance on avoiding prompt race conditions, dead air, path leaks, and geometry reflow.
+- [Experiment Roadmap & Validation Plan](file:///usr/local/google/home/alanblount/Workspaces/skills/asciinema-explainer-walkthroughs/docs/roadmap_and_experiments.md): Multi-phase plan for typing jitter, markers, automated test harnesses, and GIF export.
+
 ---
 
 ## 💡 Best Practices & Hard-Earned Lessons
 
 1. **Pre-Authenticate the Basics**: Keep 101 walkthroughs zero-friction. Don't distract beginners with OAuth errors or missing keys in introductory demos.
-2. **Never Hardcode Machine Paths**: In skill files, always use relative repo paths (e.g. `./plugin/scripts/ard_resolver.py` rather than `/usr/local/google/home/...`).
+2. **Never Hardcode Machine Paths**: In skill files and demo scripts, always use relative repository paths (e.g. `./scripts/resolver.py` rather than absolute user home paths).
 3. **Always Add a Post-Command Reading Pause**: Set `pause_after=2.5` to `4.0` seconds so human viewers have time to read model output before the next prompt types.
 4. **Lock Terminal Geometry**: Always fix rows and columns in `pty.openpty()` (112x34). Unset geometry causes text wrapping discrepancies across different viewing screens.
 5. **Redact Sensitive Strings Before Export**: Never let raw OAuth client secrets, refresh tokens, or bearer keys hit `.cast` files.
+6. **Use Native Chapter Markers**: Call `rec.send_turn(..., marker_label="Step 1: Init")` to enable scrubber dots and `[` / `]` keyboard navigation in the player.
