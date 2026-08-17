@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Explainer & Interactive Demo</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/asciinema-player@3.8.2/dist/bundle/asciinema-player.css">
+  <style>
+    :root {
+      --bg: #0b1120;
+      --card-bg: #111827;
+      --card-border: #1f2937;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --primary: #38bdf8;
+      --accent: #818cf8;
+      --success: #34d399;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+    header { text-align: center; margin-bottom: 36px; }
+    h1 { font-size: 2.2rem; margin: 0 0 10px; color: #fff; }
+    .subtitle { font-size: 1.1rem; color: var(--text-muted); max-width: 780px; margin: 0 auto 20px; }
+    
+    /* Tab Navigation */
+    .tab-nav { display: flex; justify-content: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+    .tab-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 12px 24px;
+      border-radius: 9999px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .tab-btn:hover { background: #1e293b; color: #fff; border-color: rgba(56, 189, 248, 0.4); }
+    .tab-btn.active {
+      background: rgba(56, 189, 248, 0.16);
+      color: var(--primary);
+      border-color: var(--primary);
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
+    }
+    
+    /* Player Card */
+    .player-card {
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
+      margin-bottom: 32px;
+    }
+
+    /* Grid & Cards */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 32px; }
+    @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+    .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 24px; }
+    .card h2 { font-size: 1.25rem; margin: 0 0 14px; color: var(--primary); }
+    
+    /* Zoomable Flowchart Toolbar */
+    .chart-toolbar { display: flex; gap: 8px; align-items: center; }
+    .zoom-btn {
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--primary);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .zoom-btn:hover { background: rgba(56, 189, 248, 0.25); color: #fff; }
+    .mermaid svg { font-size: 16px !important; max-width: none !important; height: auto !important; }
+    
+    footer { text-align: center; margin-top: 40px; color: var(--text-muted); font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Interactive Agent Explainer & Demo</h1>
+      <p class="subtitle">Autonomous AI agent walkthrough recorded with synchronous PTY and zero latency noise.</p>
+    </header>
+
+    <!-- Tab Switcher -->
+    <div class="tab-nav">
+      <button id="btn-tab-basics" class="tab-btn active" onclick="switchTab('basics')">⚡ The Basics (101)</button>
+      <button id="btn-tab-complete" class="tab-btn" onclick="switchTab('complete')">🚀 The Complete Suite</button>
+    </div>
+
+    <!-- Asciinema Player Section -->
+    <div class="player-card">
+      <div id="player"></div>
+    </div>
+
+    <!-- Content Sections -->
+    <div id="tab-basics-content">
+      <div class="card">
+        <h2>⚡ The Basics Walkthrough</h2>
+        <p>Step-by-step breakdown of how the tool or agent initializes, searches, configures, and executes.</p>
+      </div>
+    </div>
+
+    <div id="tab-complete-content" style="display:none;">
+      <div class="card">
+        <h2>🚀 The Complete E2E Suite</h2>
+        <p>Full multi-scenario testing suite verifying all edge cases, fallbacks, and error conditions.</p>
+      </div>
+    </div>
+
+    <!-- Zoomable Flowchart Card -->
+    <div class="card" style="margin-top:24px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h2 style="margin:0;">🧭 Decision Flowchart</h2>
+        <div class="chart-toolbar">
+          <button class="zoom-btn" onclick="zoomChart(0.15)">🔍 +</button>
+          <button class="zoom-btn" onclick="zoomChart(-0.15)">🔍 −</button>
+          <button class="zoom-btn" onclick="resetChartZoom()">↺ Reset</button>
+          <button class="zoom-btn" onclick="toggleFullscreenChart()">⛶ Fullscreen</button>
+        </div>
+      </div>
+      <div id="flowchart-container" style="background:rgba(15,23,42,0.85); border-radius:8px; padding:20px; overflow:auto; max-height:800px;">
+        <div id="chart-zoom-target" style="min-width:900px; display:flex; justify-content:center;">
+          <pre class="mermaid">
+flowchart TD
+    A["Start"] --> B{"Option A or B?"}
+    B -- "Option A" --> C["Execute Path A"]
+    B -- "Option B" --> D["Execute Path B"]
+          </pre>
+        </div>
+      </div>
+    </div>
+
+    <footer>Generated with asciinema-explainer-walkthroughs skill</footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/asciinema-player@3.8.2/dist/bundle/asciinema-player.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    let currentPlayer = null;
+    function loadPlayer(castFile) {
+      const playerDiv = document.getElementById('player');
+      playerDiv.innerHTML = '';
+      currentPlayer = AsciinemaPlayer.create(castFile, playerDiv, {
+        autoPlay: true, loop: false, speed: 1.0, theme: 'dracula', fit: 'width'
+      });
+    }
+
+    function switchTab(tab) {
+      const btnBasics = document.getElementById('btn-tab-basics');
+      const btnComplete = document.getElementById('btn-tab-complete');
+      const contentBasics = document.getElementById('tab-basics-content');
+      const contentComplete = document.getElementById('tab-complete-content');
+
+      if (tab === 'basics') {
+        btnBasics.classList.add('active');
+        btnComplete.classList.remove('active');
+        contentBasics.style.display = 'block';
+        contentComplete.style.display = 'none';
+        loadPlayer('./demo-basics.cast');
+      } else {
+        btnComplete.classList.add('active');
+        btnBasics.classList.remove('active');
+        contentBasics.style.display = 'none';
+        contentComplete.style.display = 'block';
+        loadPlayer('./demo.cast');
+      }
+    }
+
+    // Default player load
+    loadPlayer('./demo-basics.cast');
+
+    let currentZoom = 1.0;
+    function zoomChart(delta) {
+      currentZoom = Math.min(Math.max(0.6, currentZoom + delta), 2.2);
+      const target = document.getElementById('chart-zoom-target');
+      if (target) target.style.transform = `scale(${currentZoom})`;
+    }
+    function resetChartZoom() {
+      currentZoom = 1.0;
+      const target = document.getElementById('chart-zoom-target');
+      if (target) target.style.transform = 'scale(1.0)';
+    }
+    function toggleFullscreenChart() {
+      const container = document.getElementById('flowchart-container');
+      if (!document.fullscreenElement) {
+        if (container.requestFullscreen) container.requestFullscreen();
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+    }
+
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      flowchart: { useMaxWidth: false, htmlLabels: true }
+    });
+  </script>
+</body>
+</html>
