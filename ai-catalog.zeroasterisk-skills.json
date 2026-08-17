@@ -9,7 +9,7 @@
       "identifier": "urn:air:github.com:zeroasterisk:aaif-notebooklm-sync",
       "displayName": "aaif-notebooklm-sync",
       "type": "application/ai-skill+md",
-      "description": "Synchronizes all AAIF Working Group (wg-*) and foundation repositories, meeting minutes, charters, monthly reports, deliverables, reference architectures, and open pull requests from https://github.com/aaif/* into Google NotebookLM (https://notebooklm.google.com/notebook/3f4ea1ea-fe19-4afe-8cbe-ac5f9950412d). Features full state-based lifecycle management (skip unchanged, update modified, add new, remove deleted/merged) with gcert LOAS validation and an automated 7-day freshness check on session startup.",
+      "description": "Synchronizes all AAIF Working Group (wg-*) and foundation repositories, meeting minutes, charters, monthly reports, deliverables, reference architectures, and open pull requests from https://github.com/aaif/* into Google NotebookLM (https://notebooklm.google.com/notebook/3f4ea1ea-fe19-4afe-8cbe-ac5f9950412d). Features full state-based lifecycle management (skip unchanged, update modified, add new, remove deleted/merged) with gcert LOAS validation, bi-weekly lookback synthesis, and automated public GitHub Gist reporting.",
       "tags": [],
       "metadata": {
         "source": "zeroasterisk/skills",
