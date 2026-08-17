@@ -94,6 +94,9 @@ tags = ["ui", "react", "typescript", "frontend"]
 [skill.gcloud]
 tags = ["gcloud", "devops", "google-cloud"]
 
+[skill.asciinema-explainer-walkthroughs]
+tags = ["experiment", "asciinema", "demo", "walkthrough", "documentation", "pty", "recording"]
+
 # Example: disable a discovered skill without touching include/exclude
 # [skill.some-skill]
 # active = false

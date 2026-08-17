@@ -6,6 +6,42 @@
   },
   "entries": [
     {
+      "identifier": "urn:air:github.com:zeroasterisk:aaif-notebooklm-sync",
+      "displayName": "aaif-notebooklm-sync",
+      "type": "application/ai-skill+md",
+      "description": "Synchronizes all AAIF Working Group (wg-*) and foundation repositories, meeting minutes, charters, monthly reports, deliverables, reference architectures, and open pull requests from https://github.com/aaif/* into Google NotebookLM (https://notebooklm.google.com/notebook/3f4ea1ea-fe19-4afe-8cbe-ac5f9950412d). Features full state-based lifecycle management (skip unchanged, update modified, add new, remove deleted/merged) with gcert LOAS validation and an automated 7-day freshness check on session startup.",
+      "tags": [],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "aaif-notebooklm-sync"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/aaif-notebooklm-sync"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:asciinema-explainer-walkthroughs",
+      "displayName": "asciinema-explainer-walkthroughs",
+      "type": "application/ai-skill+md",
+      "description": "Create production-grade, synchronous terminal recordings (asciinema .cast) and interactive tabbed web walkthroughs for AI agents, developer tools, and CLI journeys. Includes PTY prompt-synchronization, intelligent time-compression, secret redaction, scenario banner structuring, and zoomable Mermaid flowchart companions.",
+      "tags": [
+        "experiment",
+        "asciinema",
+        "demo",
+        "walkthrough",
+        "documentation",
+        "pty",
+        "recording"
+      ],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "asciinema-explainer-walkthroughs"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/asciinema-explainer-walkthroughs"
+    },
+    {
       "identifier": "urn:air:github.com:zeroasterisk:cuj-screenshots",
       "displayName": "cuj-screenshots",
       "type": "application/ai-skill+md",
@@ -44,6 +80,20 @@
       "url": "https://github.com/zeroasterisk/skills/tree/main/elixir-best-practices"
     },
     {
+      "identifier": "urn:air:github.com:zeroasterisk:engineering-discipline",
+      "displayName": "engineering-discipline",
+      "type": "application/ai-skill+md",
+      "description": "Full engineering lifecycle \u2014 define what done means, debug systematically, verify through real surfaces before claiming completion.",
+      "tags": [],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "engineering-discipline"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/engineering-discipline"
+    },
+    {
       "identifier": "urn:air:github.com:zeroasterisk:intent-refinement",
       "displayName": "intent-refinement",
       "type": "application/ai-skill+md",
@@ -75,6 +125,20 @@
         "relativePath": "manim-video-quality"
       },
       "url": "https://github.com/zeroasterisk/skills/tree/main/manim-video-quality"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:opm-tracking",
+      "displayName": "opm-tracking",
+      "type": "application/ai-skill+md",
+      "description": "Automates creating and lifecycle tracking of customer meeting Expert Requests in Salesforce (Vector Lightning) for Cloud AI OPM. Use when logging customer engagements, filing meeting records, or driving browser automation for Salesforce Expert Request creation and status completion.",
+      "tags": [],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "opm-tracking"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/opm-tracking"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:storybook",
@@ -113,94 +177,6 @@
         "relativePath": "ui-developer"
       },
       "url": "https://github.com/zeroasterisk/skills/tree/main/ui-developer"
-    },
-    {
-      "identifier": "urn:air:github.com:google:agent-platform-deploy",
-      "displayName": "agent-platform-deploy",
-      "type": "application/ai-skill+md",
-      "description": "Deploy open models or custom weights from Model Garden to Agent Platform endpoints, check deployment status, verify serving endpoints, or clean up resources by undeploying models and deleting endpoints. Use when asked to deploy models on Agent Platform, list available Model Garden models, check if a model is deployable, query deployment cost, troubleshoot deployment errors (like quota limits), or undeploy/clean up endpoints. Also use when copying and deploying a 1P Tuned Model. Don't use for public Vertex AI deployments (use the `vertex-deploy` skill) or for running model evaluations (use the `agent-platform-eval` skill).",
-      "tags": [],
-      "metadata": {
-        "source": "google/skills",
-        "audience": "public",
-        "agents": "cloudcode",
-        "relativePath": "cloud/agent-platform-deploy"
-      },
-      "url": "https://github.com/google/skills/tree/main/skills/cloud/agent-platform-deploy"
-    },
-    {
-      "identifier": "urn:air:github.com:google:bigquery-basics",
-      "displayName": "bigquery-basics",
-      "type": "application/ai-skill+md",
-      "description": "Manages datasets, tables, and jobs in BigQuery. Use when you need to interact with BigQuery, run SQL queries, manage BigQuery resources (datasets, tables, views), or perform basic data ingestion and analysis.",
-      "tags": [],
-      "metadata": {
-        "source": "google/skills",
-        "audience": "public",
-        "agents": "cloudcode",
-        "relativePath": "cloud/bigquery-basics"
-      },
-      "url": "https://github.com/google/skills/tree/main/skills/cloud/bigquery-basics"
-    },
-    {
-      "identifier": "urn:air:github.com:google:cloud-run-basics",
-      "displayName": "cloud-run-basics",
-      "type": "application/ai-skill+md",
-      "description": "Manages Cloud Run services, jobs, and worker pools. Use when you need to deploy applications responding to HTTP requests (services), run event-triggered or scheduled tasks (jobs), or handle always-on pull-based background processing (worker pools).",
-      "tags": [],
-      "metadata": {
-        "source": "google/skills",
-        "audience": "public",
-        "agents": "cloudcode",
-        "relativePath": "cloud/cloud-run-basics"
-      },
-      "url": "https://github.com/google/skills/tree/main/skills/cloud/cloud-run-basics"
-    },
-    {
-      "identifier": "urn:air:github.com:google:gcloud",
-      "displayName": "gcloud",
-      "type": "application/ai-skill+md",
-      "description": "Interacts with Google Cloud services using the gcloud CLI safely and efficiently. Covers command validation, data reduction, safety guardrails with a denylist, and workflows for discovery and investigation. You MUST read this skill before invoking any gcloud command. Use when managing cloud resources, querying configurations, or troubleshooting issues via gcloud. Don't use when writing or debugging Google Cloud client library code or raw REST/gRPC API interactions.",
-      "tags": [
-        "gcloud",
-        "devops",
-        "google-cloud"
-      ],
-      "metadata": {
-        "source": "google/skills",
-        "audience": "public",
-        "agents": "cloudcode",
-        "relativePath": "cloud/gcloud"
-      },
-      "url": "https://github.com/google/skills/tree/main/skills/cloud/gcloud"
-    },
-    {
-      "identifier": "urn:air:github.com:google:gemini-agents-api",
-      "displayName": "gemini-agents-api",
-      "type": "application/ai-skill+md",
-      "description": "Manages custom Agent resources on Gemini Enterprise Agent Platform. Use when the user wants to programmatically create, configure, list, update, or delete stateful, server-managed Agent resources (including mounting files, skills, and tools) before executing conversations.",
-      "tags": [],
-      "metadata": {
-        "source": "google/skills",
-        "audience": "public",
-        "agents": "cloudcode",
-        "relativePath": "cloud/gemini-agents-api"
-      },
-      "url": "https://github.com/google/skills/tree/main/skills/cloud/gemini-agents-api"
-    },
-    {
-      "identifier": "urn:air:github.com:google:gemini-api",
-      "displayName": "gemini-api",
-      "type": "application/ai-skill+md",
-      "description": "Use when the user asks about using Gemini in an enterprise environment or explicitly mentions Vertex AI, Google Cloud, or Agent Platform. Guides the usage of the Gemini API on Agent Platform with the Google Gen AI SDK. Covers SDK usage (Python, JS/TS, Go, Java, C#), capabilities like multimodal inputs, tools, media generation, caching, batch prediction, and Live API.",
-      "tags": [],
-      "metadata": {
-        "source": "google/skills",
-        "audience": "public",
-        "agents": "cloudcode",
-        "relativePath": "cloud/gemini-api"
-      },
-      "url": "https://github.com/google/skills/tree/main/skills/cloud/gemini-api"
     }
   ]
 }

@@ -6,6 +6,42 @@
   },
   "entries": [
     {
+      "identifier": "urn:air:github.com:zeroasterisk:aaif-notebooklm-sync",
+      "displayName": "aaif-notebooklm-sync",
+      "type": "application/ai-skill+md",
+      "description": "Synchronizes all AAIF Working Group (wg-*) and foundation repositories, meeting minutes, charters, monthly reports, deliverables, reference architectures, and open pull requests from https://github.com/aaif/* into Google NotebookLM (https://notebooklm.google.com/notebook/3f4ea1ea-fe19-4afe-8cbe-ac5f9950412d). Features full state-based lifecycle management (skip unchanged, update modified, add new, remove deleted/merged) with gcert LOAS validation and an automated 7-day freshness check on session startup.",
+      "tags": [],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "aaif-notebooklm-sync"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/aaif-notebooklm-sync"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:asciinema-explainer-walkthroughs",
+      "displayName": "asciinema-explainer-walkthroughs",
+      "type": "application/ai-skill+md",
+      "description": "Create production-grade, synchronous terminal recordings (asciinema .cast) and interactive tabbed web walkthroughs for AI agents, developer tools, and CLI journeys. Includes PTY prompt-synchronization, intelligent time-compression, secret redaction, scenario banner structuring, and zoomable Mermaid flowchart companions.",
+      "tags": [
+        "experiment",
+        "asciinema",
+        "demo",
+        "walkthrough",
+        "documentation",
+        "pty",
+        "recording"
+      ],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "asciinema-explainer-walkthroughs"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/asciinema-explainer-walkthroughs"
+    },
+    {
       "identifier": "urn:air:github.com:zeroasterisk:cuj-screenshots",
       "displayName": "cuj-screenshots",
       "type": "application/ai-skill+md",
@@ -44,6 +80,20 @@
       "url": "https://github.com/zeroasterisk/skills/tree/main/elixir-best-practices"
     },
     {
+      "identifier": "urn:air:github.com:zeroasterisk:engineering-discipline",
+      "displayName": "engineering-discipline",
+      "type": "application/ai-skill+md",
+      "description": "Full engineering lifecycle \u2014 define what done means, debug systematically, verify through real surfaces before claiming completion.",
+      "tags": [],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "engineering-discipline"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/engineering-discipline"
+    },
+    {
       "identifier": "urn:air:github.com:zeroasterisk:intent-refinement",
       "displayName": "intent-refinement",
       "type": "application/ai-skill+md",
@@ -75,6 +125,20 @@
         "relativePath": "manim-video-quality"
       },
       "url": "https://github.com/zeroasterisk/skills/tree/main/manim-video-quality"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:opm-tracking",
+      "displayName": "opm-tracking",
+      "type": "application/ai-skill+md",
+      "description": "Automates creating and lifecycle tracking of customer meeting Expert Requests in Salesforce (Vector Lightning) for Cloud AI OPM. Use when logging customer engagements, filing meeting records, or driving browser automation for Salesforce Expert Request creation and status completion.",
+      "tags": [],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "opm-tracking"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/opm-tracking"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:storybook",
