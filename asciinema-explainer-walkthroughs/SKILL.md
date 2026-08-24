@@ -12,12 +12,13 @@ A proven engineering methodology and toolkit for creating crisp, high-signal, de
 ## 🎯 When to Use This Skill
 
 Use this skill whenever you need to:
-1. **Show Real Agent Behavior**: Demonstrate an AI agent (OpenCode, Claude Code, Gemini CLI, Cursor) solving tasks in real time without screen recording overhead.
-2. **Create Interactive Product / Spec Demos**: Build lightweight GitHub Pages demo players (`index.html`) featuring asciinema player tabs and zoomable Mermaid decision flowcharts.
+1. **Show Real Agent Behavior**: Demonstrate an AI agent (OpenCode, Claude Code, Gemini CLI, Cursor, ADK) solving tasks in real time without screen recording overhead or video compression artifacts.
+2. **Create Interactive Product / Spec Demos**: Build lightweight GitHub Pages / internal web demo players (`index.html`) featuring hot-swappable asciinema player tabs, interactive step chapters, and zoomable Mermaid decision flowcharts.
 3. **Verify Multi-Turn & Multi-Scenario Journeys**: Create both:
    - **"The Basics (101)"**: Slower, continuous step-by-step walkthrough zooming in on discovery, lookup, install, and usage.
    - **"The Complete Suite"**: Fast, automated multi-scenario test & verification run (e.g. 7/7 passing E2E scenarios).
 4. **Eliminate Non-Deterministic Latency**: Compress 10+ minutes of model thinking and container spin-up into punchy 2-3 minute videos while preserving human reading pauses.
+5. **Simplify Peer & Lead Human Review**: Provide reviewers with clickable chapter scrubbers, full-text searchable transcripts, and an interactive acceptance rubric with one-click sign-off summaries.
 
 ---
 
@@ -40,8 +41,8 @@ Naive terminal recording (`asciinema rec` in a live human session) fails for aut
                                    ▼
 ┌────────────────────────────────────────────────────────────────────────┐
 │                  Character-by-Character Typing Sim                     │
-│  - Realistic keystroke delays (0.025s - 0.035s per char)               │
-│  - Types prompts as a real human developer would in their workstation  │
+│  - Realistic keystroke delays with Gaussian jitter (0.025s - 0.035s)   │
+│  - Natural pauses on spaces, punctuation, and path delimiters          │
 └──────────────────────────────────┬─────────────────────────────────────┘
                                    │
                                    ▼
@@ -61,8 +62,8 @@ Naive terminal recording (`asciinema rec` in a live human session) fails for aut
                                    ▼
 ┌────────────────────────────────────────────────────────────────────────┐
 │                  Token & Secret Redaction Pipeline                     │
-│  - Intercepts OAuth browser callbacks and replaces codes with          │
-│    [REDACTED_CLIENT_ID] and [REDACTED_OAUTH_CODE]                      │
+│  - Intercepts OAuth tokens, PATs, Anthropic/OpenAI keys, and private   │
+│    key blocks with standardized [REDACTED_...] placeholders            │
 └──────────────────────────────────┬─────────────────────────────────────┘
                                    │
                                    ▼
@@ -78,43 +79,67 @@ Naive terminal recording (`asciinema rec` in a live human session) fails for aut
 ## 📂 Step-by-Step Workflow
 
 ### Step 1: Define Scenarios & Banners
-Create a `scripts/banner.sh` helper to output structured ANSI color box headers:
+Generate width-calibrated double-border ANSI banners using [scripts/banner.py](file:///usr/local/google/home/alanblount/Workspaces/skills/asciinema-explainer-walkthroughs/scripts/banner.py) or [scripts/banner_template.sh](file:///usr/local/google/home/alanblount/Workspaces/skills/asciinema-explainer-walkthroughs/scripts/banner_template.sh):
+
 ```bash
-./scripts/banner.sh 1  # STEP 1: Capability Search
-./scripts/banner.sh 2  # STEP 2: Catalog Lookup
+# Python CLI generator
+python3 scripts/banner.py --step 1 "Capability Search" "Agent queries catalog for matching tools" --color green
+
+# Or Bash wrapper
+./scripts/banner_template.sh 1
 ```
 
 ### Step 2: Write the Synchronous PTY Python Script
-Use the provided `scripts/pty_recorder_template.py`:
-- Configure target cols (112) and rows (34).
-- Define turns using `rec.send_turn(cmd, pause_after=3.0, char_delay=0.03)`.
-- Use `--continue` to preserve multi-turn agent conversation history.
+Use [scripts/pty_recorder_template.py](file:///usr/local/google/home/alanblount/Workspaces/skills/asciinema-explainer-walkthroughs/scripts/pty_recorder_template.py) to script the recording:
 
-### Step 3: Run & Compress Recording
-```bash
-python3 scripts/record_session.py
-# Produces demo.cast (compressed, synchronized, redacted)
-```
-
-### Step 4: Verify Content & Zero Errors
-Always programmatically verify the `.cast` output stream:
 ```python
-import json
-with open('demo.cast') as f:
-    text = ''.join(json.loads(l)[2] for l in f.readlines()[1:])
-assert 'Traceback' not in text
-assert 'No such file or directory' not in text
-for step in ['STEP 1', 'STEP 2', 'STEP 3']:
-    assert step in text
+from scripts.pty_recorder_template import SynchronousPTYRecorder
+
+rec = SynchronousPTYRecorder(cols=112, rows=34)
+rec.start()
+try:
+    # Step 1: Search & Discover
+    rec.execute_and_verify(
+        cmd="./scripts/banner.py --step 1 'Discovery' 'Search catalog' && echo 'Found 3 skills'",
+        expected_substrings=["Found 3 skills"],
+        marker_label="Step 1: Discovery",
+        pause_after=2.5,
+    )
+
+    # Step 2: Autonomous Execution
+    rec.execute_and_verify(
+        cmd="./scripts/banner.py --step 2 'Execute' 'Run agent' && python3 run_agent.py",
+        expected_substrings=["Success"],
+        forbidden_substrings=["Traceback", "FATAL"],
+        marker_label="Step 2: Execution",
+        pause_after=3.0,
+    )
+finally:
+    rec.stop()
+    rec.export(filepath="demo.cast", max_idle=2.5)
 ```
 
-### Step 5: Embed in 2-Tab Interactive Web Player (`index.html`)
-- **Tab 1: "The Basics (101)"**: Focus on the 5 foundational steps (Agent $\rightarrow$ Search $\rightarrow$ Lookup $\rightarrow$ Install $\rightarrow$ Execute).
-- **Tab 2: "The Complete Suite"**: Multi-scenario progressive disclosure, opt-out handling, and E2E verification.
-- **Companion Artifact**: High-contrast, zoomable Mermaid.js decision flowchart.
+### Step 3: Build & Validate the Interactive Walkthrough
+Use [scripts/build_walkthrough.py](file:///usr/local/google/home/alanblount/Workspaces/skills/asciinema-explainer-walkthroughs/scripts/build_walkthrough.py) to validate the `.cast` file and render the interactive HTML walkthrough:
 
-### Step 6: Automated Skill Verification
-Run the built-in unit and integration test suite to verify PTY geometry, prompt synchronization, redaction, and `.cast` schema validity:
+```bash
+# Validate recording and generate standalone index.html
+python3 scripts/build_walkthrough.py --cast demo.cast --output index.html
+
+# Start local preview server for human review
+python3 scripts/build_walkthrough.py --serve --port 8080
+```
+
+### Step 4: Human Review & Sign-Off
+Open the interactive player in a browser:
+- **Clickable Step Chapters**: Jump directly to specific markers/timestamps.
+- **Reviewer Acceptance Rubric**: Verify prompt synchronization, latency clamping, secret masking, and zero errors with interactive checkboxes.
+- **Copy Sign-off Summary**: One-click export of markdown review block for PR descriptions and bug trackers.
+- **Full Text Transcript**: Search and copy raw terminal output without waiting for video playback.
+
+### Step 5: Automated Test Suite
+Run the automated verification suite to validate recorder primitives, time clamping, redactions, and templates:
+
 ```bash
 python3 -m unittest discover -s tests -v
 ```
@@ -134,6 +159,7 @@ python3 -m unittest discover -s tests -v
 1. **Pre-Authenticate the Basics**: Keep 101 walkthroughs zero-friction. Don't distract beginners with OAuth errors or missing keys in introductory demos.
 2. **Never Hardcode Machine Paths**: In skill files and demo scripts, always use relative repository paths (e.g. `./scripts/resolver.py` rather than absolute user home paths).
 3. **Always Add a Post-Command Reading Pause**: Set `pause_after=2.5` to `4.0` seconds so human viewers have time to read model output before the next prompt types.
-4. **Lock Terminal Geometry**: Always fix rows and columns in `pty.openpty()` (112x34). Unset geometry causes text wrapping discrepancies across different viewing screens.
-5. **Redact Sensitive Strings Before Export**: Never let raw OAuth client secrets, refresh tokens, or bearer keys hit `.cast` files.
+4. **Lock Terminal Geometry**: Always fix rows and columns in `pty.openpty()` (default 112x34). Unset geometry causes text wrapping discrepancies across different viewing screens.
+5. **Redact Sensitive Strings Before Export**: Never let raw OAuth client secrets, refresh tokens, bearer keys, or API tokens hit `.cast` files.
 6. **Use Native Chapter Markers**: Call `rec.send_turn(..., marker_label="Step 1: Init")` to enable scrubber dots and `[` / `]` keyboard navigation in the player.
+7. **Simplify for Human Review**: Always provide clickable chapter jump lists, searchable transcripts, and one-click review sign-off summaries.

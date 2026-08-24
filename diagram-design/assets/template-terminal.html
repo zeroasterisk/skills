@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terminal Diagram</title>  <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Text:wght@500;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --terminal-page:        #121316;
+      --terminal-paper:       #1e1f24;
+      --terminal-bar:         #282a30;
+      --terminal-border:      #3c404b;
+      --terminal-ink:         #e3e3e3;
+      --terminal-muted:       #9aa0a6;
+      --terminal-soft:        #5f6368;
+      --terminal-accent:      #8ab4f8;
+      --terminal-accent-tint: rgba(138,180,248,0.12);
+      --font-mono:            'Roboto Mono', 'Google Sans Mono', ui-monospace, monospace;
+      --font-sans:            'Google Sans Text', system-ui, sans-serif;
+    }
+
+    body {
+      font-family: var(--font-mono);
+      background: var(--terminal-page);
+      color: var(--terminal-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2.5rem 1.5rem;
+    }
+
+    .terminal {
+      max-width: 1100px;
+      width: 100%;
+      background: var(--terminal-paper);
+      border: 1px solid var(--terminal-border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .titlebar {
+      background: var(--terminal-bar);
+      border-bottom: 1px solid var(--terminal-border);
+      padding: 0.625rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--terminal-soft);
+    }
+    .dot.accent { background: var(--terminal-accent); }
+
+    .titlebar-name {
+      margin-left: 0.5rem;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      color: var(--terminal-muted);
+      letter-spacing: 0.05em;
+    }
+
+    .frame {
+      padding: 2rem 2.25rem 2.5rem;
+    }
+
+    .prompt {
+      font-size: 0.8125rem;
+      color: var(--terminal-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .prompt .sign {
+      color: var(--terminal-accent);
+      font-weight: 600;
+      margin-right: 0.35rem;
+    }
+
+    h1 {
+      font-size: 1.35rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--terminal-ink);
+      margin-bottom: 1.75rem;
+    }
+
+    svg { width: 100%; min-width: 800px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="terminal">
+    <div class="titlebar">
+      <div class="dot accent"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="titlebar-name">[diagram-slug].sh — diagram-design</div>
+    </div>
+    <main class="frame">
+      <p class="prompt">
+        <span class="sign">$</span> diagram-design render --type [type]
+      </p>
+      <h1># [Diagram Title]</h1>
+
+      <!-- Replace [diagram-slug] with a unique slug for this diagram before export. -->
+      <svg viewBox="0 0 1000 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="[diagram-slug]-title [diagram-slug]-desc">
+        <title id="[diagram-slug]-title">[Diagram Title]</title>
+        <desc id="[diagram-slug]-desc">[One sentence describing what the terminal diagram shows]</desc>
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#9aa0a6"/></marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#8ab4f8"/></marker>
+        </defs>
+
+        <rect width="100%" height="100%" fill="#1e1f24"/>
+
+        <!-- Draw arrows first, then nodes. -->
+
+      </svg>
+    </main>
+  </div>
+</body>
+</html>

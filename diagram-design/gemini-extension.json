@@ -1,0 +1,6 @@
+{
+  "name": "diagram-design",
+  "version": "3.0.0",
+  "description": "Create publication-grade Material Design 3 and Google-themed architectural, flow, sequence, state, and data diagrams as self-contained HTML/SVG",
+  "contextFileName": "GEMINI.md"
+}

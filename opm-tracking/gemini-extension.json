@@ -1,0 +1,6 @@
+{
+  "name": "opm-tracking",
+  "version": "1.0.0",
+  "description": "Automates creating and lifecycle tracking of customer meeting Expert Requests in Salesforce for Cloud AI OPM",
+  "contextFileName": "GEMINI.md"
+}

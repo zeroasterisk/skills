@@ -63,15 +63,19 @@ include = [
 ]
 
 # ---------------------------------------------------------------------------
-# Team / google3 sources — silently skipped on machines without access.
+# Team / OPM sources — silently skipped on machines without access.
 # ---------------------------------------------------------------------------
-# [[source]]
-# name = "google3"
-# publisher = "google.com"
-# namespace = "google3"
-# path = "google3"
-# audience = "team"
-# agents = ["cloudcode"]
+[[source]]
+name = "cloud-ai-opm-skills"
+repo = "git@depot.code.corp.goog:experimental/cloud-ai-opm-skills.git"
+url_base = "https://depot.code.corp.goog/experimental/cloud-ai-opm-skills/tree/main/skills"
+publisher = "google.com"
+namespace = "cloud-ai-opm"
+path = "../cloud-ai-opm-skills/skills"
+audience = "team"
+agents = ["cloudcode"]
+exclude = ["SKILL.template.md"]
+
 
 # ---------------------------------------------------------------------------
 # Per-skill overrides (key = skill directory name)
@@ -97,6 +101,17 @@ tags = ["gcloud", "devops", "google-cloud"]
 [skill.asciinema-explainer-walkthroughs]
 tags = ["experiment", "asciinema", "demo", "walkthrough", "documentation", "pty", "recording"]
 
+[skill.diagram-design]
+tags = ["design", "architecture", "diagram", "svg", "html", "material-design", "google", "visualization"]
+
+[skill.developer-trends-intel]
+tags = ["trends", "plushcap", "goodailist", "ai", "github", "repos", "market-intelligence", "mcp"]
+
+[skill.humanizer]
+tags = ["writing", "humanizer", "style", "editing", "ai-detection", "copywriting"]
+
 # Example: disable a discovered skill without touching include/exclude
 # [skill.some-skill]
 # active = false
+
+

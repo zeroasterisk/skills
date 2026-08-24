@@ -61,6 +61,52 @@
       "url": "https://github.com/zeroasterisk/skills/tree/main/cuj-screenshots"
     },
     {
+      "identifier": "urn:air:github.com:zeroasterisk:developer-trends-intel",
+      "displayName": "developer-trends-intel",
+      "type": "application/ai-skill+md",
+      "description": "Synthesizes AI and developer ecosystem intelligence by combining Plushcap MCP (tech company engineering blogs, YouTube metrics, Hacker News activity, competitive spaces, and industry trend topics) with Good AI List (19,500+ open-source AI repositories, daily/weekly star velocity, developer activity, and category taxonomies). Use when asked to investigate AI tech trends, discover fast-growing open-source AI projects or breakout GitHub repositories, research tech company engineering momentum or blog activity, lookup items on goodailist.com or Plushcap, track developer metrics, analyze competitive spaces, or cross-reference enterprise tech announcements with open-source ecosystem adoption. Don't use for generic non-tech web search (use search_web) or single-file git operations (use vcs).",
+      "tags": [
+        "trends",
+        "plushcap",
+        "goodailist",
+        "ai",
+        "github",
+        "repos",
+        "market-intelligence",
+        "mcp"
+      ],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "developer-trends-intel"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/developer-trends-intel"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:diagram-design",
+      "displayName": "diagram-design",
+      "type": "application/ai-skill+md",
+      "description": "Create branded architecture, IT current-state, flowchart, sequence, state machine, ER/data model, timeline, swimlane, quadrant, radar/spider, loop/flywheel, nested, tree, org chart, layer stack, Venn, pyramid/funnel, bar, line, Gantt and scatter charts, high-level, process, medallion, data flow, DP integration, or DP security matrix diagrams as standalone Material Design 3 HTML/SVG/PNG with subtle Google colors. Redraw .drawio/.drawio.png/.drawio.svg or Mermaid .mmd sources at a chosen size/detail; onboard brand tokens from a website; add semantic patterns, callouts, accessible motion, or sketchy/hand-drawn styling.",
+      "tags": [
+        "design",
+        "architecture",
+        "diagram",
+        "svg",
+        "html",
+        "material-design",
+        "google",
+        "visualization"
+      ],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "diagram-design"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/diagram-design"
+    },
+    {
       "identifier": "urn:air:github.com:zeroasterisk:elixir-best-practices",
       "displayName": "elixir-best-practices",
       "type": "application/ai-skill+md",
@@ -92,6 +138,27 @@
         "relativePath": "engineering-discipline"
       },
       "url": "https://github.com/zeroasterisk/skills/tree/main/engineering-discipline"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:humanizer",
+      "displayName": "humanizer",
+      "type": "application/ai-skill+md",
+      "description": "Rewrite AI-sounding text so it reads naturally without changing what it says. Use when editing or reviewing prose for inflated claims, sales language, vague sources, repetitive structure, stock AI words, passive voice, filler, or chatbot artifacts. Based on Wikipedia's \"Signs of AI writing.\"",
+      "tags": [
+        "writing",
+        "humanizer",
+        "style",
+        "editing",
+        "ai-detection",
+        "copywriting"
+      ],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "humanizer"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/humanizer"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:intent-refinement",

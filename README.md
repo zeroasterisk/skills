@@ -6,12 +6,21 @@ Reusable skills for AI coding agents. Works with OpenClaw, Gemini CLI, and other
 
 | Skill | Description |
 |-------|-------------|
+| [aaif-notebooklm-sync](./aaif-notebooklm-sync/) | Bi-weekly lifecycle sync of AAIF WG repos, meeting minutes, and RFCs into NotebookLM with public Gist reporting |
+| [asciinema-explainer-walkthroughs](./asciinema-explainer-walkthroughs/) | Studio-grade synchronous terminal recordings (.cast) and interactive 2-tab web walkthroughs for AI agents |
 | [cuj-screenshots](./cuj-screenshots/) | Capture Critical User Journey screenshots and GIFs |
-| [storybook](./storybook/) | Write and test Storybook stories for React components |
+| [developer-trends-intel](./developer-trends-intel/) | Synthesize AI & tech trends combining Plushcap MCP (company blogs, HN, YouTube) with Good AI List (19,500+ open-source AI repos, star velocity) |
+| [diagram-design](./diagram-design/) | Publication-grade Material Design 3 and Google-themed architectural, sequence, and flow diagrams (HTML/SVG) |
 | [elixir-best-practices](./elixir-best-practices/) | Elixir coding standards — pattern matching, error handling, Phoenix conventions |
+| [engineering-discipline](./engineering-discipline/) | Full lifecycle: define what done means → debug systematically → verify through real surfaces |
+| [humanizer](./humanizer/) | Rewrite AI-sounding text to read naturally and authentically based on Wikipedia's 35 signs of AI writing |
 | [intent-refinement](./intent-refinement/) | Draft, validate, and refine product intent using Narrative-Driven Development (NDD) |
+| [manim-video-quality](./manim-video-quality/) | Quality standards, visual grammar, and LLM-as-judge evals for 3Blue1Brown-style Manim animations |
+| [opm-tracking](./opm-tracking/) | Automate Salesforce Expert Request creation and lifecycle tracking for Cloud AI OPM |
+| [storybook](./storybook/) | Write and test Storybook stories for React components |
 | [ui-developer](./ui-developer/) | Full-stack UI development workflow with testing and docs |
-| [engineering-discipline](./engineering-discipline/) | Full lifecycle: define what done means → debug systematically → verify through real surfaces. Distilled from [superpowers](https://github.com/obra/superpowers) + [zenith](https://github.com/Intelligent-Internet/zenith) |
+
+
 
 ## Scion Templates
 
