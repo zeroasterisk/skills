@@ -118,27 +118,6 @@
       "url": "https://depot.code.corp.goog/experimental/cloud-ai-opm-skills/tree/main/skills/gemini-notes-to-tasks"
     },
     {
-      "identifier": "urn:air:google.com:cloud-ai-opm:humanizer",
-      "displayName": "humanizer",
-      "type": "application/ai-skill+md",
-      "description": "Rewrite AI-sounding text so it reads naturally without changing what it says. Use when editing or reviewing prose for inflated claims, sales language, vague sources, repetitive structure, stock AI words, passive voice, filler, or chatbot artifacts. Based on Wikipedia's \"Signs of AI writing.\"",
-      "tags": [
-        "writing",
-        "humanizer",
-        "style",
-        "editing",
-        "ai-detection",
-        "copywriting"
-      ],
-      "metadata": {
-        "source": "cloud-ai-opm-skills",
-        "audience": "team",
-        "agents": "cloudcode",
-        "relativePath": "humanizer"
-      },
-      "url": "https://depot.code.corp.goog/experimental/cloud-ai-opm-skills/tree/main/skills/humanizer"
-    },
-    {
       "identifier": "urn:air:google.com:cloud-ai-opm:opm-activity-audit",
       "displayName": "opm-activity-audit",
       "type": "application/ai-skill+md",

@@ -20,6 +20,27 @@
       "url": "https://github.com/zeroasterisk/skills/tree/main/aaif-notebooklm-sync"
     },
     {
+      "identifier": "urn:air:github.com:zeroasterisk:alan-writing-style",
+      "displayName": "alan-writing-style",
+      "type": "application/ai-skill+md",
+      "description": "Write, rewrite, or review technical prose (blog posts, articles, design docs, PR descriptions, system architectures, and social posts) in Alan Blount's authentic voice: the Pragmatic Builder. Combines 20+ years of software engineering experience with DevRel clarity, dry observational wit, subtle \"muppet\" warmth/enthusiasm, crisp analogies, and strict anti-AI discipline (no em-dashes, no buzzword fluff, no chatbot patterns). Use whenever asked to write in Alan's tone, sound like Alan, humanize text to his personal standards, or write developer-facing content for his projects.",
+      "tags": [
+        "writing",
+        "voice",
+        "style",
+        "humanizer",
+        "devrel",
+        "alanblount"
+      ],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "alan-writing-style"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/alan-writing-style"
+    },
+    {
       "identifier": "urn:air:github.com:zeroasterisk:asciinema-explainer-walkthroughs",
       "displayName": "asciinema-explainer-walkthroughs",
       "type": "application/ai-skill+md",
@@ -138,6 +159,28 @@
         "relativePath": "engineering-discipline"
       },
       "url": "https://github.com/zeroasterisk/skills/tree/main/engineering-discipline"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:googlecloudtech-x-article",
+      "displayName": "googlecloudtech-x-article",
+      "type": "application/ai-skill+md",
+      "description": "Alan's standard workflow to produce a high-impact, viral X Article for the @GoogleCloudTech brand account from a trend, architecture pattern, repo, or launch: connect the trend to Google Cloud Agent Platform + live developer context, propose title/hook angles first, draft to the proven structure in Alan's Pragmatic Builder voice (20-year dev experience, muted \"muppet\" warmth, dry technical wit, parenthetical asides, zero em-dashes, and strict anti-AI discipline), generate dark-mode hand-drawn diagrams, and publish to a Google Doc on approval. Use whenever Alan wants to draft an X Article, turn a trend/spec/repo into an article, or brainstorm @GoogleCloudTech content angles.",
+      "tags": [
+        "writing",
+        "x-article",
+        "google-cloud",
+        "devrel",
+        "plushcap",
+        "trends",
+        "agent-platform"
+      ],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "googlecloudtech-x-article"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/googlecloudtech-x-article"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:humanizer",
@@ -356,27 +399,6 @@
         "relativePath": "gemini-notes-to-tasks"
       },
       "url": "https://depot.code.corp.goog/experimental/cloud-ai-opm-skills/tree/main/skills/gemini-notes-to-tasks"
-    },
-    {
-      "identifier": "urn:air:google.com:cloud-ai-opm:humanizer",
-      "displayName": "humanizer",
-      "type": "application/ai-skill+md",
-      "description": "Rewrite AI-sounding text so it reads naturally without changing what it says. Use when editing or reviewing prose for inflated claims, sales language, vague sources, repetitive structure, stock AI words, passive voice, filler, or chatbot artifacts. Based on Wikipedia's \"Signs of AI writing.\"",
-      "tags": [
-        "writing",
-        "humanizer",
-        "style",
-        "editing",
-        "ai-detection",
-        "copywriting"
-      ],
-      "metadata": {
-        "source": "cloud-ai-opm-skills",
-        "audience": "team",
-        "agents": "cloudcode",
-        "relativePath": "humanizer"
-      },
-      "url": "https://depot.code.corp.goog/experimental/cloud-ai-opm-skills/tree/main/skills/humanizer"
     },
     {
       "identifier": "urn:air:google.com:cloud-ai-opm:opm-activity-audit",

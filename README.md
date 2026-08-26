@@ -14,6 +14,8 @@ Reusable skills for AI coding agents. Works with OpenClaw, Gemini CLI, and other
 | [elixir-best-practices](./elixir-best-practices/) | Elixir coding standards — pattern matching, error handling, Phoenix conventions |
 | [engineering-discipline](./engineering-discipline/) | Full lifecycle: define what done means → debug systematically → verify through real surfaces |
 | [humanizer](./humanizer/) | Rewrite AI-sounding text to read naturally and authentically based on Wikipedia's 35 signs of AI writing |
+| [alan-writing-style](./alan-writing-style/) | Write and edit in Alan Blount's authentic voice: the Pragmatic Builder (20-year dev experience, muted muppet warmth, DevRel clarity, zero AI tells) |
+| [googlecloudtech-x-article](./googlecloudtech-x-article/) | Produce viral @GoogleCloudTech X Articles from trends, architecture, and launches in Alan's builder voice with dark-mode diagrams |
 | [intent-refinement](./intent-refinement/) | Draft, validate, and refine product intent using Narrative-Driven Development (NDD) |
 | [manim-video-quality](./manim-video-quality/) | Quality standards, visual grammar, and LLM-as-judge evals for 3Blue1Brown-style Manim animations |
 | [opm-tracking](./opm-tracking/) | Automate Salesforce Expert Request creation and lifecycle tracking for Cloud AI OPM |

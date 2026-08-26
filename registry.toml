@@ -115,3 +115,9 @@ tags = ["writing", "humanizer", "style", "editing", "ai-detection", "copywriting
 # active = false
 
 
+
+[skill.googlecloudtech-x-article]
+tags = ["writing", "x-article", "google-cloud", "devrel", "plushcap", "trends", "agent-platform"]
+
+[skill.alan-writing-style]
+tags = ["writing", "voice", "style", "humanizer", "devrel", "alanblount"]
