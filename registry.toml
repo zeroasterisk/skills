@@ -23,6 +23,7 @@ identifier = "github.com/zeroasterisk"
 [targets]
 cloudcode_config = ""
 gemini_skills_dir = "~/.gemini/config/skills"
+gemini_plugins_dir = "~/.gemini/config/plugins"
 
 # ---------------------------------------------------------------------------
 # Personal skills — this repo (github.com/zeroasterisk/skills)
@@ -58,7 +59,7 @@ publisher = "github.com"
 namespace = "ghchinoy"
 path = "plugins"
 audience = "public"
-agents = ["cloudcode"]
+agents = ["cloudcode", "gemini"]
 include = [
   "agent-aware-cli/**",
   "agent-plugin-authoring/**",

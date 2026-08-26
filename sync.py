@@ -44,9 +44,11 @@ CLOUDCODE_CANDIDATES = [
 DEFAULT_TARGETS = {
     "cloudcode_config": "",  # empty = auto-discover from CLOUDCODE_CANDIDATES
     "gemini_skills_dir": "~/.gemini/config/skills",
+    "gemini_plugins_dir": "~/.gemini/config/plugins",
 }
 CLOUDCODE_CONFIG: Path | None = None  # set in main() from [targets]
 GEMINI_SKILLS_DIR = Path()  # set in main() from [targets]
+GEMINI_PLUGINS_DIR = Path()  # set in main() from [targets]
 
 
 def find_cloudcode_config(configured: str) -> Path | None:
@@ -213,8 +215,20 @@ def sync_cloudcode(skills: list[dict]) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Gemini symlinks
+# Gemini & Jetski symlinks (skills + plugins)
 # ---------------------------------------------------------------------------
+
+MANAGED_WORKSPACE_ROOTS = [
+    str(REGISTRY_DIR),
+    "/usr/local/google/home/alanblount/Workspaces/skills",
+    "/usr/local/google/home/alanblount/Workspaces/open-source/skills",
+]
+
+
+def is_managed_target(target: Path) -> bool:
+    target_str = str(target)
+    return any(target_str.startswith(root) for root in MANAGED_WORKSPACE_ROOTS)
+
 
 def sync_gemini(skills: list[dict]) -> None:
     if DRY_RUN:
@@ -225,7 +239,9 @@ def sync_gemini(skills: list[dict]) -> None:
     wanted = {
         s["dir_name"]: s["path"]
         for s in skills
-        if "gemini" in s["agents"] and (s["path"] / "GEMINI.md").is_file()
+        if "gemini" in s["agents"] and (
+            (s["path"] / "SKILL.md").is_file() or (s["path"] / "GEMINI.md").is_file()
+        )
     }
 
     if GEMINI_SKILLS_DIR.is_dir():
@@ -233,30 +249,70 @@ def sync_gemini(skills: list[dict]) -> None:
             if not link.is_symlink():
                 continue
             target = link.resolve()
-            if not str(target).startswith(str(REGISTRY_DIR)):
-                verbose(f"gemini: skip unmanaged entry: {link.name}")
+            if not is_managed_target(target):
+                verbose(f"gemini skills: skip unmanaged entry: {link.name}")
                 continue
             if link.name not in wanted or not target.is_dir():
                 if DRY_RUN:
-                    dry(f"would remove stale symlink: {link.name}")
+                    dry(f"would remove stale skill symlink: {link.name}")
                 else:
                     link.unlink()
-                    log(f"gemini: removed stale symlink: {link.name}")
+                    log(f"gemini skills: removed stale symlink: {link.name}")
 
     for name, path in wanted.items():
         link = GEMINI_SKILLS_DIR / name
         if DRY_RUN:
-            dry(f"would symlink: {link} -> {path}")
+            dry(f"would symlink skill: {link} -> {path}")
             continue
-        if link.is_symlink() or link.exists():
+        if link.is_symlink():
             link.unlink()
+        elif link.exists():
+            verbose(f"gemini skills: skip existing non-symlink: {link.name}")
+            continue
         link.symlink_to(path)
-        log(f"gemini: linked {name}")
+        log(f"gemini skills: linked {name}")
 
-    skipped = [s["dir_name"] for s in skills
-               if "gemini" in s["agents"] and s["dir_name"] not in wanted]
-    for name in skipped:
-        verbose(f"gemini: skip {name} (no GEMINI.md)")
+
+def sync_gemini_plugins() -> None:
+    if DRY_RUN:
+        dry(f"would ensure dir: {GEMINI_PLUGINS_DIR}")
+    else:
+        GEMINI_PLUGINS_DIR.mkdir(parents=True, exist_ok=True)
+
+    plugins_root = REGISTRY_DIR / "plugins"
+    wanted: dict[str, Path] = {}
+    if plugins_root.is_dir():
+        for p in sorted(plugins_root.iterdir()):
+            if p.is_dir() and (p / "plugin.json").is_file():
+                wanted[p.name] = p
+
+    if GEMINI_PLUGINS_DIR.is_dir():
+        for link in GEMINI_PLUGINS_DIR.iterdir():
+            if not link.is_symlink():
+                continue
+            target = link.resolve()
+            if not is_managed_target(target):
+                verbose(f"gemini plugins: skip unmanaged entry: {link.name}")
+                continue
+            if link.name not in wanted or not target.is_dir():
+                if DRY_RUN:
+                    dry(f"would remove stale plugin symlink: {link.name}")
+                else:
+                    link.unlink()
+                    log(f"gemini plugins: removed stale symlink: {link.name}")
+
+    for name, path in wanted.items():
+        link = GEMINI_PLUGINS_DIR / name
+        if DRY_RUN:
+            dry(f"would symlink plugin: {link} -> {path}")
+            continue
+        if link.is_symlink():
+            link.unlink()
+        elif link.exists():
+            verbose(f"gemini plugins: skip existing non-symlink: {link.name}")
+            continue
+        link.symlink_to(path)
+        log(f"gemini plugins: linked {name}")
 
 
 # ---------------------------------------------------------------------------
@@ -337,7 +393,7 @@ def write_catalogs(host: dict, skills: list[dict]) -> None:
 # ---------------------------------------------------------------------------
 
 def main() -> int:
-    global DRY_RUN, VERBOSE, CLOUDCODE_CONFIG, GEMINI_SKILLS_DIR
+    global DRY_RUN, VERBOSE, CLOUDCODE_CONFIG, GEMINI_SKILLS_DIR, GEMINI_PLUGINS_DIR
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--verbose", action="store_true")
@@ -354,6 +410,7 @@ def main() -> int:
     targets = DEFAULT_TARGETS | registry.get("targets", {})
     CLOUDCODE_CONFIG = find_cloudcode_config(targets["cloudcode_config"])
     GEMINI_SKILLS_DIR = Path(targets["gemini_skills_dir"]).expanduser()
+    GEMINI_PLUGINS_DIR = Path(targets.get("gemini_plugins_dir", "~/.gemini/config/plugins")).expanduser()
 
     host = registry.get("host", {"displayName": "Skills Registry"})
     overrides = registry.get("skill", {})
@@ -368,6 +425,7 @@ def main() -> int:
 
     sync_cloudcode(skills)
     sync_gemini(skills)
+    sync_gemini_plugins()
     write_catalogs(host, skills)
 
     log("done")
