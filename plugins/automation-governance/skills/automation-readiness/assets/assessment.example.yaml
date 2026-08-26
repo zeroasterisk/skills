@@ -1,0 +1,29 @@
+target:
+  name: "production-release-orchestrator"
+  type: "workflow"
+  assessor: "engineering-lead"
+  description: "Automated workflow that runs smoke tests, deploys new microservice container versions to production Kubernetes clusters, updates DNS records, and triggers customer-facing notifications."
+
+scores:
+  complexity: 3       # Moderately multi-step pipeline
+  criticality: 5      # Outage impacts revenue and customers
+  uncertainty: 2      # Deterministic deployment steps with occasional network flake
+  duration: 2         # Runs in ~10 minutes
+  cost: 1             # Minimal API and compute cost
+  resources: 4        # Requires production cluster credentials and DNS API keys
+  constraints: 4      # Strict 99.99% uptime SLA and change-management compliance
+  verifiability: 4    # High verifiability (automated synthetic smoke tests and health checks)
+  reversibility: 2    # Low reversibility (rollbacks exist but customer-visible downtime is irreversible)
+  contextuality: 4    # Accesses production environment variables and infrastructure topology
+  subjectivity: 1     # Purely objective deployment health criteria
+
+hard_gates:
+  contract_first_verifiable: true      # Synthetic smoke tests and canary metric checks exist
+  irreversible_blast_radius: true      # Deploying to production has immediate external blast radius
+  statutory_safety_floor: false        # Not a medical or judicial system, but internal core infrastructure
+  high_context_sensitivity: true       # Production credentials and cloud secrets needed
+  moral_crumple_zone_risk: false       # Human approval is explicit and provided with rich canary dashboards
+
+notes:
+  verification_evidence: "Automated canary analysis via Prometheus metrics over 5 minutes with automated rollback triggers."
+  permission_scope: "Ephemeral deployment role scoped strictly to production namespace and revoked post-run."

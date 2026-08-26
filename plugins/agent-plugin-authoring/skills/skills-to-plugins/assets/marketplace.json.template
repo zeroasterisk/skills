@@ -1,0 +1,16 @@
+{
+  "name": "REPO_NAME",
+  "metadata": {
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "PLUGIN_NAME",
+      "source": "./plugins/PLUGIN_NAME",
+      "description": "Brief plugin description",
+      "skills": [
+        "./plugins/PLUGIN_NAME/skills/SKILL_NAME"
+      ]
+    }
+  ]
+}

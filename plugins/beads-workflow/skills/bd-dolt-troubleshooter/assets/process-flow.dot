@@ -1,0 +1,247 @@
+digraph BDTroubleshooterFlowLight {
+  // Graph Aesthetics & Layout (Light Theme)
+  graph [
+    bgcolor="#ffffff",
+    fontname="Inter, Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
+    fontsize=14,
+    rankdir=TB,
+    splines=ortho,
+    nodesep=0.6,
+    ranksep=0.7,
+    pad="0.5,0.5"
+  ];
+
+  node [
+    fontname="Inter, Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
+    fontsize=11,
+    fontcolor="#0f1115",
+    style="filled,rounded",
+    shape=box,
+    penwidth=1.5,
+    margin="0.25,0.18"
+  ];
+
+  edge [
+    fontname="Inter, Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
+    fontsize=9,
+    fontcolor="#64748b",
+    color="#cbd5e1",
+    penwidth=1.3,
+    arrowsize=0.8
+  ];
+
+  // Header
+  subgraph cluster_header {
+    style="invis";
+    title_node [
+      shape=plaintext,
+      fontcolor="#0f1115",
+      fontsize=16,
+      label=<<table border="0" cellborder="0" cellspacing="4">
+        <tr><td><font point-size="18" color="#0f1115"><b>Beads (bd) Diagnostic &amp; Troubleshooting Architecture</b></font></td></tr>
+        <tr><td><font point-size="12" color="#64748b">Why Low-Level Process &amp; Binary Checks Must Precede High-Level Tools like 'bd doctor'</font></td></tr>
+      </table>>
+    ];
+  }
+
+  // Phase 0: Binary & PATH Resolution
+  subgraph cluster_phase0 {
+    label=<<table border="0" cellborder="0"><tr><td><font color="#0284c7" point-size="12"><b>PHASE 0: Binary &amp; Environment Preflight</b></font></td></tr></table>>;
+    style="rounded,dashed";
+    color="#cbd5e1";
+    bgcolor="#f8fafc";
+
+    p0_scan [
+      label=<<table border="0" cellborder="0" cellspacing="2">
+        <tr><td><font color="#0f1115"><b>1. Scan PATH Binaries</b></font></td></tr>
+        <tr><td><font color="#64748b" point-size="9">which -a bd &amp; inspect-binary.sh</font></td></tr>
+      </table>>,
+      fillcolor="#ffffff",
+      color="#0284c7"
+    ];
+
+    p0_dup_decision [
+      shape=diamond,
+      label=<<table border="0" cellborder="0"><tr><td><font color="#d97706"><b>Multiple<br/>Binaries?</b></font></td></tr></table>>,
+      fillcolor="#ffffff",
+      color="#d97706"
+    ];
+
+    p0_symlink [
+      label=<<table border="0" cellborder="0" cellspacing="2">
+        <tr><td><font color="#0f1115"><b>Consolidate via Symlink</b></font></td></tr>
+        <tr><td><font color="#64748b" point-size="9">ln -sf ~/go/bin/bd ~/.local/bin/bd</font></td></tr>
+        <tr><td><font color="#16a34a" point-size="9"><b>Eliminates Shadowing Upgrade Trap</b></font></td></tr>
+      </table>>,
+      fillcolor="#ffffff",
+      color="#16a34a"
+    ];
+
+    p0_cgo [
+      label=<<table border="0" cellborder="0" cellspacing="2">
+        <tr><td><font color="#0f1115"><b>2. CGO &amp; ICU Verification</b></font></td></tr>
+        <tr><td><font color="#64748b" point-size="9">Probe Homebrew icu4c headers</font></td></tr>
+        <tr><td><font color="#64748b" point-size="9">Ensure CGO_ENABLED=1 for embedded engines</font></td></tr>
+      </table>>,
+      fillcolor="#ffffff",
+      color="#0284c7"
+    ];
+  }
+
+  // Phase 1: Process & Exclusive Lock Layer (THE CRITICAL GATE)
+  subgraph cluster_phase1 {
+    label=<<table border="0" cellborder="0"><tr><td><font color="#dc2626" point-size="12"><b>PHASE 1: Process &amp; Lock Isolation (The Pre-Doctor Gate)</b></font></td></tr></table>>;
+    style="rounded,dashed";
+    color="#fca5a5";
+    bgcolor="#fff1f2";
+
+    p1_check_lock [
+      label=<<table border="0" cellborder="0" cellspacing="2">
+        <tr><td><font color="#0f1115"><b>3. Lock &amp; Orphan Process Audit</b></font></td></tr>
+        <tr><td><font color="#64748b" point-size="9">find-dolt-server.sh / pgrep dolt sql-server</font></td></tr>
+        <tr><td><font color="#64748b" point-size="9">Check .beads/dolt-server.lock &amp; port</font></td></tr>
+      </table>>,
+      fillcolor="#ffffff",
+      color="#dc2626"
+    ];
+
+    p1_lock_decision [
+      shape=diamond,
+      label=<<table border="0" cellborder="0"><tr><td><font color="#dc2626"><b>Orphan PID /<br/>Lock Contention?</b></font></td></tr></table>>,
+      fillcolor="#ffffff",
+      color="#dc2626"
+    ];
+
+    p1_kill_orphan [
+      label=<<table border="0" cellborder="0" cellspacing="2">
+        <tr><td><font color="#0f1115"><b>Terminate Orphan &amp; Clear Locks</b></font></td></tr>
+        <tr><td><font color="#dc2626" point-size="9">kill &lt;orphan-pid&gt;</font></td></tr>
+        <tr><td><font color="#64748b" point-size="9">rm -f .beads/dolt-server.lock</font></td></tr>
+        <tr><td><font color="#16a34a" point-size="9"><b>bd dolt start (acquire fresh port)</b></font></td></tr>
+      </table>>,
+      fillcolor="#ffffff",
+      color="#dc2626"
+    ];
+
+    p1_why_not_doctor [
+      label=<<table border="0" cellborder="0" cellspacing="2">
+        <tr><td><font color="#d97706"><b>⚠️ WHY 'bd doctor' FAILS HERE</b></font></td></tr>
+        <tr><td><font color="#334155" point-size="9">• 'bd doctor' opens a SQL connection to Dolt</font></td></tr>
+        <tr><td><font color="#334155" point-size="9">• If an orphaned process holds the exclusive lock,</font></td></tr>
+        <tr><td><font color="#dc2626" point-size="9"><b>  'bd doctor' BLOCKS INDEFINITELY on startup</b></font></td></tr>
+        <tr><td><font color="#64748b" point-size="9">• Diagnostics freeze before printing any error</font></td></tr>
+      </table>>,
+      fillcolor="#ffffff",
+      color="#d97706"
+    ];
+  }
+
+  // Phase 2: Server Protocol & Schema Version Gate
+  subgraph cluster_phase2 {
+    label=<<table border="0" cellborder="0"><tr><td><font color="#0284c7" point-size="12"><b>PHASE 2: Server Connection &amp; Schema Synchronization</b></font></td></tr></table>>;
+    style="rounded,dashed";
+    color="#cbd5e1";
+    bgcolor="#f8fafc";
+
+    p2_server_status [
+      label=<<table border="0" cellborder="0" cellspacing="2">
+        <tr><td><font color="#0f1115"><b>4. Verify Server Reachability</b></font></td></tr>
+        <tr><td><font color="#64748b" point-size="9">bd dolt show &amp; bd dolt status</font></td></tr>
+        <tr><td><font color="#16a34a" point-size="9"><b>Server: running | Port reachable</b></font></td></tr>
+      </table>>,
+      fillcolor="#ffffff",
+      color="#0284c7"
+    ];
+
+    p2_schema_inspect [
+      label=<<table border="0" cellborder="0" cellspacing="2">
+        <tr><td><font color="#0f1115"><b>5. Schema Version Skew Check</b></font></td></tr>
+        <tr><td><font color="#64748b" point-size="9">bd migrate --inspect</font></td></tr>
+        <tr><td><font color="#64748b" point-size="9">Compare Binary Schema vs Database Schema</font></td></tr>
+      </table>>,
+      fillcolor="#ffffff",
+      color="#0284c7"
+    ];
+
+    p2_skew_decision [
+      shape=diamond,
+      label=<<table border="0" cellborder="0"><tr><td><font color="#d97706"><b>Schema<br/>Mismatch?</b></font></td></tr></table>>,
+      fillcolor="#ffffff",
+      color="#d97706"
+    ];
+
+    p2_fix_skew [
+      label=<<table border="0" cellborder="0" cellspacing="2">
+        <tr><td><font color="#0f1115"><b>Resolve Schema Drift</b></font></td></tr>
+        <tr><td><font color="#64748b" point-size="9">If client behind: rebuild @main</font></td></tr>
+        <tr><td><font color="#64748b" point-size="9">If client ahead: bd migrate --force</font></td></tr>
+      </table>>,
+      fillcolor="#ffffff",
+      color="#d97706"
+    ];
+  }
+
+  // Phase 3: High-Level Integrity & Doctor Execution
+  subgraph cluster_phase3 {
+    label=<<table border="0" cellborder="0"><tr><td><font color="#16a34a" point-size="12"><b>PHASE 3: Application Health &amp; Issue State (Safe for 'bd doctor')</b></font></td></tr></table>>;
+    style="rounded,dashed";
+    color="#86efac";
+    bgcolor="#f0fdf4";
+
+    p3_bd_doctor [
+      label=<<table border="0" cellborder="0" cellspacing="2">
+        <tr><td><font color="#0f1115"><b>6. Run 'bd doctor' (Now Safe)</b></font></td></tr>
+        <tr><td><font color="#16a34a" point-size="9"><b>✓ Zero chance of lock contention hang</b></font></td></tr>
+        <tr><td><font color="#64748b" point-size="9">Checks: Git working tree, config, stale molecules</font></td></tr>
+      </table>>,
+      fillcolor="#ffffff",
+      color="#16a34a"
+    ];
+
+    p3_dolt_jsonl_sync [
+      label=<<table border="0" cellborder="0" cellspacing="2">
+        <tr><td><font color="#0f1115"><b>7. Dolt vs JSONL Consistency Audit</b></font></td></tr>
+        <tr><td><font color="#64748b" point-size="9">Compare live Dolt table status against .beads/issues.jsonl</font></td></tr>
+        <tr><td><font color="#64748b" point-size="9">Ensure auto-backup manifest is healthy (no table file 404s)</font></td></tr>
+      </table>>,
+      fillcolor="#ffffff",
+      color="#16a34a"
+    ];
+
+    p3_ready [
+      label=<<table border="0" cellborder="0" cellspacing="2">
+        <tr><td><font color="#0f1115"><b>8. Ready for Work</b></font></td></tr>
+        <tr><td><font color="#16a34a" point-size="9"><b>bd ready / bd list / bd show &lt;id&gt;</b></font></td></tr>
+        <tr><td><font color="#0284c7" point-size="9">Normal Agent Operation Unblocked</font></td></tr>
+      </table>>,
+      fillcolor="#ffffff",
+      color="#0284c7"
+    ];
+  }
+
+  // Connections
+  title_node -> p0_scan [style="invis"];
+
+  p0_scan -> p0_dup_decision;
+  p0_dup_decision -> p0_symlink [label=" Yes", color="#d97706", fontcolor="#d97706"];
+  p0_dup_decision -> p0_cgo [label=" No (Single Binary)", color="#16a34a", fontcolor="#16a34a"];
+  p0_symlink -> p0_cgo;
+
+  p0_cgo -> p1_check_lock;
+
+  p1_check_lock -> p1_lock_decision;
+  p1_lock_decision -> p1_kill_orphan [label=" Yes (Lock Conflict)", color="#dc2626", fontcolor="#dc2626"];
+  p1_lock_decision -> p2_server_status [label=" No (Clean State)", color="#16a34a", fontcolor="#16a34a"];
+  p1_lock_decision -> p1_why_not_doctor [style="dotted", color="#d97706", label=" If 'bd doctor' run first"];
+
+  p1_kill_orphan -> p2_server_status;
+
+  p2_server_status -> p2_schema_inspect;
+  p2_schema_inspect -> p2_skew_decision;
+  p2_skew_decision -> p2_fix_skew [label=" Skew Detected", color="#d97706", fontcolor="#d97706"];
+  p2_skew_decision -> p3_bd_doctor [label=" Schema Aligned", color="#16a34a", fontcolor="#16a34a"];
+  p2_fix_skew -> p3_bd_doctor;
+
+  p3_bd_doctor -> p3_dolt_jsonl_sync;
+  p3_dolt_jsonl_sync -> p3_ready;
+}

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "software-craft",
+  "version": "1.0.0",
+  "description": "Software engineering discipline, systematic debugging, Elixir best practices, secure web guidelines, and agent skill authoring.",
+  "author": {
+    "name": "alanblount",
+    "url": "https://github.com/zeroasterisk"
+  },
+  "repository": "https://github.com/zeroasterisk/skills",
+  "license": "Apache-2.0",
+  "keywords": [
+    "discipline",
+    "debugging",
+    "elixir",
+    "security",
+    "skill-creator",
+    "best-practices"
+  ]
+}

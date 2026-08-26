@@ -1,0 +1,21 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "automation-governance",
+  "version": "1.0.0",
+  "description": "Framework and tooling for evaluating workflow, skill, and process automation readiness based on the Google DeepMind Intelligent AI Delegation framework.",
+  "author": {
+    "name": "ghchinoy",
+    "url": "https://github.com/ghchinoy"
+  },
+  "repository": "https://github.com/ghchinoy/agent-skills",
+  "license": "Apache-2.0",
+  "keywords": [
+    "delegation",
+    "governance",
+    "automation-readiness",
+    "safety",
+    "deepmind",
+    "multi-agent",
+    "hitl"
+  ]
+}

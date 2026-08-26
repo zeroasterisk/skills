@@ -26,6 +26,7 @@ gemini_skills_dir = "~/.gemini/config/skills"
 
 # ---------------------------------------------------------------------------
 # Personal skills — this repo (github.com/zeroasterisk/skills)
+# Organized into Agent Plugins v1.0.0 packages under plugins/
 # ---------------------------------------------------------------------------
 [[source]]
 name = "zeroasterisk/skills"
@@ -33,10 +34,43 @@ repo = "git@github.com:zeroasterisk/skills.git"
 url_base = "https://github.com/zeroasterisk/skills/tree/main"
 publisher = "github.com"
 namespace = "zeroasterisk"
-path = "."
+path = "plugins"
 audience = "personal"
 agents = ["cloudcode", "gemini"]
-exclude = ["templates/**", "google-skills/**"]
+include = [
+  "writing-and-editorial/**",
+  "visual-explainers/**",
+  "frontend-engineering/**",
+  "software-craft/**",
+  "cloud-and-workplace/**",
+  "developer-intel/**",
+]
+
+# ---------------------------------------------------------------------------
+# Upstream plugins — github.com/ghchinoy/agent-skills
+# Vendored in plugins/ and kept in sync via scripts/sync-upstream-plugins.py
+# ---------------------------------------------------------------------------
+[[source]]
+name = "ghchinoy/agent-skills"
+repo = "https://github.com/ghchinoy/agent-skills.git"
+url_base = "https://github.com/ghchinoy/agent-skills/tree/main"
+publisher = "github.com"
+namespace = "ghchinoy"
+path = "plugins"
+audience = "public"
+agents = ["cloudcode"]
+include = [
+  "agent-aware-cli/**",
+  "agent-plugin-authoring/**",
+  "ai-pop/**",
+  "automation-governance/**",
+  "beads-workflow/**",
+  "gcp-management/**",
+  "macos-hig/**",
+  "mcp-security/**",
+  "okf-authoring/**",
+  "repo-authoring/**",
+]
 
 # ---------------------------------------------------------------------------
 # Google public skills — github.com/google/skills

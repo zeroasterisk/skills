@@ -1,0 +1,163 @@
+{
+  "name": "skills",
+  "metadata": {
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "agent-aware-cli",
+      "source": "./plugins/agent-aware-cli",
+      "description": "Best practices and architectural guidelines for CLI tools optimized for both human users and AI coding agents.",
+      "skills": [
+        "./plugins/agent-aware-cli/skills/agent-aware-cli"
+      ]
+    },
+    {
+      "name": "agent-plugin-authoring",
+      "source": "./plugins/agent-plugin-authoring",
+      "description": "Authoring, migration, and linting tools for packaging Agent Skills into Agent Plugins v1.0.0 spec packages.",
+      "skills": [
+        "./plugins/agent-plugin-authoring/skills/skills-to-plugins"
+      ]
+    },
+    {
+      "name": "ai-pop",
+      "source": "./plugins/ai-pop",
+      "description": "Virtual music artist production suite: lore planning, audio synthesis, visual design, web player compilation, and public endpoint deployment.",
+      "skills": [
+        "./plugins/ai-pop/skills/ai-pop-audio-synthesizer",
+        "./plugins/ai-pop/skills/ai-pop-compiler",
+        "./plugins/ai-pop/skills/ai-pop-concept-planner",
+        "./plugins/ai-pop/skills/ai-pop-producer",
+        "./plugins/ai-pop/skills/ai-pop-publisher",
+        "./plugins/ai-pop/skills/ai-pop-visual-designer"
+      ]
+    },
+    {
+      "name": "automation-governance",
+      "source": "./plugins/automation-governance",
+      "description": "Framework and tooling for evaluating workflow, skill, and process automation readiness based on the Google DeepMind Intelligent AI Delegation framework.",
+      "skills": [
+        "./plugins/automation-governance/skills/automation-readiness"
+      ]
+    },
+    {
+      "name": "beads-workflow",
+      "source": "./plugins/beads-workflow",
+      "description": "Tools and workflows for the beads (bd) Dolt-powered issue tracking ecosystem, including diagnostics, repairs, and plan stress-testing.",
+      "skills": [
+        "./plugins/beads-workflow/skills/bd-dolt-troubleshooter",
+        "./plugins/beads-workflow/skills/grill-with-beads"
+      ]
+    },
+    {
+      "name": "cloud-and-workplace",
+      "source": "./plugins/cloud-and-workplace",
+      "description": "Google Cloud & Gemini Enterprise taxonomy, executive meeting triage, OPM Salesforce automation, and NotebookLM synchronization.",
+      "skills": [
+        "./plugins/cloud-and-workplace/skills/aaif-notebooklm-sync",
+        "./plugins/cloud-and-workplace/skills/chief-of-staff-triage",
+        "./plugins/cloud-and-workplace/skills/gemini-enterprise-agent-platform",
+        "./plugins/cloud-and-workplace/skills/opm-tracking"
+      ]
+    },
+    {
+      "name": "developer-intel",
+      "source": "./plugins/developer-intel",
+      "description": "Developer trend synthesis combining Plushcap MCP engineering blog data with Good AI List repository velocity.",
+      "skills": [
+        "./plugins/developer-intel/skills/developer-trends-intel"
+      ]
+    },
+    {
+      "name": "frontend-engineering",
+      "source": "./plugins/frontend-engineering",
+      "description": "Full-stack UI development workflows, React component isolation with Storybook, CUJ capturing, and product intent refinement.",
+      "skills": [
+        "./plugins/frontend-engineering/skills/cuj-screenshots",
+        "./plugins/frontend-engineering/skills/intent-refinement",
+        "./plugins/frontend-engineering/skills/storybook",
+        "./plugins/frontend-engineering/skills/ui-developer"
+      ]
+    },
+    {
+      "name": "gcp-management",
+      "source": "./plugins/gcp-management",
+      "description": "Google Cloud Platform and Firebase project assessment, itemized BigQuery spend analysis, quota governance, and consolidation skills.",
+      "skills": [
+        "./plugins/gcp-management/skills/gcp-project-assessment",
+        "./plugins/gcp-management/skills/gcp-project-consolidation",
+        "./plugins/gcp-management/skills/gcp-quota-governance"
+      ]
+    },
+    {
+      "name": "macos-hig",
+      "source": "./plugins/macos-hig",
+      "description": "macOS Human Interface Guidelines assistance and code reviewers for layout, interactions, and HIG compliance.",
+      "skills": [
+        "./plugins/macos-hig/skills/macos-hig-interaction",
+        "./plugins/macos-hig/skills/macos-hig-layout",
+        "./plugins/macos-hig/skills/macos-hig-reviewer"
+      ]
+    },
+    {
+      "name": "mcp-security",
+      "source": "./plugins/mcp-security",
+      "description": "Model Context Protocol (MCP) security auditing for RCE, STDIO injection, and supply chain vulnerabilities.",
+      "skills": [
+        "./plugins/mcp-security/skills/mcp-auditor"
+      ]
+    },
+    {
+      "name": "okf-authoring",
+      "source": "./plugins/okf-authoring",
+      "description": "Tool-agnostic authoring and validation for conformant Open Knowledge Format (OKF) v0.2 knowledge bundles, including the v0.2 provenance, trust, and lifecycle vocabulary.",
+      "skills": [
+        "./plugins/okf-authoring/skills/okf-author",
+        "./plugins/okf-authoring/skills/okf-validate"
+      ]
+    },
+    {
+      "name": "repo-authoring",
+      "source": "./plugins/repo-authoring",
+      "description": "Repository management skills for technical writing, README generation, changelog curation, and commit recaps.",
+      "skills": [
+        "./plugins/repo-authoring/skills/changelog-manager",
+        "./plugins/repo-authoring/skills/make-readme",
+        "./plugins/repo-authoring/skills/repository-change-recap",
+        "./plugins/repo-authoring/skills/technical-post-editorial"
+      ]
+    },
+    {
+      "name": "software-craft",
+      "source": "./plugins/software-craft",
+      "description": "Software engineering discipline, systematic debugging, Elixir best practices, secure web guidelines, and agent skill authoring.",
+      "skills": [
+        "./plugins/software-craft/skills/elixir-best-practices",
+        "./plugins/software-craft/skills/engineering-discipline",
+        "./plugins/software-craft/skills/mandatory-secure-web-skills",
+        "./plugins/software-craft/skills/skill-creator"
+      ]
+    },
+    {
+      "name": "visual-explainers",
+      "source": "./plugins/visual-explainers",
+      "description": "Tools and quality evaluation rubrics for diagrams, terminal animations, and mathematical explainer videos.",
+      "skills": [
+        "./plugins/visual-explainers/skills/asciinema-explainer-walkthroughs",
+        "./plugins/visual-explainers/skills/diagram-design",
+        "./plugins/visual-explainers/skills/manim-video-quality"
+      ]
+    },
+    {
+      "name": "writing-and-editorial",
+      "source": "./plugins/writing-and-editorial",
+      "description": "Authoring, voice matching, style refinement, and anti-AI humanization tools for technical writing and social content.",
+      "skills": [
+        "./plugins/writing-and-editorial/skills/alan-writing-style",
+        "./plugins/writing-and-editorial/skills/googlecloudtech-x-article",
+        "./plugins/writing-and-editorial/skills/humanizer"
+      ]
+    }
+  ]
+}

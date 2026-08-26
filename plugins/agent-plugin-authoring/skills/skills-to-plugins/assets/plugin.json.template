@@ -1,0 +1,13 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "PLUGIN_NAME",
+  "version": "1.0.0",
+  "description": "Brief description of plugin purpose.",
+  "author": {
+    "name": "AUTHOR_NAME",
+    "url": "https://github.com/USERNAME"
+  },
+  "repository": "https://github.com/USERNAME/REPO_NAME",
+  "license": "Apache-2.0",
+  "keywords": ["keyword1", "keyword2"]
+}

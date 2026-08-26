@@ -1,0 +1,20 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "frontend-engineering",
+  "version": "1.0.0",
+  "description": "Full-stack UI development workflows, React component isolation with Storybook, CUJ capturing, and product intent refinement.",
+  "author": {
+    "name": "alanblount",
+    "url": "https://github.com/zeroasterisk"
+  },
+  "repository": "https://github.com/zeroasterisk/skills",
+  "license": "Apache-2.0",
+  "keywords": [
+    "ui",
+    "frontend",
+    "react",
+    "storybook",
+    "cuj",
+    "intent-refinement"
+  ]
+}

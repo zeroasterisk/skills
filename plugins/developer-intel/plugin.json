@@ -1,0 +1,19 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "developer-intel",
+  "version": "1.0.0",
+  "description": "Developer trend synthesis combining Plushcap MCP engineering blog data with Good AI List repository velocity.",
+  "author": {
+    "name": "alanblount",
+    "url": "https://github.com/zeroasterisk"
+  },
+  "repository": "https://github.com/zeroasterisk/skills",
+  "license": "Apache-2.0",
+  "keywords": [
+    "developer-trends",
+    "plushcap",
+    "goodailist",
+    "ecosystem-intelligence",
+    "ai-trends"
+  ]
+}

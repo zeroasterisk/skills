@@ -1,0 +1,45 @@
+name: Sync Upstream Plugins
+
+on:
+  schedule:
+    # Run every Monday at 12:00 UTC
+    - cron: '0 12 * * 1'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    name: Sync from ghchinoy/agent-skills
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Sync upstream plugins
+        run: python3 scripts/sync-upstream-plugins.py
+
+      - name: Create Pull Request on Upstream Changes
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore(plugins): sync upstream plugins from ghchinoy/agent-skills"
+          title: "chore(plugins): sync upstream plugins from ghchinoy/agent-skills"
+          body: |
+            Automated synchronization of plugins from [ghchinoy/agent-skills](https://github.com/ghchinoy/agent-skills).
+
+            - Synced upstream plugins in `plugins/`
+            - Refreshed `.claude-plugin/marketplace.json`
+            - Verified conformance via `./scripts/validate-plugins.sh`
+          branch: chore/sync-upstream-plugins
+          delete-branch: true

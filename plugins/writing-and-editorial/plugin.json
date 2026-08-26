@@ -1,0 +1,20 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "writing-and-editorial",
+  "version": "1.0.0",
+  "description": "Authoring, voice matching, style refinement, and anti-AI humanization tools for technical writing and social content.",
+  "author": {
+    "name": "alanblount",
+    "url": "https://github.com/zeroasterisk"
+  },
+  "repository": "https://github.com/zeroasterisk/skills",
+  "license": "Apache-2.0",
+  "keywords": [
+    "writing",
+    "humanizer",
+    "editorial",
+    "voice",
+    "devrel",
+    "x-article"
+  ]
+}

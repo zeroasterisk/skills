@@ -1,0 +1,345 @@
+{
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "Alan Blount \u2014 Agent Skills",
+    "identifier": "github.com/zeroasterisk"
+  },
+  "entries": [
+    {
+      "identifier": "urn:air:github.com:ghchinoy:agent-aware-cli",
+      "displayName": "agent-aware-cli",
+      "type": "application/ai-skill+md",
+      "description": "Guide for designing and implementing command-line interfaces (CLIs) that are equally usable by human developers and automated coding agents. Use when the user wants to build a CLI, apply CLI best practices, or use Go with Cobra and Viper.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "agent-aware-cli/skills/agent-aware-cli"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/agent-aware-cli/skills/agent-aware-cli"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:skills-to-plugins",
+      "displayName": "skills-to-plugins",
+      "type": "application/ai-skill+md",
+      "description": "Audit, author, migrate, and lint Agent Skills repositories into Agent Plugins v1.0.0 specification packages. Resolves frontmatter conformance debt, groups co-dependent skills, generates plugin.json and marketplace manifests, and enforces spec containment rules. Use when converting a flat skills repo to plugins, creating a new plugin, or linting plugin conformance.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "agent-plugin-authoring/skills/skills-to-plugins"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/agent-plugin-authoring/skills/skills-to-plugins"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:ai-pop-audio-synthesizer",
+      "displayName": "ai-pop-audio-synthesizer",
+      "type": "application/ai-skill+md",
+      "description": "Sub-skill for composing high-fidelity music tracks via Google DeepMind Lyria and verifying container formats.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "ai-pop/skills/ai-pop-audio-synthesizer"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/ai-pop/skills/ai-pop-audio-synthesizer"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:ai-pop-compiler",
+      "displayName": "ai-pop-compiler",
+      "type": "application/ai-skill+md",
+      "description": "Sub-skill for validating the artist.json metadata contract, copying files, compiling typescript/Vite templates, and verifying static client builds.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "ai-pop/skills/ai-pop-compiler"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/ai-pop/skills/ai-pop-compiler"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:ai-pop-concept-planner",
+      "displayName": "ai-pop-concept-planner",
+      "type": "application/ai-skill+md",
+      "description": "Sub-skill for drafting virtual artist backstories, mini-albums, theme-based color palettes, track metadata, and lyrics.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "ai-pop/skills/ai-pop-concept-planner"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/ai-pop/skills/ai-pop-concept-planner"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:ai-pop-producer",
+      "displayName": "ai-pop-producer",
+      "type": "application/ai-skill+md",
+      "description": "Primary orchestrator skill for creating concept-driven AI Pop Artists. Use when a user asks to generate a new artist profile, album narrative, audio-visual assets, local web-player dashboard, and hosted live endpoint.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "ai-pop/skills/ai-pop-producer"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/ai-pop/skills/ai-pop-producer"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:ai-pop-publisher",
+      "displayName": "ai-pop-publisher",
+      "type": "application/ai-skill+md",
+      "description": "Sub-skill for publishing compiled AI Pop web player assets (web/dist) to a public hosting endpoint (Firebase Hosting or GCS static website bucket) and verifying liveness.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "ai-pop/skills/ai-pop-publisher"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/ai-pop/skills/ai-pop-publisher"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:ai-pop-visual-designer",
+      "displayName": "ai-pop-visual-designer",
+      "type": "application/ai-skill+md",
+      "description": "Sub-skill for generating cohesive album cover art and track illustrations using NanoBanana.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "ai-pop/skills/ai-pop-visual-designer"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/ai-pop/skills/ai-pop-visual-designer"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:automation-readiness",
+      "displayName": "automation-readiness",
+      "type": "application/ai-skill+md",
+      "description": "Evaluates whether a skill, workflow, or process should be fully automated, partially automated with human-in-the-loop (HITL) checkpoints, or kept human-led. Implements Google DeepMind's Intelligent AI Delegation framework (arXiv:2602.11865) using an 11-axis diagnostic scorecard, hard gate vetoes, autonomy tiers, and an operational guardrail matrix. Use when deciding whether to automate a process, conducting automation risk assessments, determining delegation autonomy, or configuring monitoring and verification guardrails.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "automation-governance/skills/automation-readiness"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/automation-governance/skills/automation-readiness"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:bd-dolt-troubleshooter",
+      "displayName": "bd-dolt-troubleshooter",
+      "type": "application/ai-skill+md",
+      "description": "Diagnose and repair beads (bd) issue-tracker problems caused by its Dolt backend \u2014 including engine-mode mismatches, DATABASE MISMATCH repo-ID errors, corrupt auto-backups that revert writes, dolt sql-server lock contention, hook-timeout stash-wipes, orphaned server leaks, and schema version skew (remote-backed migration blocks or client behind DB). Use when bd won't start, daemon-error is present, bd writes revert, issues.jsonl is out of sync, untracked files vanish on commit, or bd fails with \"refusing to auto-apply pending schema migrations\".",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "beads-workflow/skills/bd-dolt-troubleshooter"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/beads-workflow/skills/bd-dolt-troubleshooter"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:grill-with-beads",
+      "displayName": "grill-with-beads",
+      "type": "application/ai-skill+md",
+      "description": "Grilling session that challenges your plan, sharpens the work breakdown, and updates the beads (bd) issue tracker inline as decisions crystallise. Use when you want to stress-test a plan and translate it directly into actionable, tracked bd tasks and dependencies.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "beads-workflow/skills/grill-with-beads"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/beads-workflow/skills/grill-with-beads"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:gcp-project-assessment",
+      "displayName": "gcp-project-assessment",
+      "type": "application/ai-skill+md",
+      "description": "Audits, categorizes, and correlates Google Cloud & Firebase projects across billing accounts, active compute, 30-day traffic metrics, cost drivers, and Firebase services. Produces structured Markdown reports with Mermaid cost charts and actionable optimization recommendations.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "gcp-management/skills/gcp-project-assessment"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/gcp-management/skills/gcp-project-assessment"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:gcp-project-consolidation",
+      "displayName": "gcp-project-consolidation",
+      "type": "application/ai-skill+md",
+      "description": "Guides the identification, cleanup, and consolidation of duplicate environments, orphaned persistent disks, unlinked codelabs, and safe project decommissioning across Google Cloud portfolios.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "gcp-management/skills/gcp-project-consolidation"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/gcp-management/skills/gcp-project-consolidation"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:gcp-quota-governance",
+      "displayName": "gcp-quota-governance",
+      "type": "application/ai-skill+md",
+      "description": "Evaluates, recommends, and formats commands for setting hard API quotas, rate limits, Cloud Run scaling caps, and automated billing circuit breakers across Google Cloud & Vertex AI projects.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "gcp-management/skills/gcp-quota-governance"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/gcp-management/skills/gcp-quota-governance"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:macos-hig-interaction",
+      "displayName": "macos-hig-interaction",
+      "type": "application/ai-skill+md",
+      "description": "Guidelines and assistance for creating macOS applications compliant with Apple's Human Interface Guidelines regarding Input, Interaction, and System Features.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "macos-hig/skills/macos-hig-interaction"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/macos-hig/skills/macos-hig-interaction"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:macos-hig-layout",
+      "displayName": "macos-hig-layout",
+      "type": "application/ai-skill+md",
+      "description": "Guidelines and assistance for creating macOS applications compliant with Apple's Human Interface Guidelines regarding Layout, Window Management, and Displays.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "macos-hig/skills/macos-hig-layout"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/macos-hig/skills/macos-hig-layout"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:macos-hig-reviewer",
+      "displayName": "macos-hig-reviewer",
+      "type": "application/ai-skill+md",
+      "description": "A comprehensive macOS Human Interface Guidelines code and design reviewer. Analyzes macOS application code and design for HIG compliance.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "macos-hig/skills/macos-hig-reviewer"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/macos-hig/skills/macos-hig-reviewer"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:mcp-auditor",
+      "displayName": "mcp-auditor",
+      "type": "application/ai-skill+md",
+      "description": "Audits local Model Context Protocol (MCP) server configurations and custom-built MCP servers for Remote Command Execution (RCE) and supply chain vulnerabilities, specifically focusing on STDIO transport injection and malicious prompt injection. Use when auditing MCP server configs, reviewing MCP server source code, or conducting a security review of AI IDE extensions.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "mcp-security/skills/mcp-auditor"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/mcp-security/skills/mcp-auditor"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:okf-author",
+      "displayName": "okf-author",
+      "type": "application/ai-skill+md",
+      "description": "Author a conformant Open Knowledge Format (OKF) v0.2 knowledge bundle by hand or from a description \u2014 one concept per markdown file with a required non-empty type, a reserved root index.md declaring okf_version, bundle-relative markdown links as relationship edges, and the correct v0.2 provenance/trust/lifecycle frontmatter (sources, generated, verified, status, stale_after). Derives trust tiers rather than storing a credibility score, and preserves unknown keys for forward-compatibility. Works fully by hand with zero OKF binaries installed; opportunistically uses binder/okfcli/factile/openknowledge when present. Use when asked to create an OKF bundle, write OKF concepts, add trust or provenance frontmatter, or turn notes/a description into OKF.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "okf-authoring/skills/okf-author"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/okf-authoring/skills/okf-author"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:okf-validate",
+      "displayName": "okf-validate",
+      "type": "application/ai-skill+md",
+      "description": "Validate an Open Knowledge Format (OKF) v0.2 knowledge bundle for \u00a711 conformance and trust-signal well-formedness, reporting everything as advisories and never rejecting a bundle for optional, unknown, or broken content. Checks that every non-reserved markdown file has parseable frontmatter with a non-empty type, that a root index.md declaring okf_version and any log.md follow their reserved structure, and that provenance/trust frontmatter is well-formed (actor convention, generated/verified shape, no stored credibility score). Prefers shelling out to an installed validator (okfcli/okf validate, factile, openknowledge) but falls back to explaining and running the checks entirely by hand with zero OKF binaries. Use when asked to validate, lint, or conformance-check an OKF bundle.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "okf-authoring/skills/okf-validate"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/okf-authoring/skills/okf-validate"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:changelog-manager",
+      "displayName": "changelog-manager",
+      "type": "application/ai-skill+md",
+      "description": "Generates, updates, and curates a CHANGELOG.md file adhering to the Keep a Changelog v1.1.0 specification and Common Changelog style guide by analyzing bd issue tracking history and git commit history.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "repo-authoring/skills/changelog-manager"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/repo-authoring/skills/changelog-manager"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:make-readme",
+      "displayName": "make-readme",
+      "type": "application/ai-skill+md",
+      "description": "Create, assess, and improve README.md files for public GitHub projects. Scores an existing README against a weighted rubric, gives targeted section-by-section fixes, and can check strict standard-readme spec compliance. Use when the user asks to write a README, review/grade a README, improve an existing README, or check standard-readme compliance.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "repo-authoring/skills/make-readme"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/repo-authoring/skills/make-readme"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:repository-change-recap",
+      "displayName": "repository-change-recap",
+      "type": "application/ai-skill+md",
+      "description": "Generates a structured weekly or custom timeframe commit recap for a repository. Looks for repository-specific categorization rules in .gemini/recap-rules.md or GEMINI.md before fetching git logs via git log --stat to accurately organize changes (e.g. core vs experiments). Supports optional audio generation.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "repo-authoring/skills/repository-change-recap"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/repo-authoring/skills/repository-change-recap"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:technical-post-editorial",
+      "displayName": "technical-post-editorial",
+      "type": "application/ai-skill+md",
+      "description": "Edit and review technical blog posts, specs, and engineering write-ups to ensure clean house-style conformity and pitch-appropriate readability. Use as a post-hoc acceptance gate or review tool.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "repo-authoring/skills/technical-post-editorial"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/repo-authoring/skills/technical-post-editorial"
+    }
+  ]
+}

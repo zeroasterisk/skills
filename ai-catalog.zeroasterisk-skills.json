@@ -15,71 +15,51 @@
         "source": "zeroasterisk/skills",
         "audience": "personal",
         "agents": "cloudcode,gemini",
-        "relativePath": "aaif-notebooklm-sync"
+        "relativePath": "cloud-and-workplace/skills/aaif-notebooklm-sync"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/aaif-notebooklm-sync"
+      "url": "https://github.com/zeroasterisk/skills/tree/main/cloud-and-workplace/skills/aaif-notebooklm-sync"
     },
     {
-      "identifier": "urn:air:github.com:zeroasterisk:alan-writing-style",
-      "displayName": "alan-writing-style",
+      "identifier": "urn:air:github.com:zeroasterisk:chief-of-staff-triage",
+      "displayName": "chief-of-staff-triage",
       "type": "application/ai-skill+md",
-      "description": "Write, rewrite, or review technical prose (blog posts, articles, design docs, PR descriptions, system architectures, and social posts) in Alan Blount's authentic voice: the Pragmatic Builder. Combines 20+ years of software engineering experience with DevRel clarity, dry observational wit, subtle \"muppet\" warmth/enthusiasm, crisp analogies, and strict anti-AI discipline (no em-dashes, no buzzword fluff, no chatbot patterns). Use whenever asked to write in Alan's tone, sound like Alan, humanize text to his personal standards, or write developer-facing content for his projects.",
-      "tags": [
-        "writing",
-        "voice",
-        "style",
-        "humanizer",
-        "devrel",
-        "alanblount"
-      ],
+      "description": "Triages the user's unread Chat, Email, and Calendar into an actionable \"pay attention vs. ignore\" digest. Uses a local user profile (~/.config/agent/user-profile.md) to personalize prioritization weights, key collaborators, and projects. If the profile is missing, the agent will guide the user to create one.",
+      "tags": [],
       "metadata": {
         "source": "zeroasterisk/skills",
         "audience": "personal",
         "agents": "cloudcode,gemini",
-        "relativePath": "alan-writing-style"
+        "relativePath": "cloud-and-workplace/skills/chief-of-staff-triage"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/alan-writing-style"
+      "url": "https://github.com/zeroasterisk/skills/tree/main/cloud-and-workplace/skills/chief-of-staff-triage"
     },
     {
-      "identifier": "urn:air:github.com:zeroasterisk:asciinema-explainer-walkthroughs",
-      "displayName": "asciinema-explainer-walkthroughs",
+      "identifier": "urn:air:github.com:zeroasterisk:gemini-enterprise-agent-platform",
+      "displayName": "gemini-enterprise-agent-platform",
       "type": "application/ai-skill+md",
-      "description": "Create production-grade, synchronous terminal recordings (asciinema .cast) and interactive tabbed web walkthroughs for AI agents, developer tools, and CLI journeys. Includes PTY prompt-synchronization, intelligent time-compression, secret redaction, scenario banner structuring, and zoomable Mermaid flowchart companions.",
-      "tags": [
-        "experiment",
-        "asciinema",
-        "demo",
-        "walkthrough",
-        "documentation",
-        "pty",
-        "recording"
-      ],
+      "description": "Brand naming, product hierarchy, API translations, and service taxonomy for Gemini Enterprise and the Agent Platform. Use when you encounter unfamiliar product names like UCAIP, GEAP, Agent Engine, Reasoning Engine, Agentspace, GAAB, CES, or need to map between old and new brand names, understand which APIs or Concord tables correspond to which product surface, or understand the agent service hierarchy (Runtime, Sessions, Memory, Sandbox, Gateway, etc.). Don't use for ADK code patterns (use google-agents-cli-adk-code) or deployment (use google-agents-cli-deploy).",
+      "tags": [],
       "metadata": {
         "source": "zeroasterisk/skills",
         "audience": "personal",
         "agents": "cloudcode,gemini",
-        "relativePath": "asciinema-explainer-walkthroughs"
+        "relativePath": "cloud-and-workplace/skills/gemini-enterprise-agent-platform"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/asciinema-explainer-walkthroughs"
+      "url": "https://github.com/zeroasterisk/skills/tree/main/cloud-and-workplace/skills/gemini-enterprise-agent-platform"
     },
     {
-      "identifier": "urn:air:github.com:zeroasterisk:cuj-screenshots",
-      "displayName": "cuj-screenshots",
+      "identifier": "urn:air:github.com:zeroasterisk:opm-tracking",
+      "displayName": "opm-tracking",
       "type": "application/ai-skill+md",
-      "description": "Capture Critical User Journey (CUJ) screenshots and GIFs from web apps using headless Chromium. Use when you need to create visual demos, verify UI changes, or document user flows.",
-      "tags": [
-        "testing",
-        "ui",
-        "screenshots",
-        "automation"
-      ],
+      "description": "Automates creating and lifecycle tracking of customer meeting Expert Requests in Salesforce (Vector Lightning) for Cloud AI OPM. Use when logging customer engagements, filing meeting records, or driving browser automation for Salesforce Expert Request creation and status completion.",
+      "tags": [],
       "metadata": {
         "source": "zeroasterisk/skills",
         "audience": "personal",
         "agents": "cloudcode,gemini",
-        "relativePath": "cuj-screenshots"
+        "relativePath": "cloud-and-workplace/skills/opm-tracking"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/cuj-screenshots"
+      "url": "https://github.com/zeroasterisk/skills/tree/main/cloud-and-workplace/skills/opm-tracking"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:developer-trends-intel",
@@ -100,9 +80,168 @@
         "source": "zeroasterisk/skills",
         "audience": "personal",
         "agents": "cloudcode,gemini",
-        "relativePath": "developer-trends-intel"
+        "relativePath": "developer-intel/skills/developer-trends-intel"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/developer-trends-intel"
+      "url": "https://github.com/zeroasterisk/skills/tree/main/developer-intel/skills/developer-trends-intel"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:cuj-screenshots",
+      "displayName": "cuj-screenshots",
+      "type": "application/ai-skill+md",
+      "description": "Capture Critical User Journey (CUJ) screenshots and GIFs from web apps using headless Chromium. Use when you need to create visual demos, verify UI changes, or document user flows.",
+      "tags": [
+        "testing",
+        "ui",
+        "screenshots",
+        "automation"
+      ],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "frontend-engineering/skills/cuj-screenshots"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/frontend-engineering/skills/cuj-screenshots"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:intent-refinement",
+      "displayName": "intent-refinement",
+      "type": "application/ai-skill+md",
+      "description": "Identify, draft, validate, and refine product intent and plan specifications using Narrative-Driven Development (NDD) taxonomy. Use when designing new features, refining requirements, or preparing specs for AI agents.",
+      "tags": [
+        "product",
+        "ndd",
+        "planning",
+        "requirements"
+      ],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "frontend-engineering/skills/intent-refinement"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/frontend-engineering/skills/intent-refinement"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:storybook",
+      "displayName": "storybook",
+      "type": "application/ai-skill+md",
+      "description": "Write and test Storybook stories for React components. Use for component isolation, visual testing, and documentation.",
+      "tags": [
+        "ui",
+        "react",
+        "testing",
+        "storybook"
+      ],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "frontend-engineering/skills/storybook"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/frontend-engineering/skills/storybook"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:ui-developer",
+      "displayName": "ui-developer",
+      "type": "application/ai-skill+md",
+      "description": "Full-stack UI development workflow with component isolation, testing, visual documentation, and CUJ capture. Use for React/TypeScript frontend development.",
+      "tags": [
+        "ui",
+        "react",
+        "typescript",
+        "frontend"
+      ],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "frontend-engineering/skills/ui-developer"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/frontend-engineering/skills/ui-developer"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:elixir-best-practices",
+      "displayName": "elixir-best-practices",
+      "type": "application/ai-skill+md",
+      "description": "Elixir coding standards and best practices. Use when writing, reviewing, or refactoring Elixir code to ensure idiomatic patterns, proper error handling, and Phoenix conventions.",
+      "tags": [
+        "elixir",
+        "phoenix",
+        "liveview",
+        "language"
+      ],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "software-craft/skills/elixir-best-practices"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/software-craft/skills/elixir-best-practices"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:engineering-discipline",
+      "displayName": "engineering-discipline",
+      "type": "application/ai-skill+md",
+      "description": "Full engineering lifecycle \u2014 define what done means, debug systematically, verify through real surfaces before claiming completion.",
+      "tags": [],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "software-craft/skills/engineering-discipline"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/software-craft/skills/engineering-discipline"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:mandatory-secure-web-skills",
+      "displayName": "mandatory-secure-web-skills",
+      "type": "application/ai-skill+md",
+      "description": "Mandatory secure coding rules and vulnerability prevention for web applications covering input validation, output encoding, session management, and auth.",
+      "tags": [],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "software-craft/skills/mandatory-secure-web-skills"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/software-craft/skills/mandatory-secure-web-skills"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:skill-creator",
+      "displayName": "skill-creator",
+      "type": "application/ai-skill+md",
+      "description": "Guide and best practices for creating, evaluating, and iteratively improving high-leverage skills for AI coding agents.",
+      "tags": [],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "software-craft/skills/skill-creator"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/software-craft/skills/skill-creator"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:asciinema-explainer-walkthroughs",
+      "displayName": "asciinema-explainer-walkthroughs",
+      "type": "application/ai-skill+md",
+      "description": "Create production-grade, synchronous terminal recordings (asciinema .cast) and interactive tabbed web walkthroughs for AI agents, developer tools, and CLI journeys. Includes PTY prompt-synchronization, intelligent time-compression, secret redaction, scenario banner structuring, and zoomable Mermaid flowchart companions.",
+      "tags": [
+        "experiment",
+        "asciinema",
+        "demo",
+        "walkthrough",
+        "documentation",
+        "pty",
+        "recording"
+      ],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "visual-explainers/skills/asciinema-explainer-walkthroughs"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/visual-explainers/skills/asciinema-explainer-walkthroughs"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:diagram-design",
@@ -123,42 +262,44 @@
         "source": "zeroasterisk/skills",
         "audience": "personal",
         "agents": "cloudcode,gemini",
-        "relativePath": "diagram-design"
+        "relativePath": "visual-explainers/skills/diagram-design"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/diagram-design"
+      "url": "https://github.com/zeroasterisk/skills/tree/main/visual-explainers/skills/diagram-design"
     },
     {
-      "identifier": "urn:air:github.com:zeroasterisk:elixir-best-practices",
-      "displayName": "elixir-best-practices",
+      "identifier": "urn:air:github.com:zeroasterisk:manim-video-quality",
+      "displayName": "manim-video-quality",
       "type": "application/ai-skill+md",
-      "description": "Elixir coding standards and best practices. Use when writing, reviewing, or refactoring Elixir code to ensure idiomatic patterns, proper error handling, and Phoenix conventions.",
-      "tags": [
-        "elixir",
-        "phoenix",
-        "liveview",
-        "language"
-      ],
-      "metadata": {
-        "source": "zeroasterisk/skills",
-        "audience": "personal",
-        "agents": "cloudcode,gemini",
-        "relativePath": "elixir-best-practices"
-      },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/elixir-best-practices"
-    },
-    {
-      "identifier": "urn:air:github.com:zeroasterisk:engineering-discipline",
-      "displayName": "engineering-discipline",
-      "type": "application/ai-skill+md",
-      "description": "Full engineering lifecycle \u2014 define what done means, debug systematically, verify through real surfaces before claiming completion.",
+      "description": "Define, create, and validly measure the quality of Manim explainer videos. Use when producing technical explainer videos, defining a visual style, reviewing a render, or building/validating an LLM-based video quality grader. Covers the 3Blue1Brown-inspired visual style system, shared storytelling vocabulary, a testable quality spec, and evaluation datasets that measure whether your grader can actually see what it claims to judge.",
       "tags": [],
       "metadata": {
         "source": "zeroasterisk/skills",
         "audience": "personal",
         "agents": "cloudcode,gemini",
-        "relativePath": "engineering-discipline"
+        "relativePath": "visual-explainers/skills/manim-video-quality"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/engineering-discipline"
+      "url": "https://github.com/zeroasterisk/skills/tree/main/visual-explainers/skills/manim-video-quality"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:alan-writing-style",
+      "displayName": "alan-writing-style",
+      "type": "application/ai-skill+md",
+      "description": "Write, rewrite, or review technical prose (blog posts, articles, design docs, PR descriptions, system architectures, and social posts) in Alan Blount's authentic voice: the Pragmatic Builder. Combines 20+ years of software engineering experience with DevRel clarity, dry observational wit, subtle \"muppet\" warmth/enthusiasm, crisp analogies, and strict anti-AI discipline (no em-dashes, no buzzword fluff, no chatbot patterns). Use whenever asked to write in Alan's tone, sound like Alan, humanize text to his personal standards, or write developer-facing content for his projects.",
+      "tags": [
+        "writing",
+        "voice",
+        "style",
+        "humanizer",
+        "devrel",
+        "alanblount"
+      ],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "writing-and-editorial/skills/alan-writing-style"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/writing-and-editorial/skills/alan-writing-style"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:googlecloudtech-x-article",
@@ -178,9 +319,9 @@
         "source": "zeroasterisk/skills",
         "audience": "personal",
         "agents": "cloudcode,gemini",
-        "relativePath": "googlecloudtech-x-article"
+        "relativePath": "writing-and-editorial/skills/googlecloudtech-x-article"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/googlecloudtech-x-article"
+      "url": "https://github.com/zeroasterisk/skills/tree/main/writing-and-editorial/skills/googlecloudtech-x-article"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:humanizer",
@@ -199,94 +340,9 @@
         "source": "zeroasterisk/skills",
         "audience": "personal",
         "agents": "cloudcode,gemini",
-        "relativePath": "humanizer"
+        "relativePath": "writing-and-editorial/skills/humanizer"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/humanizer"
-    },
-    {
-      "identifier": "urn:air:github.com:zeroasterisk:intent-refinement",
-      "displayName": "intent-refinement",
-      "type": "application/ai-skill+md",
-      "description": "Identify, draft, validate, and refine product intent and plan specifications using Narrative-Driven Development (NDD) taxonomy. Use when designing new features, refining requirements, or preparing specs for AI agents.",
-      "tags": [
-        "product",
-        "ndd",
-        "planning",
-        "requirements"
-      ],
-      "metadata": {
-        "source": "zeroasterisk/skills",
-        "audience": "personal",
-        "agents": "cloudcode,gemini",
-        "relativePath": "intent-refinement"
-      },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/intent-refinement"
-    },
-    {
-      "identifier": "urn:air:github.com:zeroasterisk:manim-video-quality",
-      "displayName": "manim-video-quality",
-      "type": "application/ai-skill+md",
-      "description": "Define, create, and validly measure the quality of Manim explainer videos. Use when producing technical explainer videos, defining a visual style, reviewing a render, or building/validating an LLM-based video quality grader. Covers the 3Blue1Brown-inspired visual style system, shared storytelling vocabulary, a testable quality spec, and evaluation datasets that measure whether your grader can actually see what it claims to judge.",
-      "tags": [],
-      "metadata": {
-        "source": "zeroasterisk/skills",
-        "audience": "personal",
-        "agents": "cloudcode,gemini",
-        "relativePath": "manim-video-quality"
-      },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/manim-video-quality"
-    },
-    {
-      "identifier": "urn:air:github.com:zeroasterisk:opm-tracking",
-      "displayName": "opm-tracking",
-      "type": "application/ai-skill+md",
-      "description": "Automates creating and lifecycle tracking of customer meeting Expert Requests in Salesforce (Vector Lightning) for Cloud AI OPM. Use when logging customer engagements, filing meeting records, or driving browser automation for Salesforce Expert Request creation and status completion.",
-      "tags": [],
-      "metadata": {
-        "source": "zeroasterisk/skills",
-        "audience": "personal",
-        "agents": "cloudcode,gemini",
-        "relativePath": "opm-tracking"
-      },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/opm-tracking"
-    },
-    {
-      "identifier": "urn:air:github.com:zeroasterisk:storybook",
-      "displayName": "storybook",
-      "type": "application/ai-skill+md",
-      "description": "Write and test Storybook stories for React components. Use for component isolation, visual testing, and documentation.",
-      "tags": [
-        "ui",
-        "react",
-        "testing",
-        "storybook"
-      ],
-      "metadata": {
-        "source": "zeroasterisk/skills",
-        "audience": "personal",
-        "agents": "cloudcode,gemini",
-        "relativePath": "storybook"
-      },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/storybook"
-    },
-    {
-      "identifier": "urn:air:github.com:zeroasterisk:ui-developer",
-      "displayName": "ui-developer",
-      "type": "application/ai-skill+md",
-      "description": "Full-stack UI development workflow with component isolation, testing, visual documentation, and CUJ capture. Use for React/TypeScript frontend development.",
-      "tags": [
-        "ui",
-        "react",
-        "typescript",
-        "frontend"
-      ],
-      "metadata": {
-        "source": "zeroasterisk/skills",
-        "audience": "personal",
-        "agents": "cloudcode,gemini",
-        "relativePath": "ui-developer"
-      },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/ui-developer"
+      "url": "https://github.com/zeroasterisk/skills/tree/main/writing-and-editorial/skills/humanizer"
     }
   ]
 }

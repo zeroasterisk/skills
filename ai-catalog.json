@@ -15,71 +15,51 @@
         "source": "zeroasterisk/skills",
         "audience": "personal",
         "agents": "cloudcode,gemini",
-        "relativePath": "aaif-notebooklm-sync"
+        "relativePath": "cloud-and-workplace/skills/aaif-notebooklm-sync"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/aaif-notebooklm-sync"
+      "url": "https://github.com/zeroasterisk/skills/tree/main/cloud-and-workplace/skills/aaif-notebooklm-sync"
     },
     {
-      "identifier": "urn:air:github.com:zeroasterisk:alan-writing-style",
-      "displayName": "alan-writing-style",
+      "identifier": "urn:air:github.com:zeroasterisk:chief-of-staff-triage",
+      "displayName": "chief-of-staff-triage",
       "type": "application/ai-skill+md",
-      "description": "Write, rewrite, or review technical prose (blog posts, articles, design docs, PR descriptions, system architectures, and social posts) in Alan Blount's authentic voice: the Pragmatic Builder. Combines 20+ years of software engineering experience with DevRel clarity, dry observational wit, subtle \"muppet\" warmth/enthusiasm, crisp analogies, and strict anti-AI discipline (no em-dashes, no buzzword fluff, no chatbot patterns). Use whenever asked to write in Alan's tone, sound like Alan, humanize text to his personal standards, or write developer-facing content for his projects.",
-      "tags": [
-        "writing",
-        "voice",
-        "style",
-        "humanizer",
-        "devrel",
-        "alanblount"
-      ],
+      "description": "Triages the user's unread Chat, Email, and Calendar into an actionable \"pay attention vs. ignore\" digest. Uses a local user profile (~/.config/agent/user-profile.md) to personalize prioritization weights, key collaborators, and projects. If the profile is missing, the agent will guide the user to create one.",
+      "tags": [],
       "metadata": {
         "source": "zeroasterisk/skills",
         "audience": "personal",
         "agents": "cloudcode,gemini",
-        "relativePath": "alan-writing-style"
+        "relativePath": "cloud-and-workplace/skills/chief-of-staff-triage"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/alan-writing-style"
+      "url": "https://github.com/zeroasterisk/skills/tree/main/cloud-and-workplace/skills/chief-of-staff-triage"
     },
     {
-      "identifier": "urn:air:github.com:zeroasterisk:asciinema-explainer-walkthroughs",
-      "displayName": "asciinema-explainer-walkthroughs",
+      "identifier": "urn:air:github.com:zeroasterisk:gemini-enterprise-agent-platform",
+      "displayName": "gemini-enterprise-agent-platform",
       "type": "application/ai-skill+md",
-      "description": "Create production-grade, synchronous terminal recordings (asciinema .cast) and interactive tabbed web walkthroughs for AI agents, developer tools, and CLI journeys. Includes PTY prompt-synchronization, intelligent time-compression, secret redaction, scenario banner structuring, and zoomable Mermaid flowchart companions.",
-      "tags": [
-        "experiment",
-        "asciinema",
-        "demo",
-        "walkthrough",
-        "documentation",
-        "pty",
-        "recording"
-      ],
+      "description": "Brand naming, product hierarchy, API translations, and service taxonomy for Gemini Enterprise and the Agent Platform. Use when you encounter unfamiliar product names like UCAIP, GEAP, Agent Engine, Reasoning Engine, Agentspace, GAAB, CES, or need to map between old and new brand names, understand which APIs or Concord tables correspond to which product surface, or understand the agent service hierarchy (Runtime, Sessions, Memory, Sandbox, Gateway, etc.). Don't use for ADK code patterns (use google-agents-cli-adk-code) or deployment (use google-agents-cli-deploy).",
+      "tags": [],
       "metadata": {
         "source": "zeroasterisk/skills",
         "audience": "personal",
         "agents": "cloudcode,gemini",
-        "relativePath": "asciinema-explainer-walkthroughs"
+        "relativePath": "cloud-and-workplace/skills/gemini-enterprise-agent-platform"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/asciinema-explainer-walkthroughs"
+      "url": "https://github.com/zeroasterisk/skills/tree/main/cloud-and-workplace/skills/gemini-enterprise-agent-platform"
     },
     {
-      "identifier": "urn:air:github.com:zeroasterisk:cuj-screenshots",
-      "displayName": "cuj-screenshots",
+      "identifier": "urn:air:github.com:zeroasterisk:opm-tracking",
+      "displayName": "opm-tracking",
       "type": "application/ai-skill+md",
-      "description": "Capture Critical User Journey (CUJ) screenshots and GIFs from web apps using headless Chromium. Use when you need to create visual demos, verify UI changes, or document user flows.",
-      "tags": [
-        "testing",
-        "ui",
-        "screenshots",
-        "automation"
-      ],
+      "description": "Automates creating and lifecycle tracking of customer meeting Expert Requests in Salesforce (Vector Lightning) for Cloud AI OPM. Use when logging customer engagements, filing meeting records, or driving browser automation for Salesforce Expert Request creation and status completion.",
+      "tags": [],
       "metadata": {
         "source": "zeroasterisk/skills",
         "audience": "personal",
         "agents": "cloudcode,gemini",
-        "relativePath": "cuj-screenshots"
+        "relativePath": "cloud-and-workplace/skills/opm-tracking"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/cuj-screenshots"
+      "url": "https://github.com/zeroasterisk/skills/tree/main/cloud-and-workplace/skills/opm-tracking"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:developer-trends-intel",
@@ -100,9 +80,168 @@
         "source": "zeroasterisk/skills",
         "audience": "personal",
         "agents": "cloudcode,gemini",
-        "relativePath": "developer-trends-intel"
+        "relativePath": "developer-intel/skills/developer-trends-intel"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/developer-trends-intel"
+      "url": "https://github.com/zeroasterisk/skills/tree/main/developer-intel/skills/developer-trends-intel"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:cuj-screenshots",
+      "displayName": "cuj-screenshots",
+      "type": "application/ai-skill+md",
+      "description": "Capture Critical User Journey (CUJ) screenshots and GIFs from web apps using headless Chromium. Use when you need to create visual demos, verify UI changes, or document user flows.",
+      "tags": [
+        "testing",
+        "ui",
+        "screenshots",
+        "automation"
+      ],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "frontend-engineering/skills/cuj-screenshots"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/frontend-engineering/skills/cuj-screenshots"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:intent-refinement",
+      "displayName": "intent-refinement",
+      "type": "application/ai-skill+md",
+      "description": "Identify, draft, validate, and refine product intent and plan specifications using Narrative-Driven Development (NDD) taxonomy. Use when designing new features, refining requirements, or preparing specs for AI agents.",
+      "tags": [
+        "product",
+        "ndd",
+        "planning",
+        "requirements"
+      ],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "frontend-engineering/skills/intent-refinement"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/frontend-engineering/skills/intent-refinement"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:storybook",
+      "displayName": "storybook",
+      "type": "application/ai-skill+md",
+      "description": "Write and test Storybook stories for React components. Use for component isolation, visual testing, and documentation.",
+      "tags": [
+        "ui",
+        "react",
+        "testing",
+        "storybook"
+      ],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "frontend-engineering/skills/storybook"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/frontend-engineering/skills/storybook"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:ui-developer",
+      "displayName": "ui-developer",
+      "type": "application/ai-skill+md",
+      "description": "Full-stack UI development workflow with component isolation, testing, visual documentation, and CUJ capture. Use for React/TypeScript frontend development.",
+      "tags": [
+        "ui",
+        "react",
+        "typescript",
+        "frontend"
+      ],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "frontend-engineering/skills/ui-developer"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/frontend-engineering/skills/ui-developer"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:elixir-best-practices",
+      "displayName": "elixir-best-practices",
+      "type": "application/ai-skill+md",
+      "description": "Elixir coding standards and best practices. Use when writing, reviewing, or refactoring Elixir code to ensure idiomatic patterns, proper error handling, and Phoenix conventions.",
+      "tags": [
+        "elixir",
+        "phoenix",
+        "liveview",
+        "language"
+      ],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "software-craft/skills/elixir-best-practices"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/software-craft/skills/elixir-best-practices"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:engineering-discipline",
+      "displayName": "engineering-discipline",
+      "type": "application/ai-skill+md",
+      "description": "Full engineering lifecycle \u2014 define what done means, debug systematically, verify through real surfaces before claiming completion.",
+      "tags": [],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "software-craft/skills/engineering-discipline"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/software-craft/skills/engineering-discipline"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:mandatory-secure-web-skills",
+      "displayName": "mandatory-secure-web-skills",
+      "type": "application/ai-skill+md",
+      "description": "Mandatory secure coding rules and vulnerability prevention for web applications covering input validation, output encoding, session management, and auth.",
+      "tags": [],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "software-craft/skills/mandatory-secure-web-skills"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/software-craft/skills/mandatory-secure-web-skills"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:skill-creator",
+      "displayName": "skill-creator",
+      "type": "application/ai-skill+md",
+      "description": "Guide and best practices for creating, evaluating, and iteratively improving high-leverage skills for AI coding agents.",
+      "tags": [],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "software-craft/skills/skill-creator"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/software-craft/skills/skill-creator"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:asciinema-explainer-walkthroughs",
+      "displayName": "asciinema-explainer-walkthroughs",
+      "type": "application/ai-skill+md",
+      "description": "Create production-grade, synchronous terminal recordings (asciinema .cast) and interactive tabbed web walkthroughs for AI agents, developer tools, and CLI journeys. Includes PTY prompt-synchronization, intelligent time-compression, secret redaction, scenario banner structuring, and zoomable Mermaid flowchart companions.",
+      "tags": [
+        "experiment",
+        "asciinema",
+        "demo",
+        "walkthrough",
+        "documentation",
+        "pty",
+        "recording"
+      ],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "visual-explainers/skills/asciinema-explainer-walkthroughs"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/visual-explainers/skills/asciinema-explainer-walkthroughs"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:diagram-design",
@@ -123,42 +262,44 @@
         "source": "zeroasterisk/skills",
         "audience": "personal",
         "agents": "cloudcode,gemini",
-        "relativePath": "diagram-design"
+        "relativePath": "visual-explainers/skills/diagram-design"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/diagram-design"
+      "url": "https://github.com/zeroasterisk/skills/tree/main/visual-explainers/skills/diagram-design"
     },
     {
-      "identifier": "urn:air:github.com:zeroasterisk:elixir-best-practices",
-      "displayName": "elixir-best-practices",
+      "identifier": "urn:air:github.com:zeroasterisk:manim-video-quality",
+      "displayName": "manim-video-quality",
       "type": "application/ai-skill+md",
-      "description": "Elixir coding standards and best practices. Use when writing, reviewing, or refactoring Elixir code to ensure idiomatic patterns, proper error handling, and Phoenix conventions.",
-      "tags": [
-        "elixir",
-        "phoenix",
-        "liveview",
-        "language"
-      ],
-      "metadata": {
-        "source": "zeroasterisk/skills",
-        "audience": "personal",
-        "agents": "cloudcode,gemini",
-        "relativePath": "elixir-best-practices"
-      },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/elixir-best-practices"
-    },
-    {
-      "identifier": "urn:air:github.com:zeroasterisk:engineering-discipline",
-      "displayName": "engineering-discipline",
-      "type": "application/ai-skill+md",
-      "description": "Full engineering lifecycle \u2014 define what done means, debug systematically, verify through real surfaces before claiming completion.",
+      "description": "Define, create, and validly measure the quality of Manim explainer videos. Use when producing technical explainer videos, defining a visual style, reviewing a render, or building/validating an LLM-based video quality grader. Covers the 3Blue1Brown-inspired visual style system, shared storytelling vocabulary, a testable quality spec, and evaluation datasets that measure whether your grader can actually see what it claims to judge.",
       "tags": [],
       "metadata": {
         "source": "zeroasterisk/skills",
         "audience": "personal",
         "agents": "cloudcode,gemini",
-        "relativePath": "engineering-discipline"
+        "relativePath": "visual-explainers/skills/manim-video-quality"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/engineering-discipline"
+      "url": "https://github.com/zeroasterisk/skills/tree/main/visual-explainers/skills/manim-video-quality"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:alan-writing-style",
+      "displayName": "alan-writing-style",
+      "type": "application/ai-skill+md",
+      "description": "Write, rewrite, or review technical prose (blog posts, articles, design docs, PR descriptions, system architectures, and social posts) in Alan Blount's authentic voice: the Pragmatic Builder. Combines 20+ years of software engineering experience with DevRel clarity, dry observational wit, subtle \"muppet\" warmth/enthusiasm, crisp analogies, and strict anti-AI discipline (no em-dashes, no buzzword fluff, no chatbot patterns). Use whenever asked to write in Alan's tone, sound like Alan, humanize text to his personal standards, or write developer-facing content for his projects.",
+      "tags": [
+        "writing",
+        "voice",
+        "style",
+        "humanizer",
+        "devrel",
+        "alanblount"
+      ],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "writing-and-editorial/skills/alan-writing-style"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/writing-and-editorial/skills/alan-writing-style"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:googlecloudtech-x-article",
@@ -178,9 +319,9 @@
         "source": "zeroasterisk/skills",
         "audience": "personal",
         "agents": "cloudcode,gemini",
-        "relativePath": "googlecloudtech-x-article"
+        "relativePath": "writing-and-editorial/skills/googlecloudtech-x-article"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/googlecloudtech-x-article"
+      "url": "https://github.com/zeroasterisk/skills/tree/main/writing-and-editorial/skills/googlecloudtech-x-article"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:humanizer",
@@ -199,262 +340,345 @@
         "source": "zeroasterisk/skills",
         "audience": "personal",
         "agents": "cloudcode,gemini",
-        "relativePath": "humanizer"
+        "relativePath": "writing-and-editorial/skills/humanizer"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/humanizer"
+      "url": "https://github.com/zeroasterisk/skills/tree/main/writing-and-editorial/skills/humanizer"
     },
     {
-      "identifier": "urn:air:github.com:zeroasterisk:intent-refinement",
-      "displayName": "intent-refinement",
+      "identifier": "urn:air:github.com:ghchinoy:agent-aware-cli",
+      "displayName": "agent-aware-cli",
       "type": "application/ai-skill+md",
-      "description": "Identify, draft, validate, and refine product intent and plan specifications using Narrative-Driven Development (NDD) taxonomy. Use when designing new features, refining requirements, or preparing specs for AI agents.",
-      "tags": [
-        "product",
-        "ndd",
-        "planning",
-        "requirements"
-      ],
-      "metadata": {
-        "source": "zeroasterisk/skills",
-        "audience": "personal",
-        "agents": "cloudcode,gemini",
-        "relativePath": "intent-refinement"
-      },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/intent-refinement"
-    },
-    {
-      "identifier": "urn:air:github.com:zeroasterisk:manim-video-quality",
-      "displayName": "manim-video-quality",
-      "type": "application/ai-skill+md",
-      "description": "Define, create, and validly measure the quality of Manim explainer videos. Use when producing technical explainer videos, defining a visual style, reviewing a render, or building/validating an LLM-based video quality grader. Covers the 3Blue1Brown-inspired visual style system, shared storytelling vocabulary, a testable quality spec, and evaluation datasets that measure whether your grader can actually see what it claims to judge.",
+      "description": "Guide for designing and implementing command-line interfaces (CLIs) that are equally usable by human developers and automated coding agents. Use when the user wants to build a CLI, apply CLI best practices, or use Go with Cobra and Viper.",
       "tags": [],
       "metadata": {
-        "source": "zeroasterisk/skills",
-        "audience": "personal",
-        "agents": "cloudcode,gemini",
-        "relativePath": "manim-video-quality"
-      },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/manim-video-quality"
-    },
-    {
-      "identifier": "urn:air:github.com:zeroasterisk:opm-tracking",
-      "displayName": "opm-tracking",
-      "type": "application/ai-skill+md",
-      "description": "Automates creating and lifecycle tracking of customer meeting Expert Requests in Salesforce (Vector Lightning) for Cloud AI OPM. Use when logging customer engagements, filing meeting records, or driving browser automation for Salesforce Expert Request creation and status completion.",
-      "tags": [],
-      "metadata": {
-        "source": "zeroasterisk/skills",
-        "audience": "personal",
-        "agents": "cloudcode,gemini",
-        "relativePath": "opm-tracking"
-      },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/opm-tracking"
-    },
-    {
-      "identifier": "urn:air:github.com:zeroasterisk:storybook",
-      "displayName": "storybook",
-      "type": "application/ai-skill+md",
-      "description": "Write and test Storybook stories for React components. Use for component isolation, visual testing, and documentation.",
-      "tags": [
-        "ui",
-        "react",
-        "testing",
-        "storybook"
-      ],
-      "metadata": {
-        "source": "zeroasterisk/skills",
-        "audience": "personal",
-        "agents": "cloudcode,gemini",
-        "relativePath": "storybook"
-      },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/storybook"
-    },
-    {
-      "identifier": "urn:air:github.com:zeroasterisk:ui-developer",
-      "displayName": "ui-developer",
-      "type": "application/ai-skill+md",
-      "description": "Full-stack UI development workflow with component isolation, testing, visual documentation, and CUJ capture. Use for React/TypeScript frontend development.",
-      "tags": [
-        "ui",
-        "react",
-        "typescript",
-        "frontend"
-      ],
-      "metadata": {
-        "source": "zeroasterisk/skills",
-        "audience": "personal",
-        "agents": "cloudcode,gemini",
-        "relativePath": "ui-developer"
-      },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/ui-developer"
-    },
-    {
-      "identifier": "urn:air:google.com:cloud-ai-opm:access-opm-skills-repo",
-      "displayName": "access-opm-skills-repo",
-      "type": "application/ai-skill+md",
-      "description": "Grant a teammate WRITE (push) access to the OPM skills repo (or any FoG / GitHub Enterprise repo) so they can contribute skills. Use when asked to add someone as a contributor or collaborator, to give push/write access, or to onboard a colleague to the repo. This is a deterministic action: the agent just runs the bundled script \u2014 no reasoning, minimal tokens. Don't use for read access (public FoG repos are already readable by anyone onboarded) or for creating a repo.",
-      "tags": [],
-      "metadata": {
-        "source": "cloud-ai-opm-skills",
-        "audience": "team",
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
         "agents": "cloudcode",
-        "relativePath": "access-opm-skills-repo"
+        "relativePath": "agent-aware-cli/skills/agent-aware-cli"
       },
-      "url": "https://depot.code.corp.goog/experimental/cloud-ai-opm-skills/tree/main/skills/access-opm-skills-repo"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/agent-aware-cli/skills/agent-aware-cli"
     },
     {
-      "identifier": "urn:air:google.com:cloud-ai-opm:account-team-mapper",
-      "displayName": "account-team-mapper",
+      "identifier": "urn:air:github.com:ghchinoy:skills-to-plugins",
+      "displayName": "skills-to-plugins",
       "type": "application/ai-skill+md",
-      "description": "Research skill to match Google Cloud Customers and Opportunities to their account team (FSR, KAE, CE, FDE, TAM) and active products being used via a parallel modular engine or grounded lookups across authoritative internal webapps: go/kerrigan and go/vector, alongside Moma search. Use when researching customer account leadership, deal context, billing/product workload footprints, or assembling field engagement tables and distribution lists. Features decoupled authentication configurations that execute independently across available SSO, LOAS, and Workspace tool paths.",
+      "description": "Audit, author, migrate, and lint Agent Skills repositories into Agent Plugins v1.0.0 specification packages. Resolves frontmatter conformance debt, groups co-dependent skills, generates plugin.json and marketplace manifests, and enforces spec containment rules. Use when converting a flat skills repo to plugins, creating a new plugin, or linting plugin conformance.",
       "tags": [],
       "metadata": {
-        "source": "cloud-ai-opm-skills",
-        "audience": "team",
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
         "agents": "cloudcode",
-        "relativePath": "account-team-mapper"
+        "relativePath": "agent-plugin-authoring/skills/skills-to-plugins"
       },
-      "url": "https://depot.code.corp.goog/experimental/cloud-ai-opm-skills/tree/main/skills/account-team-mapper"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/agent-plugin-authoring/skills/skills-to-plugins"
     },
     {
-      "identifier": "urn:air:google.com:cloud-ai-opm:asciinema-demo-producer",
-      "displayName": "asciinema-demo-producer",
+      "identifier": "urn:air:github.com:ghchinoy:ai-pop-audio-synthesizer",
+      "displayName": "ai-pop-audio-synthesizer",
       "type": "application/ai-skill+md",
-      "description": "Create, time-compress, redact, and share studio-grade terminal recordings (.cast) and interactive 2-tab web walkthroughs for AI agents and CLI tools. Use when producing customer-facing demos, executive walk-throughs, field enablement videos, or GitHub Pages demo players without live demo failures or dead-air latency.",
+      "description": "Sub-skill for composing high-fidelity music tracks via Google DeepMind Lyria and verifying container formats.",
       "tags": [],
       "metadata": {
-        "source": "cloud-ai-opm-skills",
-        "audience": "team",
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
         "agents": "cloudcode",
-        "relativePath": "asciinema-demo-producer"
+        "relativePath": "ai-pop/skills/ai-pop-audio-synthesizer"
       },
-      "url": "https://depot.code.corp.goog/experimental/cloud-ai-opm-skills/tree/main/skills/asciinema-demo-producer"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/ai-pop/skills/ai-pop-audio-synthesizer"
     },
     {
-      "identifier": "urn:air:google.com:cloud-ai-opm:broadcasting-to-field",
-      "displayName": "broadcasting-to-field",
+      "identifier": "urn:air:github.com:ghchinoy:ai-pop-compiler",
+      "displayName": "ai-pop-compiler",
       "type": "application/ai-skill+md",
-      "description": "Broadcasts ONE structured announcement to the Google Cloud field (sellers and SEs) across many Google Chat rooms in a single consistent house format (\ud83d\udea8 header + intro + Scope + Action Item + links + footer). Drafts the message with the user, recommends target rooms from the OPM room-directory spreadsheets, forces a sandbox preview, and only broadcasts after explicit approval of BOTH the message and the room list. Use when broadcasting a field announcement, an EAP / launch / GA / roadmap update, a DRZ / data-residency update, or posting the same message to many field or community rooms at once. Don't use for one-off DMs, replying inside an existing thread, non-field internal posts, or a message to a single room (post that directly with the gchat skill). Reuses: gchat, gchat-conduct, chat-conversation, opm, gsheets, gdrive.",
+      "description": "Sub-skill for validating the artist.json metadata contract, copying files, compiling typescript/Vite templates, and verifying static client builds.",
       "tags": [],
       "metadata": {
-        "source": "cloud-ai-opm-skills",
-        "audience": "team",
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
         "agents": "cloudcode",
-        "relativePath": "broadcasting-to-field"
+        "relativePath": "ai-pop/skills/ai-pop-compiler"
       },
-      "url": "https://depot.code.corp.goog/experimental/cloud-ai-opm-skills/tree/main/skills/broadcasting-to-field"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/ai-pop/skills/ai-pop-compiler"
     },
     {
-      "identifier": "urn:air:google.com:cloud-ai-opm:concise-pm-escalation",
-      "displayName": "concise-pm-escalation",
+      "identifier": "urn:air:github.com:ghchinoy:ai-pop-concept-planner",
+      "displayName": "ai-pop-concept-planner",
       "type": "application/ai-skill+md",
-      "description": "Formats a short, BLUF-first escalation to PMs when a customer issue or bug needs product-team attention. Use when asked to escalate a customer bug/blocker to PMs, write a concise escalation, or draft a short escalation email/message in the Background/Problem/Ask structure with client name, numbers, and bug links. Don't use for weekly notes, field broadcasts, or general status reports.",
+      "description": "Sub-skill for drafting virtual artist backstories, mini-albums, theme-based color palettes, track metadata, and lyrics.",
       "tags": [],
       "metadata": {
-        "source": "cloud-ai-opm-skills",
-        "audience": "team",
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
         "agents": "cloudcode",
-        "relativePath": "concise-pm-escalation"
+        "relativePath": "ai-pop/skills/ai-pop-concept-planner"
       },
-      "url": "https://depot.code.corp.goog/experimental/cloud-ai-opm-skills/tree/main/skills/concise-pm-escalation"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/ai-pop/skills/ai-pop-concept-planner"
     },
     {
-      "identifier": "urn:air:google.com:cloud-ai-opm:gcloud-ai-deck-builder",
-      "displayName": "gcloud-ai-deck-builder",
+      "identifier": "urn:air:github.com:ghchinoy:ai-pop-producer",
+      "displayName": "ai-pop-producer",
       "type": "application/ai-skill+md",
-      "description": "Build a sharp, on-brand Google Cloud AI Platform slide deck (Gemini Enterprise / field enablement) from a source doc or topic, by copying the official brand templates and filling them with a render-verify loop. Use when asked to create/build/design a deck, presentation, or slides for the field, an EBC, a launch, or a product/topic overview in the Google Cloud AI brand style. Covers layout selection (title, agenda, 3-column key-takeaways, big-statement, divider, content, FAQ, closing), title/text sizing so nothing wraps or overlaps, sourcing REAL images/diagrams (from the source doc + brand image library, never generated), and verifying each slide by rendering it. Don't use for non-Google-brand decks, for editing an existing deck's copy only, or for analyst/RFP writing.",
+      "description": "Primary orchestrator skill for creating concept-driven AI Pop Artists. Use when a user asks to generate a new artist profile, album narrative, audio-visual assets, local web-player dashboard, and hosted live endpoint.",
       "tags": [],
       "metadata": {
-        "source": "cloud-ai-opm-skills",
-        "audience": "team",
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
         "agents": "cloudcode",
-        "relativePath": "gcloud-ai-deck-builder"
+        "relativePath": "ai-pop/skills/ai-pop-producer"
       },
-      "url": "https://depot.code.corp.goog/experimental/cloud-ai-opm-skills/tree/main/skills/gcloud-ai-deck-builder"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/ai-pop/skills/ai-pop-producer"
     },
     {
-      "identifier": "urn:air:google.com:cloud-ai-opm:gcp-agent-journey-simulator",
-      "displayName": "gcp-agent-journey-simulator",
+      "identifier": "urn:air:github.com:ghchinoy:ai-pop-publisher",
+      "displayName": "ai-pop-publisher",
       "type": "application/ai-skill+md",
-      "description": "Simulate and validate developer interactions with GCP platform tools and Google agent skills across auth tiers (Tier 0 Zero Auth, Tier 1 API Keys, Tier 2/3 Managed GCP ADC/SA). Use when designing cross-product Google AI tools, auditing user consent and opt-out flows, testing fallback to offline skills, or verifying ARD catalog discovery without runtime crashes.",
+      "description": "Sub-skill for publishing compiled AI Pop web player assets (web/dist) to a public hosting endpoint (Firebase Hosting or GCS static website bucket) and verifying liveness.",
       "tags": [],
       "metadata": {
-        "source": "cloud-ai-opm-skills",
-        "audience": "team",
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
         "agents": "cloudcode",
-        "relativePath": "gcp-agent-journey-simulator"
+        "relativePath": "ai-pop/skills/ai-pop-publisher"
       },
-      "url": "https://depot.code.corp.goog/experimental/cloud-ai-opm-skills/tree/main/skills/gcp-agent-journey-simulator"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/ai-pop/skills/ai-pop-publisher"
     },
     {
-      "identifier": "urn:air:google.com:cloud-ai-opm:gemini-notes-to-tasks",
-      "displayName": "gemini-notes-to-tasks",
+      "identifier": "urn:air:github.com:ghchinoy:ai-pop-visual-designer",
+      "displayName": "ai-pop-visual-designer",
       "type": "application/ai-skill+md",
-      "description": "Process Gemini meeting-notes emails (from gemini-notes@google.com):",
+      "description": "Sub-skill for generating cohesive album cover art and track illustrations using NanoBanana.",
       "tags": [],
       "metadata": {
-        "source": "cloud-ai-opm-skills",
-        "audience": "team",
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
         "agents": "cloudcode",
-        "relativePath": "gemini-notes-to-tasks"
+        "relativePath": "ai-pop/skills/ai-pop-visual-designer"
       },
-      "url": "https://depot.code.corp.goog/experimental/cloud-ai-opm-skills/tree/main/skills/gemini-notes-to-tasks"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/ai-pop/skills/ai-pop-visual-designer"
     },
     {
-      "identifier": "urn:air:google.com:cloud-ai-opm:opm-activity-audit",
-      "displayName": "opm-activity-audit",
+      "identifier": "urn:air:github.com:ghchinoy:automation-readiness",
+      "displayName": "automation-readiness",
       "type": "application/ai-skill+md",
-      "description": "Use when an OPM wants to audit their own recent activity (default last 4 weeks) and produce a manager-facing \"Activity Map & Priorities\" Google Doc. It mines the RUNNING USER's own data \u2014 their AI-platform session history (e.g. CloudCode, GE App, Cowork, gogo), Google Calendar, Gmail and Drive \u2014 time-weights the work into a shared set of OPM task categories (customer-facing, field enablement, PM-facing, analyst relations, product testing, content, AI productivity, team ops), optionally splits by product, proposes OKR-anchored priorities, and fills the team template so every OPM's doc looks the same for the manager. Triggers: \"map my activity\", \"what do I spend my time on\", \"build my activity / priorities doc for my manager\", \"time audit\", \"categorize my work\". NOT for triaging a live to-do list, and NOT for personal (non-work) projects. Uses the user's own accounts only.",
+      "description": "Evaluates whether a skill, workflow, or process should be fully automated, partially automated with human-in-the-loop (HITL) checkpoints, or kept human-led. Implements Google DeepMind's Intelligent AI Delegation framework (arXiv:2602.11865) using an 11-axis diagnostic scorecard, hard gate vetoes, autonomy tiers, and an operational guardrail matrix. Use when deciding whether to automate a process, conducting automation risk assessments, determining delegation autonomy, or configuring monitoring and verification guardrails.",
       "tags": [],
       "metadata": {
-        "source": "cloud-ai-opm-skills",
-        "audience": "team",
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
         "agents": "cloudcode",
-        "relativePath": "opm-activity-audit"
+        "relativePath": "automation-governance/skills/automation-readiness"
       },
-      "url": "https://depot.code.corp.goog/experimental/cloud-ai-opm-skills/tree/main/skills/opm-activity-audit"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/automation-governance/skills/automation-readiness"
     },
     {
-      "identifier": "urn:air:google.com:cloud-ai-opm:opm-ge-app",
-      "displayName": "opm-ge-app",
+      "identifier": "urn:air:github.com:ghchinoy:bd-dolt-troubleshooter",
+      "displayName": "bd-dolt-troubleshooter",
       "type": "application/ai-skill+md",
-      "description": "Toolkit for an Outbound Product Manager (OPM) working on the Gemini Enterprise APP (GE App) surface. Use when answering field/seller/customer questions about GE App, finding the authoritative GE App source (FAQ, pricing, battlecard, roadmap dates, DRZ, EAP), drafting field comms or replies as an OPM, or posting in the GE/OPM Google Chat rooms. Grounds every answer in the OPM-validated GE App knowledge base (the \"Leia grounding\" set) and applies GE App audience rules (INTERNAL_STRICT / INTERNAL_NDA / EXTERNAL_SAFE). Answers in two tiers: the OPM-validated source of truth first, then an optional, clearly-labelled \"field signal\" complement read from internal GE/field chat rooms (interesting but unvalidated, never passed off as official). Don't use for GE Agent Platform deep-dives, for Gemini for Workspace, or for analyst RFP/Gartner writing (use the gartner-responses skill for that). Depends on: google_workspace (CSA + Docs/Sheets/Drive), gchat, gchat-conduct.",
+      "description": "Diagnose and repair beads (bd) issue-tracker problems caused by its Dolt backend \u2014 including engine-mode mismatches, DATABASE MISMATCH repo-ID errors, corrupt auto-backups that revert writes, dolt sql-server lock contention, hook-timeout stash-wipes, orphaned server leaks, and schema version skew (remote-backed migration blocks or client behind DB). Use when bd won't start, daemon-error is present, bd writes revert, issues.jsonl is out of sync, untracked files vanish on commit, or bd fails with \"refusing to auto-apply pending schema migrations\".",
       "tags": [],
       "metadata": {
-        "source": "cloud-ai-opm-skills",
-        "audience": "team",
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
         "agents": "cloudcode",
-        "relativePath": "opm-ge-app"
+        "relativePath": "beads-workflow/skills/bd-dolt-troubleshooter"
       },
-      "url": "https://depot.code.corp.goog/experimental/cloud-ai-opm-skills/tree/main/skills/opm-ge-app"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/beads-workflow/skills/bd-dolt-troubleshooter"
     },
     {
-      "identifier": "urn:air:google.com:cloud-ai-opm:pm-brief",
-      "displayName": "pm-brief",
+      "identifier": "urn:air:github.com:ghchinoy:grill-with-beads",
+      "displayName": "grill-with-beads",
       "type": "application/ai-skill+md",
-      "description": "Turn customer / field inputs into a PM-facing **PM Requirements Brief** \u2014 a concise, executive-length (1\u20132 page) decision doc for the product team, as a Google Doc (usually one living doc with one subject per tab) or a slide deck. For a given requirement it states: scope, what the requirement demands, the lifecycle + validation gate, what customers do today, the Cloud Blockers (with PM status and CR counts), customer examples, and phased improvement suggestions for PMs. Use when an OPM needs to structure a requirement (a regulatory need, a governance gap, a missing capability) from customer inputs and present it to PMs, grounded in Buganizer Cloud Blockers and cited sources. Works for any customer and any topic; customers appear only as examples. Also fires on \"customer requirements brief\". Don't use for field/seller comms or analyst RFPs.",
+      "description": "Grilling session that challenges your plan, sharpens the work breakdown, and updates the beads (bd) issue tracker inline as decisions crystallise. Use when you want to stress-test a plan and translate it directly into actionable, tracked bd tasks and dependencies.",
       "tags": [],
       "metadata": {
-        "source": "cloud-ai-opm-skills",
-        "audience": "team",
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
         "agents": "cloudcode",
-        "relativePath": "pm-brief"
+        "relativePath": "beads-workflow/skills/grill-with-beads"
       },
-      "url": "https://depot.code.corp.goog/experimental/cloud-ai-opm-skills/tree/main/skills/pm-brief"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/beads-workflow/skills/grill-with-beads"
     },
     {
-      "identifier": "urn:air:google.com:cloud-ai-opm:podman-agent-harness",
-      "displayName": "podman-agent-harness",
+      "identifier": "urn:air:github.com:ghchinoy:gcp-project-assessment",
+      "displayName": "gcp-project-assessment",
       "type": "application/ai-skill+md",
-      "description": "Simulate and verify AI coding agents (OpenCode, Claude Code, Gemini CLI, Cursor) interacting with tools and CLI environments inside hermetic Podman/Docker containers. Use when evaluating agent developer journeys (CUJs), testing multi-turn sessions without polluting your local workstation, or creating reproducible sandboxes for customer agent demos.",
+      "description": "Audits, categorizes, and correlates Google Cloud & Firebase projects across billing accounts, active compute, 30-day traffic metrics, cost drivers, and Firebase services. Produces structured Markdown reports with Mermaid cost charts and actionable optimization recommendations.",
       "tags": [],
       "metadata": {
-        "source": "cloud-ai-opm-skills",
-        "audience": "team",
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
         "agents": "cloudcode",
-        "relativePath": "podman-agent-harness"
+        "relativePath": "gcp-management/skills/gcp-project-assessment"
       },
-      "url": "https://depot.code.corp.goog/experimental/cloud-ai-opm-skills/tree/main/skills/podman-agent-harness"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/gcp-management/skills/gcp-project-assessment"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:gcp-project-consolidation",
+      "displayName": "gcp-project-consolidation",
+      "type": "application/ai-skill+md",
+      "description": "Guides the identification, cleanup, and consolidation of duplicate environments, orphaned persistent disks, unlinked codelabs, and safe project decommissioning across Google Cloud portfolios.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "gcp-management/skills/gcp-project-consolidation"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/gcp-management/skills/gcp-project-consolidation"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:gcp-quota-governance",
+      "displayName": "gcp-quota-governance",
+      "type": "application/ai-skill+md",
+      "description": "Evaluates, recommends, and formats commands for setting hard API quotas, rate limits, Cloud Run scaling caps, and automated billing circuit breakers across Google Cloud & Vertex AI projects.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "gcp-management/skills/gcp-quota-governance"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/gcp-management/skills/gcp-quota-governance"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:macos-hig-interaction",
+      "displayName": "macos-hig-interaction",
+      "type": "application/ai-skill+md",
+      "description": "Guidelines and assistance for creating macOS applications compliant with Apple's Human Interface Guidelines regarding Input, Interaction, and System Features.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "macos-hig/skills/macos-hig-interaction"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/macos-hig/skills/macos-hig-interaction"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:macos-hig-layout",
+      "displayName": "macos-hig-layout",
+      "type": "application/ai-skill+md",
+      "description": "Guidelines and assistance for creating macOS applications compliant with Apple's Human Interface Guidelines regarding Layout, Window Management, and Displays.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "macos-hig/skills/macos-hig-layout"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/macos-hig/skills/macos-hig-layout"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:macos-hig-reviewer",
+      "displayName": "macos-hig-reviewer",
+      "type": "application/ai-skill+md",
+      "description": "A comprehensive macOS Human Interface Guidelines code and design reviewer. Analyzes macOS application code and design for HIG compliance.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "macos-hig/skills/macos-hig-reviewer"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/macos-hig/skills/macos-hig-reviewer"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:mcp-auditor",
+      "displayName": "mcp-auditor",
+      "type": "application/ai-skill+md",
+      "description": "Audits local Model Context Protocol (MCP) server configurations and custom-built MCP servers for Remote Command Execution (RCE) and supply chain vulnerabilities, specifically focusing on STDIO transport injection and malicious prompt injection. Use when auditing MCP server configs, reviewing MCP server source code, or conducting a security review of AI IDE extensions.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "mcp-security/skills/mcp-auditor"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/mcp-security/skills/mcp-auditor"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:okf-author",
+      "displayName": "okf-author",
+      "type": "application/ai-skill+md",
+      "description": "Author a conformant Open Knowledge Format (OKF) v0.2 knowledge bundle by hand or from a description \u2014 one concept per markdown file with a required non-empty type, a reserved root index.md declaring okf_version, bundle-relative markdown links as relationship edges, and the correct v0.2 provenance/trust/lifecycle frontmatter (sources, generated, verified, status, stale_after). Derives trust tiers rather than storing a credibility score, and preserves unknown keys for forward-compatibility. Works fully by hand with zero OKF binaries installed; opportunistically uses binder/okfcli/factile/openknowledge when present. Use when asked to create an OKF bundle, write OKF concepts, add trust or provenance frontmatter, or turn notes/a description into OKF.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "okf-authoring/skills/okf-author"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/okf-authoring/skills/okf-author"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:okf-validate",
+      "displayName": "okf-validate",
+      "type": "application/ai-skill+md",
+      "description": "Validate an Open Knowledge Format (OKF) v0.2 knowledge bundle for \u00a711 conformance and trust-signal well-formedness, reporting everything as advisories and never rejecting a bundle for optional, unknown, or broken content. Checks that every non-reserved markdown file has parseable frontmatter with a non-empty type, that a root index.md declaring okf_version and any log.md follow their reserved structure, and that provenance/trust frontmatter is well-formed (actor convention, generated/verified shape, no stored credibility score). Prefers shelling out to an installed validator (okfcli/okf validate, factile, openknowledge) but falls back to explaining and running the checks entirely by hand with zero OKF binaries. Use when asked to validate, lint, or conformance-check an OKF bundle.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "okf-authoring/skills/okf-validate"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/okf-authoring/skills/okf-validate"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:changelog-manager",
+      "displayName": "changelog-manager",
+      "type": "application/ai-skill+md",
+      "description": "Generates, updates, and curates a CHANGELOG.md file adhering to the Keep a Changelog v1.1.0 specification and Common Changelog style guide by analyzing bd issue tracking history and git commit history.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "repo-authoring/skills/changelog-manager"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/repo-authoring/skills/changelog-manager"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:make-readme",
+      "displayName": "make-readme",
+      "type": "application/ai-skill+md",
+      "description": "Create, assess, and improve README.md files for public GitHub projects. Scores an existing README against a weighted rubric, gives targeted section-by-section fixes, and can check strict standard-readme spec compliance. Use when the user asks to write a README, review/grade a README, improve an existing README, or check standard-readme compliance.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "repo-authoring/skills/make-readme"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/repo-authoring/skills/make-readme"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:repository-change-recap",
+      "displayName": "repository-change-recap",
+      "type": "application/ai-skill+md",
+      "description": "Generates a structured weekly or custom timeframe commit recap for a repository. Looks for repository-specific categorization rules in .gemini/recap-rules.md or GEMINI.md before fetching git logs via git log --stat to accurately organize changes (e.g. core vs experiments). Supports optional audio generation.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "repo-authoring/skills/repository-change-recap"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/repo-authoring/skills/repository-change-recap"
+    },
+    {
+      "identifier": "urn:air:github.com:ghchinoy:technical-post-editorial",
+      "displayName": "technical-post-editorial",
+      "type": "application/ai-skill+md",
+      "description": "Edit and review technical blog posts, specs, and engineering write-ups to ensure clean house-style conformity and pitch-appropriate readability. Use as a post-hoc acceptance gate or review tool.",
+      "tags": [],
+      "metadata": {
+        "source": "ghchinoy/agent-skills",
+        "audience": "public",
+        "agents": "cloudcode",
+        "relativePath": "repo-authoring/skills/technical-post-editorial"
+      },
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/repo-authoring/skills/technical-post-editorial"
     }
   ]
 }

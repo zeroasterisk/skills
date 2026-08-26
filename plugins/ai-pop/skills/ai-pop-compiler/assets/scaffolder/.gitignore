@@ -1,0 +1,4 @@
+# Ignore compiled scaffolder binaries
+ai-pop-scaffolder
+ai-pop-scaffolder.exe
+ai-pop-scaffolder.bin

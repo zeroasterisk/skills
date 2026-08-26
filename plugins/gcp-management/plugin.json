@@ -1,0 +1,23 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "gcp-management",
+  "version": "1.0.0",
+  "description": "Google Cloud Platform and Firebase project assessment, itemized BigQuery spend analysis, quota governance, and consolidation skills.",
+  "author": {
+    "name": "ghchinoy",
+    "url": "https://github.com/ghchinoy"
+  },
+  "repository": "https://github.com/ghchinoy/agent-skills",
+  "license": "Apache-2.0",
+  "keywords": [
+    "gcp",
+    "google-cloud",
+    "firebase",
+    "audit",
+    "billing",
+    "bigquery-billing-export",
+    "quota-governance",
+    "cost-optimization",
+    "cloud-management"
+  ]
+}

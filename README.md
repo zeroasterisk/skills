@@ -1,193 +1,187 @@
-# Agent Skills
+# Agent Skills & Plugins
 
-Reusable skills for AI coding agents. Works with OpenClaw, Gemini CLI, and other agent platforms.
+[![Validate Plugins and Skills](https://github.com/zeroasterisk/skills/actions/workflows/validate.yml/badge.svg)](https://github.com/zeroasterisk/skills/actions/workflows/validate.yml)
+[![Sync Upstream Plugins](https://github.com/zeroasterisk/skills/actions/workflows/sync-upstream.yml/badge.svg)](https://github.com/zeroasterisk/skills/actions/workflows/sync-upstream.yml)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
-## Skills
+Reusable agent skills and modular packages adhering to the [Agent Plugins Specification v1.0.0](https://agent-plugins.org) and [Agent Skills Specification](https://agentskills.io). Compatible with Antigravity (`agy`), Jetski, Claude Plugin Marketplace, OpenClaw, Gemini CLI, and `npx skills`.
 
-| Skill | Description |
-|-------|-------------|
-| [aaif-notebooklm-sync](./aaif-notebooklm-sync/) | Bi-weekly lifecycle sync of AAIF WG repos, meeting minutes, and RFCs into NotebookLM with public Gist reporting |
-| [asciinema-explainer-walkthroughs](./asciinema-explainer-walkthroughs/) | Studio-grade synchronous terminal recordings (.cast) and interactive 2-tab web walkthroughs for AI agents |
-| [cuj-screenshots](./cuj-screenshots/) | Capture Critical User Journey screenshots and GIFs |
-| [developer-trends-intel](./developer-trends-intel/) | Synthesize AI & tech trends combining Plushcap MCP (company blogs, HN, YouTube) with Good AI List (19,500+ open-source AI repos, star velocity) |
-| [diagram-design](./diagram-design/) | Publication-grade Material Design 3 and Google-themed architectural, sequence, and flow diagrams (HTML/SVG) |
-| [elixir-best-practices](./elixir-best-practices/) | Elixir coding standards — pattern matching, error handling, Phoenix conventions |
-| [engineering-discipline](./engineering-discipline/) | Full lifecycle: define what done means → debug systematically → verify through real surfaces |
-| [humanizer](./humanizer/) | Rewrite AI-sounding text to read naturally and authentically based on Wikipedia's 35 signs of AI writing |
-| [alan-writing-style](./alan-writing-style/) | Write and edit in Alan Blount's authentic voice: the Pragmatic Builder (20-year dev experience, muted muppet warmth, DevRel clarity, zero AI tells) |
-| [googlecloudtech-x-article](./googlecloudtech-x-article/) | Produce viral @GoogleCloudTech X Articles from trends, architecture, and launches in Alan's builder voice with dark-mode diagrams |
-| [intent-refinement](./intent-refinement/) | Draft, validate, and refine product intent using Narrative-Driven Development (NDD) |
-| [manim-video-quality](./manim-video-quality/) | Quality standards, visual grammar, and LLM-as-judge evals for 3Blue1Brown-style Manim animations |
-| [opm-tracking](./opm-tracking/) | Automate Salesforce Expert Request creation and lifecycle tracking for Cloud AI OPM |
-| [storybook](./storybook/) | Write and test Storybook stories for React components |
-| [ui-developer](./ui-developer/) | Full-stack UI development workflow with testing and docs |
+---
 
+## Repository Architecture
 
+The repository is structured into modular **Agent Plugins** (`plugins/<plugin-name>/`), each containing a `plugin.json` package manifest, structured `skills/<skill-name>/`, and indexed via `.claude-plugin/marketplace.json`.
+
+```
+skills/
+├── .claude-plugin/
+│   └── marketplace.json          # Claude Plugin Marketplace catalog
+├── plugins/
+│   ├── <plugin-name>/
+│   │   ├── plugin.json           # Agent Plugins v1.0.0 package manifest
+│   │   └── skills/
+│   │       └── <skill-name>/
+│   │           ├── SKILL.md      # Normative instructions & YAML frontmatter
+│   │           ├── references/   # Deep-dive documentation (progressive disclosure)
+│   │           ├── scripts/      # Deterministic, executable automation (+x)
+│   │           └── assets/       # Static templates and boilerplate
+├── scripts/
+│   ├── validate-plugins.sh       # Conformance validator (manifests, frontmatter, scripts)
+│   ├── sync-upstream-plugins.py  # Synchronizer for upstream plugins from ghchinoy/agent-skills
+│   ├── sync-upstream-plugins.sh  # Shell wrapper for upstream synchronization
+│   └── audit-conformance.sh      # Read-only conformance debt scanner
+├── registry.toml                 # Source declarations + federation overrides
+├── sync.py                       # Reconciles registry → agent configs & ARD catalogs
+└── ai-catalog.json               # ARD v1.0 catalog of resolved skills
+```
+
+---
+
+## Plugin Catalog
+
+### Personal Plugins (`zeroasterisk`)
+
+| Plugin | Version | Description | Included Skills |
+| :--- | :--- | :--- | :--- |
+| **`writing-and-editorial`** | `1.0.0` | Authoring, voice matching, style refinement, and anti-AI humanization tools for technical writing and social content. | `alan-writing-style`<br>`googlecloudtech-x-article`<br>`humanizer` |
+| **`visual-explainers`** | `1.0.0` | Tools and quality evaluation rubrics for diagrams, terminal animations, and mathematical explainer videos. | `diagram-design`<br>`asciinema-explainer-walkthroughs`<br>`manim-video-quality` |
+| **`frontend-engineering`** | `1.0.0` | Full-stack UI development workflows, React component isolation with Storybook, CUJ capturing, and product intent refinement. | `ui-developer`<br>`storybook`<br>`cuj-screenshots`<br>`intent-refinement` |
+| **`software-craft`** | `1.0.0` | Software engineering discipline, systematic debugging, Elixir best practices, secure web guidelines, and agent skill authoring. | `engineering-discipline`<br>`elixir-best-practices`<br>`mandatory-secure-web-skills`<br>`skill-creator` |
+| **`cloud-and-workplace`** | `1.0.0` | Google Cloud & Gemini Enterprise taxonomy, executive meeting triage, OPM Salesforce automation, and NotebookLM synchronization. | `gemini-enterprise-agent-platform`<br>`chief-of-staff-triage`<br>`opm-tracking`<br>`aaif-notebooklm-sync` |
+| **`developer-intel`** | `1.0.0` | Developer trend synthesis combining Plushcap MCP engineering blog data with Good AI List repository velocity. | `developer-trends-intel` |
+
+### Consumed Upstream Plugins (`ghchinoy/agent-skills`)
+
+Mirrored and synchronized from [Hussain Chinoy's agent-skills repository](https://github.com/ghchinoy/agent-skills):
+
+| Plugin | Version | Description | Included Skills |
+| :--- | :--- | :--- | :--- |
+| **`agent-aware-cli`** | `1.0.0` | Best practices and architectural guidelines for CLI tools optimized for both human users and AI coding agents. | `agent-aware-cli` |
+| **`agent-plugin-authoring`**| `1.1.0` | Authoring, migration, and linting tools for packaging Agent Skills into Agent Plugins v1.0.0 spec packages. | `skills-to-plugins` |
+| **`ai-pop`** | `1.0.0` | Virtual music artist production suite: lore planning, audio synthesis, visual design, player compilation, and deployment. | `ai-pop-producer`<br>`ai-pop-concept-planner`<br>`ai-pop-audio-synthesizer`<br>`ai-pop-visual-designer`<br>`ai-pop-compiler`<br>`ai-pop-publisher` |
+| **`automation-governance`** | `1.0.0` | Framework and tooling for evaluating workflow automation readiness based on Google DeepMind research. | `automation-readiness` |
+| **`beads-workflow`** | `1.9.1` | Tools and workflows for the beads (`bd`) Dolt-powered issue tracking ecosystem (diagnostics, repair, plan grilling). | `bd-dolt-troubleshooter`<br>`grill-with-beads` |
+| **`gcp-management`** | `1.0.0` | Google Cloud Platform & Firebase project assessment, itemized BigQuery spend analysis, quota governance, and consolidation. | `gcp-project-assessment`<br>`gcp-quota-governance`<br>`gcp-project-consolidation` |
+| **`macos-hig`** | `1.1.0` | macOS Human Interface Guidelines assistance and code reviewers for layout, interactions, and HIG compliance. | `macos-hig-layout`<br>`macos-hig-interaction`<br>`macos-hig-reviewer` |
+| **`mcp-security`** | `1.0.0` | Model Context Protocol (MCP) security auditing for RCE, STDIO injection, and supply chain vulnerabilities. | `mcp-auditor` |
+| **`okf-authoring`** | `1.0.0` | Tool-agnostic authoring and validation for conformant Open Knowledge Format (OKF) v0.2 knowledge bundles. | `okf-author`<br>`okf-validate` |
+| **`repo-authoring`** | `1.0.0` | Repository management skills for technical writing, README generation, changelog curation, and commit recaps. | `make-readme`<br>`technical-post-editorial`<br>`repository-change-recap`<br>`changelog-manager` |
+
+---
+
+## Upstream Synchronization
+
+Upstream plugins from `ghchinoy/agent-skills` are maintained in `plugins/` and kept continuously in sync.
+
+### Manual Sync via CLI
+
+Run the synchronizer to fetch upstream updates, update vendored plugins, refresh `.claude-plugin/marketplace.json`, and run validation:
+
+```bash
+# Full sync, marketplace refresh, and validation
+./scripts/sync-upstream-plugins.sh
+
+# Dry-run to preview upstream changes
+./scripts/sync-upstream-plugins.sh --dry-run
+```
+
+### Automated Sync via GitHub Actions
+
+The repository includes [`.github/workflows/sync-upstream.yml`](.github/workflows/sync-upstream.yml), which:
+- Runs automatically on a weekly schedule (Mondays at 12:00 UTC) and on manual dispatch.
+- Checks `ghchinoy/agent-skills` for upstream changes.
+- Automatically opens a Pull Request with updated plugins and validated manifests.
+
+---
+
+## Validation & Conformance
+
+Run local validation across all plugin manifests (`plugin.json`), skill frontmatter (`SKILL.md`), executable script bits, and marketplace indexing:
+
+```bash
+./scripts/validate-plugins.sh
+```
+
+To audit conformance debt on new or modified skills:
+
+```bash
+./scripts/audit-conformance.sh
+```
+
+---
+
+## Installation & Usage
+
+### Installing via Open Agent Skills CLI (`npx skills`)
+
+The [Open Agent Skills CLI](https://github.com/vercel-labs/skills) works natively with this repository via `.claude-plugin/marketplace.json`:
+
+```bash
+# List available skills in the repository
+npx skills add zeroasterisk/skills --list
+
+# Install a specific skill (e.g., alan-writing-style or mcp-auditor)
+npx skills add zeroasterisk/skills --skill alan-writing-style
+npx skills add zeroasterisk/skills --skill mcp-auditor
+
+# Install all skills to your project
+npx skills add zeroasterisk/skills --all
+```
+
+### Antigravity (`agy`) / Jetski
+
+`agy` (Antigravity) and `jetski` automatically discover skills placed in your customization root (`~/.gemini/config/skills/` or project `.agents/skills/`):
+
+```bash
+# Link all skills into ~/.gemini/config/skills via sync.py
+./sync.py
+
+# Or manually link a single skill
+ln -s "$(pwd)/plugins/writing-and-editorial/skills/alan-writing-style" ~/.gemini/config/skills/
+```
+
+### Gemini CLI
+
+```bash
+# Install a specific skill directly from GitHub
+gemini skills install zeroasterisk/skills --path plugins/software-craft/skills/engineering-discipline
+
+# Link local skill
+gemini skills link ./plugins/writing-and-editorial/skills/alan-writing-style
+```
+
+---
+
+## Registry Federation (`sync.py`)
+
+`registry.toml` acts as the single source of truth for federated skills across machines. `sync.py` reads the registry and:
+1. Auto-discovers all `SKILL.md` files across declared sources.
+2. Updates `cloudcode.json` `skills.paths` for CloudCode agents.
+3. Manages symlinks in `~/.gemini/config/skills/` for active Gemini / Jetski / Antigravity agents.
+4. Generates ARD-compliant [Agentic Resource Discovery](https://agenticresourcediscovery.org/) catalogs (`ai-catalog.json`).
+
+```bash
+./sync.py               # Reconcile registry and generate catalogs
+./sync.py --dry-run     # Preview actions without writing
+./sync.py --verbose     # Show all skipped and included skills
+```
+
+---
 
 ## Scion Templates
 
-Agent templates for [Scion](https://scion.ai) — each directory contains a `scion-agent.yaml`, system prompt, and agent instructions.
+Agent templates for [Scion](https://scion.ai) — each directory contains a `scion-agent.yaml`, system prompt, and agent instructions:
 
 | Template | Description |
-|----------|-------------|
+| :--- | :--- |
 | [elixir-dev](./templates/elixir-dev/) | Elixir SWE agent with Postgres, SQLite, Redis — for AgentMsg and a2a-elixir development |
 | [project-lead](./templates/project-lead/) | Project lead — sub-coordinator for sustained project work, delegates to SWE/verifier agents |
 | [researcher](./templates/researcher/) | Research agent — investigates questions, reads docs, analyzes code, produces findings |
 | [swe](./templates/swe/) | Senior software engineer — implements features, fixes bugs, writes tests |
 | [verifier](./templates/verifier/) | Skeptical verifier — independently checks that work actually produces correct outcomes |
 
-Also included: [elixir-best-practices.md](./templates/elixir-best-practices.md) — Elixir coding standards and conventions for SWE agents.
-
-## Registry & Sync
-
-This repo is the **canonical source** for personal skills and the **registry** for
-federated skills from other sources (team repos, google/skills, internal tooling).
-
-### How federation works
-
-External skill sources are cloned as independent git repos into gitignored
-subdirectories alongside the personal skills. `registry.toml` declares each
-**source** once; skills within a source are **auto-discovered** by scanning
-for `SKILL.md` files (scoped by `include`/`exclude` globs):
-
-```
-skills/                        # this repo
-  registry.toml                # source declarations + per-skill overrides
-  sync.py                      # reconciles registry → agent config + catalogs
-  sync.sh                      # thin wrapper around sync.py
-  elixir-best-practices/       # personal skill (tracked by this repo)
-  ui-developer/                # personal skill (tracked by this repo)
-  google-skills/               # github.com/google/skills clone — gitignored
-  ai-catalog.json              # generated: ARD aggregate of resolved skills
-  ai-catalog.<source>.json     # generated: one ARD catalog per source
-```
-
-Each external directory is its own git repo. This repo never tracks their
-contents — only `registry.toml` knows they exist. On machines without a given
-source, that directory simply isn't present and its skills are silently
-skipped. New skills added upstream appear automatically after `git pull` +
-`./sync.py` — no per-skill registry edits needed.
-
-### Replicating on a new machine
-
-```bash
-git clone git@github.com:zeroasterisk/skills.git ~/Workspaces/skills
-cd ~/Workspaces/skills
-./sync.py --clone-missing     # clones declared external sources, then syncs
-```
-
-Sources declared with `repo` + `clone_to` in `registry.toml` are cloned
-automatically by `--clone-missing`; anything else (e.g. google3 paths) is
-skipped silently on machines without access. Agent wiring destinations are
-configurable per machine via `[targets]` in `registry.toml`.
-
-### Adding an external skill source
-
-```bash
-# 1. Add ONE [[source]] block to registry.toml:
-#    repo = "https://github.com/google/skills.git"
-#    clone_to = "google-skills"        # gitignore this dir
-#    path = "google-skills/skills"
-#    include = ["cloud/gcloud", ...]   # curate, or omit for everything
-
-# 2. Clone + sync
-./sync.py --clone-missing
-```
-
-### sync.py
-
-Reads `registry.toml` (stdlib `tomllib`, no dependencies) and on each run:
-
-1. Auto-discovers `*/SKILL.md` under each source path present on this machine
-2. Updates `cloudcode.json` `skills.paths` (CloudCode agent)
-3. Creates/cleans symlinks in `~/.gemini/config/skills/` (Gemini/AGY)
-4. Writes ARD-compliant `ai-catalog.json` per source + an aggregate
-
-```bash
-./sync.py               # normal sync (sync.sh still works)
-./sync.py --dry-run     # preview without changes
-./sync.py --verbose     # show skipped skills too
-```
-
-### ai-catalog.json (ARD)
-
-Catalogs follow the [Agentic Resource Discovery](https://agenticresourcediscovery.org/)
-`ai-catalog` spec (specVersion 1.0, validated against the
-[official schema](https://github.com/ards-project/ard-spec/blob/main/spec/schemas/ai-catalog.schema.json)).
-Each skill is an entry of type `application/ai-skill+md` with a
-domain-anchored URN (`urn:air:github.com:zeroasterisk:<skill>`), public
-GitHub URL, tags, and metadata. No local filesystem paths — safe to commit,
-and publishable at `/.well-known/ai-catalog.json` for ARD registries to
-crawl once we want public discovery.
-
-### Usage
-
-### Antigravity (`agy`) / Jetski
-
-`agy` (Antigravity - external) and `jetski` (internal) auto-discover skills placed in your customization root (e.g., `~/.gemini/config/skills/` or project `.agents/skills/`).
-
-Copy a skill folder to your skills directory:
-
-```bash
-# External (Antigravity)
-cp -r cuj-screenshots ~/.gemini/config/skills/
-
-# Internal (Jetski)
-cp -r cuj-screenshots ~/.gemini/config/skills/
-```
-
-Both platforms automatically discover the skill from the `SKILL.md` frontmatter and instructions.
-
-### OpenClaw
-
-Copy a skill folder to `~/.openclaw/workspace/skills/`:
-
-```bash
-cp -r cuj-screenshots ~/.openclaw/workspace/skills/
-```
-
-OpenClaw auto-discovers skills from the `SKILL.md` description.
-
-### Gemini CLI (Deprecated)
-
-> [!WARNING]  
-> `gemini` CLI is deprecated in favor of `agy` (Antigravity) externally and `jetski` internally.
-
-Point Gemini to the skill's `GEMINI.md`:
-
-```bash
-gemini -i cuj-screenshots/GEMINI.md "capture screenshots of my app"
-```
-
-Or use the extension format:
-
-```bash
-gemini --load-extension cuj-screenshots/gemini-extension.json
-```
-
-## Structure
-
-Each skill follows this structure:
-
-```
-skill-name/
-├── SKILL.md              # OpenClaw skill file (required)
-├── README.md             # Human documentation
-├── GEMINI.md             # Gemini CLI instructions (optional)
-├── gemini-extension.json # Gemini extension manifest (optional)
-├── scripts/              # Helper scripts
-└── examples/             # Usage examples
-```
-
-## Contributing
-
-PRs welcome! Each skill should:
-
-1. Have a clear, single purpose
-2. Work without project-specific dependencies
-3. Include examples
-4. Support at least OpenClaw (SKILL.md)
+---
 
 ## License
 
-MIT
+This repository is licensed under the [Apache License 2.0](LICENSE).

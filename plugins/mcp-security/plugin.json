@@ -1,0 +1,13 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "mcp-security",
+  "version": "1.0.0",
+  "description": "Model Context Protocol (MCP) security auditing for RCE, STDIO injection, and supply chain vulnerabilities.",
+  "author": {
+    "name": "ghchinoy",
+    "url": "https://github.com/ghchinoy"
+  },
+  "repository": "https://github.com/ghchinoy/agent-skills",
+  "license": "Apache-2.0",
+  "keywords": ["mcp", "security", "audit", "rce", "vulnerability"]
+}
