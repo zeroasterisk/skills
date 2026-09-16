@@ -22,6 +22,7 @@ Reusable skills for AI coding agents. Works with OpenClaw, Gemini CLI, and other
 | [opm-tracking](./opm-tracking/) | Automate Salesforce Expert Request creation and lifecycle tracking for Cloud AI OPM |
 | [storybook](./storybook/) | Write and test Storybook stories for React components |
 | [ui-developer](./ui-developer/) | Full-stack UI development workflow with testing and docs |
+| [youtube-thumbnail-designer](./youtube-thumbnail-designer/) | High-impact 1920x1080 YouTube thumbnails and technical social hero cards from real UI screenshots via Playwright HTML/CSS canvas |
 
 
 

@@ -244,6 +244,20 @@
         "relativePath": "ui-developer"
       },
       "url": "https://github.com/zeroasterisk/skills/tree/main/ui-developer"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:youtube-thumbnail-designer",
+      "displayName": "youtube-thumbnail-designer",
+      "type": "application/ai-skill+md",
+      "description": "Create high-impact 1920x1080 (16:9) YouTube thumbnails and technical social hero cards from real UI screenshots using a programmatic Playwright HTML/CSS canvas. Preserves 100% lossless UI screenshot clarity while layering 3D perspective depth, percentage-locked feature spotlights, subtle dot-matrix textures, and multi-stop gradient typography.",
+      "tags": [],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "audience": "personal",
+        "agents": "cloudcode,gemini",
+        "relativePath": "youtube-thumbnail-designer"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/main/youtube-thumbnail-designer"
     }
   ]
 }
