@@ -81,10 +81,12 @@ Use when showcasing multiple screens or components (e.g., Desktop + Mobile, or C
 1. **Acquire & Inspect Source Screenshot**:
    - Accept a local image path (`.png`, `.jpg`, `.webp`) or download from a URL (`curl -sL <url> -o screenshot.png` or environment-specific screenshot CLI if applicable).
    - Inspect image dimensions (`python3 -c 'from PIL import Image; print(Image.open("screenshot.png").size)'` or `file screenshot.png`) and view the image (`view_file`) to identify the focal UI element for the spotlight callout.
-2. **Calculate Spotlight Percentage Coordinates**:
+2. **Calculate Spotlight Percentage Coordinates & Gutter Masking**:
    - Measure where the key UI feature sits horizontally (`left%`, `width%`) and vertically (`top%`, `height%`) relative to the full screenshot dimensions.
+   - **CRITICAL ASPECT-RATIO RULE**: Never crop `.showcase-container` using `object-fit: cover` or non-native dimensions when using percentage-locked overlays (`.live-highlight`). Doing so alters the aspect ratio and causes highlight bounding boxes to drift off their target UI elements. Always preserve the native image `aspect-ratio` (e.g. `aspect-ratio: 3400 / 1894`) on `.showcase-container` and hide unwanted background columns using solid dark masks positioned along clean vertical/horizontal UI gutters.
+   - **CHROMIUM GRADIENT TEXT RULE**: Never apply `text-shadow` directly to elements (or parents of elements) using `-webkit-background-clip: text; -webkit-text-fill-color: transparent;`. Chromium renders dark text-shadows *inside* transparent glyph fills and creates dark smudge halos around letters. Keep gradient text in a separate sibling `div` with `text-shadow: none`.
 3. **Render via Playwright (`scripts/render_thumbnail.mjs`)**:
-   - Run the bundled generator script or execute a customized Node.js Playwright script targeting headless Chrome/Chromium (`--no-sandbox`).
+   - Run the bundled generator script or execute a customized Node.js Playwright script targeting headless Chrome/Chromium (`--no-sandbox`) at both `1920x1080` (`deviceScaleFactor: 1`) and `3840x2160` (`deviceScaleFactor: 2`).
    - Example invocation of the bundled CLI helper:
      ```bash
      node scripts/render_thumbnail.mjs \
@@ -98,12 +100,11 @@ Use when showcasing multiple screens or components (e.g., Desktop + Mobile, or C
        --spotlight "53.8,23.6,30.8,24.5" \
        --output youtube_thumbnail.png
      ```
-4. **Visual Verification Gate**:
-   - **Always** inspect the generated `youtube_thumbnail.png` using `view_file` before presenting it to the user.
-   - Verify:
-     - No text overlaps awkwardly with bright background elements.
-     - The gap between left typography and right 3D screen feels tight and intentional.
-     - The spotlight box frames the intended UI feature without clipping its label.
+4. **Mandatory Critical Visual Audit Gate (`view_file`)**:
+   - **Always** copy the rendered image to a new versioned filename (to bypass UI media caching) and inspect it with `view_file` before presenting to the user.
+   - Audit every edge critically:
+     - **Zero Bounding Box Overflow**: Verify that 100% of highlighted UI text sits cleanly inside its `.live-highlight` bounding box with zero overflowing letters or badges.
+     - **Zero Sliced / Half-Clipped Words or Numbers**: Check every mask boundary (`top`, `bottom`, `left`, `right`) to ensure zero words, dates, prices, or status numbers (e.g., `RUNTIME`, `8 turns`, `+1`) are sliced in half or dangling outside their cards.
+     - **High-Contrast Typography**: Verify that gradient headline text sits over a clean, uniform dark background with zero blurry screenshot bleed or dark drop-shadow halos.
 5. **Deliver & Share**:
-   - Provide the local file path and embed the image in any markdown artifact.
-   - If the user's workspace has an image hosting or screenshot sharing CLI configured, optionally upload and return the shareable URL.
+   - Provide both 4K (`3840x2160`) and 1080p (`1920x1080`) local paths and shareable links, and embed the verified image in the canonical markdown artifact.
