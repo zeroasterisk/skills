@@ -80,7 +80,7 @@ Naive terminal recording (`asciinema rec` in a live human session) fails for aut
 ## 📂 Step-by-Step Workflow
 
 ### Step 1: Define Scenarios & Banners
-Generate width-calibrated double-border ANSI banners using [scripts/banner.py](file:///usr/local/google/home/alanblount/Workspaces/skills/asciinema-explainer-walkthroughs/scripts/banner.py) or [scripts/banner_template.sh](file:///usr/local/google/home/alanblount/Workspaces/skills/asciinema-explainer-walkthroughs/scripts/banner_template.sh):
+Generate width-calibrated double-border ANSI banners using [scripts/banner.py](scripts/banner.py) or [scripts/banner_template.sh](scripts/banner_template.sh):
 
 ```bash
 # Python CLI generator
@@ -91,7 +91,7 @@ python3 scripts/banner.py --step 1 "Capability Search" "Agent queries catalog fo
 ```
 
 ### Step 2: Write the Synchronous PTY Python Script
-Use [scripts/pty_recorder_template.py](file:///usr/local/google/home/alanblount/Workspaces/skills/asciinema-explainer-walkthroughs/scripts/pty_recorder_template.py) to script the recording:
+Use [scripts/pty_recorder_template.py](scripts/pty_recorder_template.py) to script the recording:
 
 ```python
 from scripts.pty_recorder_template import SynchronousPTYRecorder
@@ -121,7 +121,7 @@ finally:
 ```
 
 ### Step 3: Build & Validate the Interactive Walkthrough
-Use [scripts/build_walkthrough.py](file:///usr/local/google/home/alanblount/Workspaces/skills/asciinema-explainer-walkthroughs/scripts/build_walkthrough.py) to validate the `.cast` file and render the interactive HTML walkthrough:
+Use [scripts/build_walkthrough.py](scripts/build_walkthrough.py) to validate the `.cast` file and render the interactive HTML walkthrough:
 
 ```bash
 # Validate recording and generate standalone index.html
@@ -149,9 +149,9 @@ python3 -m unittest discover -s tests -v
 
 ## 📚 Advanced Documentation & Research
 
-- [Competitive Analysis & Ecosystem Patterns](file:///usr/local/google/home/alanblount/Workspaces/skills/asciinema-explainer-walkthroughs/docs/competitive_analysis_and_patterns.md): In-depth comparison of Asciinema v2/v3, Charm VHS, Pexpect, `agg`, and high-value patterns.
-- [Lessons Learned & Common Pitfalls](file:///usr/local/google/home/alanblount/Workspaces/skills/asciinema-explainer-walkthroughs/docs/lessons_learned_and_pitfalls.md): Guidance on avoiding prompt race conditions, dead air, path leaks, and geometry reflow.
-- [Experiment Roadmap & Validation Plan](file:///usr/local/google/home/alanblount/Workspaces/skills/asciinema-explainer-walkthroughs/docs/roadmap_and_experiments.md): Multi-phase plan for typing jitter, markers, automated test harnesses, and GIF export.
+- [Competitive Analysis & Ecosystem Patterns](docs/competitive_analysis_and_patterns.md): In-depth comparison of Asciinema v2/v3, Charm VHS, Pexpect, `agg`, and high-value patterns.
+- [Lessons Learned & Common Pitfalls](docs/lessons_learned_and_pitfalls.md): Guidance on avoiding prompt race conditions, dead air, path leaks, and geometry reflow.
+- [Experiment Roadmap & Validation Plan](docs/roadmap_and_experiments.md): Multi-phase plan for typing jitter, markers, automated test harnesses, and GIF export.
 
 ---
 

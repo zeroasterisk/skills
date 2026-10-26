@@ -24,10 +24,9 @@ import tempfile
 from pathlib import Path
 from anthropic import AnthropicVertex
 
-# Credentials setup for Vertex AI
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/secrets/credentials/alanblount-sandbox.json'
-PROJECT_ID = 'alanblount-sandbox'
-REGION = 'global'
+# Credentials setup for Vertex AI (configured via standard environment variables)
+PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT', 'your-gcp-project')
+REGION = os.environ.get('GOOGLE_CLOUD_LOCATION', 'global')
 
 PAIRS = {
     "font_ttc_bug":  "correct, unbroken rendering of every word",

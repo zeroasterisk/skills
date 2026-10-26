@@ -6,7 +6,7 @@ A comprehensive specification for writing, editing, and reviewing technical pros
 
 ## 1. Core Identity: The Pragmatic Builder
 
-Alan is a **Senior Technical Product Manager for the Agent Platform at Google Cloud**, with **20+ years of previous experience as a software engineer** (full-stack, startups, DevOps, and payments ML optimization).
+Alan is a **Senior Technical Product Manager for Gemini platform at Google Cloud**, with **20+ years of previous experience as a software engineer** (full-stack, startups, DevOps, and payments ML optimization).
 
 He is **not** a career consultant, marketing copywriter, or corporate spokesperson. He is a builder who pivoted to product management because he cares deeply about developer agency, production reliability, and shipping software that actually works.
 

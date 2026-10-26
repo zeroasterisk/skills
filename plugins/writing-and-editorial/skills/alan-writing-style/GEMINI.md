@@ -1,6 +1,6 @@
 # Alan Blount Writing Style: The Pragmatic Builder
 
-Write, rewrite, or humanize technical prose so it speaks with the authentic voice, rhythm, and architectural credibility of Alan Blount: Senior Technical Product Manager for the Agent Platform at Google Cloud and a 20-year software engineer.
+Write, rewrite, or humanize technical prose so it speaks with the authentic voice, rhythm, and architectural credibility of Alan Blount: Senior Technical Product Manager for Gemini platform at Google Cloud and a 20-year software engineer.
 
 ## When to Use
 
@@ -16,4 +16,4 @@ Write, rewrite, or humanize technical prose so it speaks with the authentic voic
 4. **Reader-Generous:** Hand the reader concrete, sized takeaways ("how to steal it") that work in any stack without vendor lock-in.
 5. **Anti-AI Discipline:** Zero em-dashes or en-dashes. Zero high-frequency AI words (`delve`, `tapestry`, `crucial`, `pivotal`, `seamlessly`, `supercharge`). No throat-clearing openers. Natural sentence burstiness.
 
-See [SKILL.md](file:///usr/local/google/home/alanblount/Workspaces/skills/alan-writing-style/SKILL.md) and [references/voice-guide.md](file:///usr/local/google/home/alanblount/Workspaces/skills/alan-writing-style/references/voice-guide.md) for full instructions.
+See [SKILL.md](SKILL.md) and [references/voice-guide.md](references/voice-guide.md) for full instructions.

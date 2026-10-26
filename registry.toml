@@ -3,41 +3,89 @@
 # Single source of truth for federated skills across all sources and machines.
 # Parsed by sync.py (stdlib tomllib — no dependencies).
 #
-# Model:
-#   [host]      — ARD catalog host identity (who publishes this catalog)
-#   [[source]]  — a skill bundle: a directory tree scanned for */SKILL.md
-#   [skill.X]   — optional per-skill overrides (tags, active, agents)
+# Three strictly isolated tiers (never mixed in catalogs or unintended agents):
+#   - "zeroasterisk" : Public personal & vendored OSS skills (github.com/zeroasterisk/skills)
+#   - "opm"          : Shared team skills (configured in ~/.config/skills-sync/local.toml)
+#   - "work"         : Personal work skills (configured in ~/.config/skills-sync/local.toml)
 #
-# Sources are auto-discovered: every directory containing a SKILL.md under
-# `path` becomes a skill. Use `include` / `exclude` (glob patterns matched
-# against the path relative to `path`) to scope large upstream repos.
-# If a source path doesn't exist on this machine it is silently skipped.
+# Model:
+#   [host]          — Public ARD catalog host identity (only "zeroasterisk" tier is written to repo ai-catalog*.json)
+#   [agents.<name>] — Per-agent wiring & subscribed `tiers` (1, 2, or all 3 tiers)
+#   [[source]]      — Skill bundle directory tree scanned for */SKILL.md, tagged with `tier`
+#   [skill.<name>]  — Optional per-skill overrides (tags, active, agents)
+#
+# Private or machine-specific sources (e.g. `tier = "opm"` and `tier = "work"`,
+# pre-submit `fallback_paths`, or `native_piper_skills_dir`) live in
+# ~/.config/skills-sync/local.toml so zero internal URLs or paths enter git.
 
 [host]
 displayName = "Alan Blount — Agent Skills"
 identifier = "github.com/zeroasterisk"
 
-# Where sync.py writes agent wiring. cloudcode_config auto-discovers
-# (~/dotfiles/config/cloudcode/, then ~/.config/cloudcode/) when empty;
-# set it explicitly to pin a machine-specific location.
+# Shared path defaults; [agents.*] below controls per-agent tier routing.
 [targets]
 cloudcode_config = ""
 gemini_skills_dir = "~/.gemini/config/skills"
 gemini_plugins_dir = "~/.gemini/config/plugins"
+local_catalog_dir = "~/.config/skills-sync"
 
 # ---------------------------------------------------------------------------
+# Per-Agent Tier Subscriptions
+#   jetski     -> all 3 tiers ("zeroasterisk", "opm", "work")
+#   cloudcode  -> 2 tiers ("zeroasterisk", "opm")
+#   gemini-cli -> opt-in, 2 tiers ("zeroasterisk", "opm")
+#   claude     -> opt-in, 1 tier ("zeroasterisk")
+#   codex      -> opt-in, 1 tier ("zeroasterisk")
+# Override ad-hoc via CLI: ./sync.py --agents claude --tiers zeroasterisk,opm
+# ---------------------------------------------------------------------------
+[agents.jetski]
+enabled = true
+kind = "jetski"
+tiers = ["zeroasterisk", "opm", "work"]
+skills_dir = "~/.gemini/config/skills"
+plugins_dir = "~/.gemini/config/plugins"
+
+[agents.cloudcode]
+enabled = true
+kind = "cloudcode"
+tiers = ["zeroasterisk", "opm"]
+config = ""
+
+[agents.gemini-cli]
+enabled = false
+kind = "symlink-dir"
+tiers = ["zeroasterisk", "opm"]
+skills_dir = "~/.gemini/skills"
+
+[agents.claude]
+enabled = false
+kind = "symlink-dir"
+tiers = ["zeroasterisk"]
+skills_dir = "~/.claude/skills"
+
+[agents.codex]
+enabled = false
+kind = "symlink-dir"
+tiers = ["zeroasterisk"]
+skills_dir = "~/.codex/skills"
+
+
+# ===========================================================================
+# TIER 1: "zeroasterisk" — Public OSS Personal & Vendored Plugins
+# (ONLY this tier is emitted into repo-tracked ai-catalog*.json files)
+# ===========================================================================
+
 # Personal skills — this repo (github.com/zeroasterisk/skills)
 # Organized into Agent Plugins v1.0.0 packages under plugins/
-# ---------------------------------------------------------------------------
 [[source]]
 name = "zeroasterisk/skills"
+tier = "zeroasterisk"
 repo = "git@github.com:zeroasterisk/skills.git"
-url_base = "https://github.com/zeroasterisk/skills/tree/main"
+url_base = "https://github.com/zeroasterisk/skills/tree/master/plugins"
 publisher = "github.com"
 namespace = "zeroasterisk"
 path = "plugins"
 audience = "personal"
-agents = ["cloudcode", "gemini"]
 include = [
   "writing-and-editorial/**",
   "visual-explainers/**",
@@ -45,21 +93,20 @@ include = [
   "software-craft/**",
   "cloud-and-workplace/**",
   "developer-intel/**",
+  "developer-friction-reviewer/**",
 ]
 
-# ---------------------------------------------------------------------------
 # Upstream plugins — github.com/ghchinoy/agent-skills
 # Vendored in plugins/ and kept in sync via scripts/sync-upstream-plugins.py
-# ---------------------------------------------------------------------------
 [[source]]
 name = "ghchinoy/agent-skills"
+tier = "zeroasterisk"
 repo = "https://github.com/ghchinoy/agent-skills.git"
-url_base = "https://github.com/ghchinoy/agent-skills/tree/main"
+url_base = "https://github.com/ghchinoy/agent-skills/tree/main/plugins"
 publisher = "github.com"
 namespace = "ghchinoy"
 path = "plugins"
 audience = "public"
-agents = ["cloudcode", "gemini"]
 include = [
   "agent-aware-cli/**",
   "agent-plugin-authoring/**",
@@ -73,13 +120,26 @@ include = [
   "repo-authoring/**",
 ]
 
-# ---------------------------------------------------------------------------
+# ADLC Toolkit & Plugins — github.com/voodootikigod/adlc
+# Vendored in plugins/adlc and kept in sync via scripts/sync-adlc.py
+[[source]]
+name = "voodootikigod/adlc"
+tier = "zeroasterisk"
+repo = "https://github.com/voodootikigod/adlc.git"
+url_base = "https://github.com/voodootikigod/adlc/tree/main"
+publisher = "github.com"
+namespace = "voodootikigod"
+path = "plugins"
+audience = "public"
+include = [
+  "adlc/**",
+]
+
 # Google public skills — github.com/google/skills
 # Cloned into ./google-skills (gitignored, independent git repo).
-# Curated subset via `include`; widen or set ["**"] to take everything.
-# ---------------------------------------------------------------------------
 [[source]]
 name = "google/skills"
+tier = "zeroasterisk"
 repo = "https://github.com/google/skills.git"
 clone_to = "google-skills"          # enables ./sync.py --clone-missing
 url_base = "https://github.com/google/skills/tree/main/skills"
@@ -97,24 +157,31 @@ include = [
   "cloud/agent-platform-deploy",
 ]
 
-# ---------------------------------------------------------------------------
-# Team / OPM sources — silently skipped on machines without access.
-# ---------------------------------------------------------------------------
-[[source]]
-name = "cloud-ai-opm-skills"
-repo = "git@depot.code.corp.goog:experimental/cloud-ai-opm-skills.git"
-url_base = "https://depot.code.corp.goog/experimental/cloud-ai-opm-skills/tree/main/skills"
-publisher = "google.com"
-namespace = "cloud-ai-opm"
-path = "../cloud-ai-opm-skills/skills"
-audience = "team"
-agents = ["cloudcode"]
-exclude = ["SKILL.template.md"]
+
+# ===========================================================================
+# TIERS 2 ("opm") & 3 ("work") — Configured Locally
+# Add private team or work [[source]] blocks in ~/.config/skills-sync/local.toml:
+#
+#   [[source]]
+#   name = "team-skills"
+#   tier = "opm"
+#   path = "~/Workspaces/team-skills/skills"
+#   audience = "team"
+#
+#   [[source]]
+#   name = "work-skills"
+#   tier = "work"
+#   path = "~/Workspaces/work-skills"
+#   audience = "personal-work"
+# ===========================================================================
 
 
 # ---------------------------------------------------------------------------
 # Per-skill overrides (key = skill directory name)
 # ---------------------------------------------------------------------------
+[skill.manim-video-quality]
+active = false
+
 [skill.elixir-best-practices]
 tags = ["elixir", "phoenix", "liveview", "language"]
 
@@ -145,14 +212,8 @@ tags = ["trends", "plushcap", "goodailist", "ai", "github", "repos", "market-int
 [skill.humanizer]
 tags = ["writing", "humanizer", "style", "editing", "ai-detection", "copywriting"]
 
-# Example: disable a discovered skill without touching include/exclude
-# [skill.some-skill]
-# active = false
-
-
-
 [skill.googlecloudtech-x-article]
-tags = ["writing", "x-article", "google-cloud", "devrel", "plushcap", "trends", "agent-platform"]
+tags = ["writing", "x-article", "google-cloud", "devrel", "plushcap", "trends", "gemini-platform"]
 
 [skill.alan-writing-style]
 tags = ["writing", "voice", "style", "humanizer", "devrel", "alanblount"]

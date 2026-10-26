@@ -32,4 +32,4 @@ Based on Wikipedia's ["Signs of AI writing"](https://en.wikipedia.org/wiki/Wikip
 - **File Mode:** Overwrite or update file directly with natural prose; keep code, metadata, tables, and links intact.
 - **Embedded Mode:** For commit messages, PRs, or docs, output clean, humanized text directly without meta-commentary.
 
-See [SKILL.md](file:///usr/local/google/home/alanblount/Workspaces/skills/humanizer/SKILL.md) for full examples, before/after pairs, and detailed explanations.
+See [SKILL.md](SKILL.md) for full examples, before/after pairs, and detailed explanations.

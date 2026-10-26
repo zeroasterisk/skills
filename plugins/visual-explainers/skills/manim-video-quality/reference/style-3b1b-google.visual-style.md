@@ -1,5 +1,5 @@
 ---
-name: "3Blue1Brown x Google Agent Platform"
+name: "3Blue1Brown x Google Gemini platform"
 version: "1.0"
 tags:
   - math-explainer
@@ -68,7 +68,7 @@ colors:
       role: "secondary emphasis, highlighting a specific detail within a blue explanation"
     - name: "Google Blue"
       hex: "#4285F4"
-      role: "RESERVED — only when the content IS the Google product/platform itself (e.g. the Agent Platform node, Gemini branding)"
+      role: "RESERVED — only when the content IS the Google product/platform itself (e.g. the Gemini platform node, Gemini branding)"
     - name: "Google Green"
       hex: "#34A853"
       role: "RESERVED — confirmed / success / allowed states only"

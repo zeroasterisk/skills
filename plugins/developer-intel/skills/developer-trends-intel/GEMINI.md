@@ -14,13 +14,13 @@ Synthesizes AI ecosystem and tech industry intelligence by combining **Plushcap 
 ### Good AI List
 ```bash
 # Top daily star gainers
-/usr/local/google/home/alanblount/Workspaces/skills/developer-trends-intel/scripts/goodailist.py trending --window 1d --limit 15
+./scripts/goodailist.py trending --window 1d --limit 15
 
 # Search specific category or subcategory
-/usr/local/google/home/alanblount/Workspaces/skills/developer-trends-intel/scripts/goodailist.py repos --search "mcp" --category "AI Engineering" --limit 10
+./scripts/goodailist.py repos --search "mcp" --category "AI Engineering" --limit 10
 
 # Search developers
-/usr/local/google/home/alanblount/Workspaces/skills/developer-trends-intel/scripts/goodailist.py devs --search "karpathy"
+./scripts/goodailist.py devs --search "karpathy"
 ```
 
 ### Plushcap MCP
@@ -31,4 +31,4 @@ call_mcp_tool(ServerName="plushcap", ToolName="get_company", Arguments={"slug": 
 call_mcp_tool(ServerName="plushcap", ToolName="get_trend_topic_data", Arguments={"slug": "ai-agents", "weeks": 12})
 ```
 
-See [SKILL.md](file:///usr/local/google/home/alanblount/Workspaces/skills/developer-trends-intel/SKILL.md) for full instructions and multi-source synthesis workflows.
+See [SKILL.md](SKILL.md) for full instructions and multi-source synthesis workflows.

@@ -13,11 +13,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "agent-aware-cli/skills/agent-aware-cli"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/agent-aware-cli/skills/agent-aware-cli"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/agent-aware-cli/skills/agent-aware-cli"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:skills-to-plugins",
@@ -27,11 +28,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "agent-plugin-authoring/skills/skills-to-plugins"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/agent-plugin-authoring/skills/skills-to-plugins"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/agent-plugin-authoring/skills/skills-to-plugins"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:ai-pop-audio-synthesizer",
@@ -41,11 +43,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "ai-pop/skills/ai-pop-audio-synthesizer"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/ai-pop/skills/ai-pop-audio-synthesizer"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/ai-pop/skills/ai-pop-audio-synthesizer"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:ai-pop-compiler",
@@ -55,11 +58,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "ai-pop/skills/ai-pop-compiler"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/ai-pop/skills/ai-pop-compiler"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/ai-pop/skills/ai-pop-compiler"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:ai-pop-concept-planner",
@@ -69,11 +73,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "ai-pop/skills/ai-pop-concept-planner"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/ai-pop/skills/ai-pop-concept-planner"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/ai-pop/skills/ai-pop-concept-planner"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:ai-pop-producer",
@@ -83,11 +88,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "ai-pop/skills/ai-pop-producer"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/ai-pop/skills/ai-pop-producer"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/ai-pop/skills/ai-pop-producer"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:ai-pop-publisher",
@@ -97,11 +103,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "ai-pop/skills/ai-pop-publisher"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/ai-pop/skills/ai-pop-publisher"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/ai-pop/skills/ai-pop-publisher"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:ai-pop-visual-designer",
@@ -111,11 +118,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "ai-pop/skills/ai-pop-visual-designer"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/ai-pop/skills/ai-pop-visual-designer"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/ai-pop/skills/ai-pop-visual-designer"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:automation-readiness",
@@ -125,11 +133,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "automation-governance/skills/automation-readiness"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/automation-governance/skills/automation-readiness"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/automation-governance/skills/automation-readiness"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:bd-dolt-troubleshooter",
@@ -139,11 +148,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "beads-workflow/skills/bd-dolt-troubleshooter"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/beads-workflow/skills/bd-dolt-troubleshooter"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/beads-workflow/skills/bd-dolt-troubleshooter"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:grill-with-beads",
@@ -153,11 +163,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "beads-workflow/skills/grill-with-beads"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/beads-workflow/skills/grill-with-beads"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/beads-workflow/skills/grill-with-beads"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:gcp-project-assessment",
@@ -167,11 +178,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "gcp-management/skills/gcp-project-assessment"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/gcp-management/skills/gcp-project-assessment"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/gcp-management/skills/gcp-project-assessment"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:gcp-project-consolidation",
@@ -181,11 +193,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "gcp-management/skills/gcp-project-consolidation"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/gcp-management/skills/gcp-project-consolidation"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/gcp-management/skills/gcp-project-consolidation"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:gcp-quota-governance",
@@ -195,11 +208,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "gcp-management/skills/gcp-quota-governance"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/gcp-management/skills/gcp-quota-governance"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/gcp-management/skills/gcp-quota-governance"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:macos-hig-interaction",
@@ -209,11 +223,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "macos-hig/skills/macos-hig-interaction"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/macos-hig/skills/macos-hig-interaction"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/macos-hig/skills/macos-hig-interaction"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:macos-hig-layout",
@@ -223,11 +238,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "macos-hig/skills/macos-hig-layout"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/macos-hig/skills/macos-hig-layout"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/macos-hig/skills/macos-hig-layout"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:macos-hig-reviewer",
@@ -237,11 +253,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "macos-hig/skills/macos-hig-reviewer"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/macos-hig/skills/macos-hig-reviewer"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/macos-hig/skills/macos-hig-reviewer"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:mcp-auditor",
@@ -251,11 +268,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "mcp-security/skills/mcp-auditor"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/mcp-security/skills/mcp-auditor"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/mcp-security/skills/mcp-auditor"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:okf-author",
@@ -265,11 +283,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "okf-authoring/skills/okf-author"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/okf-authoring/skills/okf-author"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/okf-authoring/skills/okf-author"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:okf-validate",
@@ -279,11 +298,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "okf-authoring/skills/okf-validate"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/okf-authoring/skills/okf-validate"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/okf-authoring/skills/okf-validate"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:changelog-manager",
@@ -293,11 +313,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "repo-authoring/skills/changelog-manager"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/repo-authoring/skills/changelog-manager"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/repo-authoring/skills/changelog-manager"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:make-readme",
@@ -307,11 +328,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "repo-authoring/skills/make-readme"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/repo-authoring/skills/make-readme"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/repo-authoring/skills/make-readme"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:repository-change-recap",
@@ -321,11 +343,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "repo-authoring/skills/repository-change-recap"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/repo-authoring/skills/repository-change-recap"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/repo-authoring/skills/repository-change-recap"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:technical-post-editorial",
@@ -335,11 +358,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "repo-authoring/skills/technical-post-editorial"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/repo-authoring/skills/technical-post-editorial"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/repo-authoring/skills/technical-post-editorial"
     }
   ]
 }

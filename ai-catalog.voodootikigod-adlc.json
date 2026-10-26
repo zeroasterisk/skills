@@ -1,0 +1,69 @@
+{
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "Alan Blount \u2014 Agent Skills",
+    "identifier": "github.com/zeroasterisk"
+  },
+  "entries": [
+    {
+      "identifier": "urn:air:github.com:voodootikigod:adlc",
+      "displayName": "adlc",
+      "type": "application/ai-skill+md",
+      "description": "Routes agentic development work to the right Agentic Development Lifecycle (ADLC) gate in Gemini (Antigravity/JetSki). Use when shaping a spec or ticket, deciding how to fan out work to models, protecting frozen rails during a build, prosecuting a change before merge, or distilling repeated review findings into defenses. Triggers on \"shape this spec\", \"is this ticket ready\", \"freeze these tests\", \"prosecute this change\", \"is this safe to merge\", \"ADLC\", \"which gate\", \"spec-lint\", \"premortem\", \"coldstart\", \"rails-guard\", \"hollow-test\", \"behavior-diff\".",
+      "tags": [],
+      "metadata": {
+        "source": "voodootikigod/adlc",
+        "tier": "zeroasterisk",
+        "audience": "public",
+        "agents": "tier:zeroasterisk",
+        "relativePath": "adlc/skills/adlc"
+      },
+      "url": "https://github.com/voodootikigod/adlc/tree/main/adlc/skills/adlc"
+    },
+    {
+      "identifier": "urn:air:github.com:voodootikigod:adlc-doctrine",
+      "displayName": "adlc-doctrine",
+      "type": "application/ai-skill+md",
+      "description": "Core operating rules for agents working inside an ADLC-orchestrated run (Antigravity Booster). Use whenever executing a ticket, reviewing a diff, or acting as part of an agb fleet. Encodes quota discipline, evidence rules, and scope discipline.",
+      "tags": [],
+      "metadata": {
+        "source": "voodootikigod/adlc",
+        "tier": "zeroasterisk",
+        "audience": "public",
+        "agents": "tier:zeroasterisk",
+        "relativePath": "adlc/skills/adlc-doctrine"
+      },
+      "url": "https://github.com/voodootikigod/adlc/tree/main/adlc/skills/adlc-doctrine"
+    },
+    {
+      "identifier": "urn:air:github.com:voodootikigod:adlc-prosecutor",
+      "displayName": "adlc-prosecutor",
+      "type": "application/ai-skill+md",
+      "description": "Refute-charter review discipline for prosecuting a diff against its ticket. Use when asked to act as a prosecutor, reviewer, or to find reasons a change must not merge.",
+      "tags": [],
+      "metadata": {
+        "source": "voodootikigod/adlc",
+        "tier": "zeroasterisk",
+        "audience": "public",
+        "agents": "tier:zeroasterisk",
+        "relativePath": "adlc/skills/adlc-prosecutor"
+      },
+      "url": "https://github.com/voodootikigod/adlc/tree/main/adlc/skills/adlc-prosecutor"
+    },
+    {
+      "identifier": "urn:air:github.com:voodootikigod:adlc-self-orchestrate",
+      "displayName": "adlc-self-orchestrate",
+      "type": "application/ai-skill+md",
+      "description": "How an Antigravity session decomposes a large build-out into a ticket DAG and drives the agb fleet itself (recursive orchestration). Use when asked to \"build X in parallel\", \"run a fleet\", \"orchestrate this with agb\", or when a task is too large for one session.",
+      "tags": [],
+      "metadata": {
+        "source": "voodootikigod/adlc",
+        "tier": "zeroasterisk",
+        "audience": "public",
+        "agents": "tier:zeroasterisk",
+        "relativePath": "adlc/skills/adlc-self-orchestrate"
+      },
+      "url": "https://github.com/voodootikigod/adlc/tree/main/adlc/skills/adlc-self-orchestrate"
+    }
+  ]
+}

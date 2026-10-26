@@ -9,15 +9,16 @@
       "identifier": "urn:air:github.com:zeroasterisk:aaif-notebooklm-sync",
       "displayName": "aaif-notebooklm-sync",
       "type": "application/ai-skill+md",
-      "description": "Synchronizes all AAIF Working Group (wg-*) and foundation repositories, meeting minutes, charters, monthly reports, deliverables, reference architectures, and open pull requests from https://github.com/aaif/* into Google NotebookLM (https://notebooklm.google.com/notebook/3f4ea1ea-fe19-4afe-8cbe-ac5f9950412d). Features full state-based lifecycle management (skip unchanged, update modified, add new, remove deleted/merged) with gcert LOAS validation, bi-weekly lookback synthesis, and automated public GitHub Gist reporting.",
+      "description": "Synchronizes all AAIF Working Group (wg-*) and foundation repositories, meeting minutes, charters, monthly reports, deliverables, reference architectures, and open pull requests from https://github.com/aaif/* into Google NotebookLM (https://notebooklm.google.com/notebook/3f4ea1ea-fe19-4afe-8cbe-ac5f9950412d). Features full state-based lifecycle management (skip unchanged, update modified, add new, remove deleted/merged) with active credential validation, bi-weekly lookback synthesis, and automated public GitHub Gist reporting.",
       "tags": [],
       "metadata": {
         "source": "zeroasterisk/skills",
+        "tier": "zeroasterisk",
         "audience": "personal",
-        "agents": "cloudcode,gemini",
+        "agents": "tier:zeroasterisk",
         "relativePath": "cloud-and-workplace/skills/aaif-notebooklm-sync"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/cloud-and-workplace/skills/aaif-notebooklm-sync"
+      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/cloud-and-workplace/skills/aaif-notebooklm-sync"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:chief-of-staff-triage",
@@ -27,39 +28,27 @@
       "tags": [],
       "metadata": {
         "source": "zeroasterisk/skills",
+        "tier": "zeroasterisk",
         "audience": "personal",
-        "agents": "cloudcode,gemini",
+        "agents": "tier:zeroasterisk",
         "relativePath": "cloud-and-workplace/skills/chief-of-staff-triage"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/cloud-and-workplace/skills/chief-of-staff-triage"
+      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/cloud-and-workplace/skills/chief-of-staff-triage"
     },
     {
-      "identifier": "urn:air:github.com:zeroasterisk:gemini-enterprise-agent-platform",
-      "displayName": "gemini-enterprise-agent-platform",
+      "identifier": "urn:air:github.com:zeroasterisk:developer-friction-reviewer",
+      "displayName": "developer-friction-reviewer",
       "type": "application/ai-skill+md",
-      "description": "Brand naming, product hierarchy, API translations, and service taxonomy for Gemini Enterprise and the Agent Platform. Use when you encounter unfamiliar product names like UCAIP, GEAP, Agent Engine, Reasoning Engine, Agentspace, GAAB, CES, or need to map between old and new brand names, understand which APIs or Concord tables correspond to which product surface, or understand the agent service hierarchy (Runtime, Sessions, Memory, Sandbox, Gateway, etc.). Don't use for ADK code patterns (use google-agents-cli-adk-code) or deployment (use google-agents-cli-deploy).",
+      "description": "Orchestrates persona-based developer friction reviews and audit loops on onboarding flows, recipes, tools, and CLIs. Spawns a persona subagent to execute documented steps from a cold start, record errors into a structured Friction Log artifact, and remediate verified issues across iterative review loops. Use when testing developer experience (DX), walking new developer journeys, auditing README instructions, validating recipes, or running cold-start onboarding audits. Don't use for generic unit testing or standalone code formatting without a persona walkthrough.",
       "tags": [],
       "metadata": {
         "source": "zeroasterisk/skills",
+        "tier": "zeroasterisk",
         "audience": "personal",
-        "agents": "cloudcode,gemini",
-        "relativePath": "cloud-and-workplace/skills/gemini-enterprise-agent-platform"
+        "agents": "tier:zeroasterisk",
+        "relativePath": "developer-friction-reviewer/skills/developer-friction-reviewer"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/cloud-and-workplace/skills/gemini-enterprise-agent-platform"
-    },
-    {
-      "identifier": "urn:air:github.com:zeroasterisk:opm-tracking",
-      "displayName": "opm-tracking",
-      "type": "application/ai-skill+md",
-      "description": "Automates creating and lifecycle tracking of customer meeting Expert Requests in Salesforce (Vector Lightning) for Cloud AI OPM. Use when logging customer engagements, filing meeting records, or driving browser automation for Salesforce Expert Request creation and status completion.",
-      "tags": [],
-      "metadata": {
-        "source": "zeroasterisk/skills",
-        "audience": "personal",
-        "agents": "cloudcode,gemini",
-        "relativePath": "cloud-and-workplace/skills/opm-tracking"
-      },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/cloud-and-workplace/skills/opm-tracking"
+      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/developer-friction-reviewer/skills/developer-friction-reviewer"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:developer-trends-intel",
@@ -78,11 +67,12 @@
       ],
       "metadata": {
         "source": "zeroasterisk/skills",
+        "tier": "zeroasterisk",
         "audience": "personal",
-        "agents": "cloudcode,gemini",
+        "agents": "tier:zeroasterisk",
         "relativePath": "developer-intel/skills/developer-trends-intel"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/developer-intel/skills/developer-trends-intel"
+      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/developer-intel/skills/developer-trends-intel"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:cuj-screenshots",
@@ -97,11 +87,12 @@
       ],
       "metadata": {
         "source": "zeroasterisk/skills",
+        "tier": "zeroasterisk",
         "audience": "personal",
-        "agents": "cloudcode,gemini",
+        "agents": "tier:zeroasterisk",
         "relativePath": "frontend-engineering/skills/cuj-screenshots"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/frontend-engineering/skills/cuj-screenshots"
+      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/frontend-engineering/skills/cuj-screenshots"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:intent-refinement",
@@ -116,11 +107,12 @@
       ],
       "metadata": {
         "source": "zeroasterisk/skills",
+        "tier": "zeroasterisk",
         "audience": "personal",
-        "agents": "cloudcode,gemini",
+        "agents": "tier:zeroasterisk",
         "relativePath": "frontend-engineering/skills/intent-refinement"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/frontend-engineering/skills/intent-refinement"
+      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/frontend-engineering/skills/intent-refinement"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:storybook",
@@ -135,11 +127,12 @@
       ],
       "metadata": {
         "source": "zeroasterisk/skills",
+        "tier": "zeroasterisk",
         "audience": "personal",
-        "agents": "cloudcode,gemini",
+        "agents": "tier:zeroasterisk",
         "relativePath": "frontend-engineering/skills/storybook"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/frontend-engineering/skills/storybook"
+      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/frontend-engineering/skills/storybook"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:ui-developer",
@@ -154,11 +147,12 @@
       ],
       "metadata": {
         "source": "zeroasterisk/skills",
+        "tier": "zeroasterisk",
         "audience": "personal",
-        "agents": "cloudcode,gemini",
+        "agents": "tier:zeroasterisk",
         "relativePath": "frontend-engineering/skills/ui-developer"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/frontend-engineering/skills/ui-developer"
+      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/frontend-engineering/skills/ui-developer"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:elixir-best-practices",
@@ -173,11 +167,12 @@
       ],
       "metadata": {
         "source": "zeroasterisk/skills",
+        "tier": "zeroasterisk",
         "audience": "personal",
-        "agents": "cloudcode,gemini",
+        "agents": "tier:zeroasterisk",
         "relativePath": "software-craft/skills/elixir-best-practices"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/software-craft/skills/elixir-best-practices"
+      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/software-craft/skills/elixir-best-practices"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:engineering-discipline",
@@ -187,11 +182,12 @@
       "tags": [],
       "metadata": {
         "source": "zeroasterisk/skills",
+        "tier": "zeroasterisk",
         "audience": "personal",
-        "agents": "cloudcode,gemini",
+        "agents": "tier:zeroasterisk",
         "relativePath": "software-craft/skills/engineering-discipline"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/software-craft/skills/engineering-discipline"
+      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/software-craft/skills/engineering-discipline"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:mandatory-secure-web-skills",
@@ -201,11 +197,12 @@
       "tags": [],
       "metadata": {
         "source": "zeroasterisk/skills",
+        "tier": "zeroasterisk",
         "audience": "personal",
-        "agents": "cloudcode,gemini",
+        "agents": "tier:zeroasterisk",
         "relativePath": "software-craft/skills/mandatory-secure-web-skills"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/software-craft/skills/mandatory-secure-web-skills"
+      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/software-craft/skills/mandatory-secure-web-skills"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:skill-creator",
@@ -215,11 +212,12 @@
       "tags": [],
       "metadata": {
         "source": "zeroasterisk/skills",
+        "tier": "zeroasterisk",
         "audience": "personal",
-        "agents": "cloudcode,gemini",
+        "agents": "tier:zeroasterisk",
         "relativePath": "software-craft/skills/skill-creator"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/software-craft/skills/skill-creator"
+      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/software-craft/skills/skill-creator"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:asciinema-explainer-walkthroughs",
@@ -237,11 +235,12 @@
       ],
       "metadata": {
         "source": "zeroasterisk/skills",
+        "tier": "zeroasterisk",
         "audience": "personal",
-        "agents": "cloudcode,gemini",
+        "agents": "tier:zeroasterisk",
         "relativePath": "visual-explainers/skills/asciinema-explainer-walkthroughs"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/visual-explainers/skills/asciinema-explainer-walkthroughs"
+      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/visual-explainers/skills/asciinema-explainer-walkthroughs"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:diagram-design",
@@ -260,25 +259,27 @@
       ],
       "metadata": {
         "source": "zeroasterisk/skills",
+        "tier": "zeroasterisk",
         "audience": "personal",
-        "agents": "cloudcode,gemini",
+        "agents": "tier:zeroasterisk",
         "relativePath": "visual-explainers/skills/diagram-design"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/visual-explainers/skills/diagram-design"
+      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/visual-explainers/skills/diagram-design"
     },
     {
-      "identifier": "urn:air:github.com:zeroasterisk:manim-video-quality",
-      "displayName": "manim-video-quality",
+      "identifier": "urn:air:github.com:zeroasterisk:youtube-thumbnail-designer",
+      "displayName": "youtube-thumbnail-designer",
       "type": "application/ai-skill+md",
-      "description": "Define, create, and validly measure the quality of Manim explainer videos. Use when producing technical explainer videos, defining a visual style, reviewing a render, or building/validating an LLM-based video quality grader. Covers the 3Blue1Brown-inspired visual style system, shared storytelling vocabulary, a testable quality spec, and evaluation datasets that measure whether your grader can actually see what it claims to judge.",
+      "description": "Create high-impact 1920x1080 (16:9) YouTube thumbnails and technical social hero cards from real UI screenshots using a programmatic Playwright HTML/CSS canvas. Preserves 100% lossless UI screenshot clarity while layering 3D perspective depth, percentage-locked feature spotlights, subtle dot-matrix textures, and multi-stop gradient typography.",
       "tags": [],
       "metadata": {
         "source": "zeroasterisk/skills",
+        "tier": "zeroasterisk",
         "audience": "personal",
-        "agents": "cloudcode,gemini",
-        "relativePath": "visual-explainers/skills/manim-video-quality"
+        "agents": "tier:zeroasterisk",
+        "relativePath": "visual-explainers/skills/youtube-thumbnail-designer"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/visual-explainers/skills/manim-video-quality"
+      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/visual-explainers/skills/youtube-thumbnail-designer"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:alan-writing-style",
@@ -295,17 +296,18 @@
       ],
       "metadata": {
         "source": "zeroasterisk/skills",
+        "tier": "zeroasterisk",
         "audience": "personal",
-        "agents": "cloudcode,gemini",
+        "agents": "tier:zeroasterisk",
         "relativePath": "writing-and-editorial/skills/alan-writing-style"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/writing-and-editorial/skills/alan-writing-style"
+      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/writing-and-editorial/skills/alan-writing-style"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:googlecloudtech-x-article",
       "displayName": "googlecloudtech-x-article",
       "type": "application/ai-skill+md",
-      "description": "Alan's standard workflow to produce a high-impact, viral X Article for the @GoogleCloudTech brand account from a trend, architecture pattern, repo, or launch: connect the trend to Google Cloud Agent Platform + live developer context, propose title/hook angles first, draft to the proven structure in Alan's Pragmatic Builder voice (20-year dev experience, muted \"muppet\" warmth, dry technical wit, parenthetical asides, zero em-dashes, and strict anti-AI discipline), generate dark-mode hand-drawn diagrams, and publish to a Google Doc on approval. Use whenever Alan wants to draft an X Article, turn a trend/spec/repo into an article, or brainstorm @GoogleCloudTech content angles.",
+      "description": "Alan's standard workflow to produce a high-impact, viral X Article for the @GoogleCloudTech brand account from a trend, architecture pattern, repo, or launch: connect the trend to Google Cloud Gemini platform + live developer context, propose title/hook angles first, draft to the proven structure in Alan's Pragmatic Builder voice (20-year dev experience, muted \"muppet\" warmth, dry technical wit, parenthetical asides, zero em-dashes, and strict anti-AI discipline), generate clean Engineering Graph Paper diagrams, and publish to a Google Doc on approval. Use whenever Alan wants to draft an X Article, turn a trend/spec/repo into an article, or brainstorm @GoogleCloudTech content angles.",
       "tags": [
         "writing",
         "x-article",
@@ -313,15 +315,16 @@
         "devrel",
         "plushcap",
         "trends",
-        "agent-platform"
+        "gemini-platform"
       ],
       "metadata": {
         "source": "zeroasterisk/skills",
+        "tier": "zeroasterisk",
         "audience": "personal",
-        "agents": "cloudcode,gemini",
+        "agents": "tier:zeroasterisk",
         "relativePath": "writing-and-editorial/skills/googlecloudtech-x-article"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/writing-and-editorial/skills/googlecloudtech-x-article"
+      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/writing-and-editorial/skills/googlecloudtech-x-article"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:humanizer",
@@ -338,11 +341,12 @@
       ],
       "metadata": {
         "source": "zeroasterisk/skills",
+        "tier": "zeroasterisk",
         "audience": "personal",
-        "agents": "cloudcode,gemini",
+        "agents": "tier:zeroasterisk",
         "relativePath": "writing-and-editorial/skills/humanizer"
       },
-      "url": "https://github.com/zeroasterisk/skills/tree/main/writing-and-editorial/skills/humanizer"
+      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/writing-and-editorial/skills/humanizer"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:agent-aware-cli",
@@ -352,11 +356,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "agent-aware-cli/skills/agent-aware-cli"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/agent-aware-cli/skills/agent-aware-cli"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/agent-aware-cli/skills/agent-aware-cli"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:skills-to-plugins",
@@ -366,11 +371,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "agent-plugin-authoring/skills/skills-to-plugins"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/agent-plugin-authoring/skills/skills-to-plugins"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/agent-plugin-authoring/skills/skills-to-plugins"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:ai-pop-audio-synthesizer",
@@ -380,11 +386,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "ai-pop/skills/ai-pop-audio-synthesizer"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/ai-pop/skills/ai-pop-audio-synthesizer"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/ai-pop/skills/ai-pop-audio-synthesizer"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:ai-pop-compiler",
@@ -394,11 +401,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "ai-pop/skills/ai-pop-compiler"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/ai-pop/skills/ai-pop-compiler"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/ai-pop/skills/ai-pop-compiler"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:ai-pop-concept-planner",
@@ -408,11 +416,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "ai-pop/skills/ai-pop-concept-planner"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/ai-pop/skills/ai-pop-concept-planner"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/ai-pop/skills/ai-pop-concept-planner"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:ai-pop-producer",
@@ -422,11 +431,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "ai-pop/skills/ai-pop-producer"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/ai-pop/skills/ai-pop-producer"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/ai-pop/skills/ai-pop-producer"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:ai-pop-publisher",
@@ -436,11 +446,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "ai-pop/skills/ai-pop-publisher"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/ai-pop/skills/ai-pop-publisher"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/ai-pop/skills/ai-pop-publisher"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:ai-pop-visual-designer",
@@ -450,11 +461,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "ai-pop/skills/ai-pop-visual-designer"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/ai-pop/skills/ai-pop-visual-designer"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/ai-pop/skills/ai-pop-visual-designer"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:automation-readiness",
@@ -464,11 +476,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "automation-governance/skills/automation-readiness"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/automation-governance/skills/automation-readiness"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/automation-governance/skills/automation-readiness"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:bd-dolt-troubleshooter",
@@ -478,11 +491,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "beads-workflow/skills/bd-dolt-troubleshooter"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/beads-workflow/skills/bd-dolt-troubleshooter"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/beads-workflow/skills/bd-dolt-troubleshooter"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:grill-with-beads",
@@ -492,11 +506,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "beads-workflow/skills/grill-with-beads"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/beads-workflow/skills/grill-with-beads"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/beads-workflow/skills/grill-with-beads"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:gcp-project-assessment",
@@ -506,11 +521,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "gcp-management/skills/gcp-project-assessment"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/gcp-management/skills/gcp-project-assessment"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/gcp-management/skills/gcp-project-assessment"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:gcp-project-consolidation",
@@ -520,11 +536,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "gcp-management/skills/gcp-project-consolidation"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/gcp-management/skills/gcp-project-consolidation"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/gcp-management/skills/gcp-project-consolidation"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:gcp-quota-governance",
@@ -534,11 +551,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "gcp-management/skills/gcp-quota-governance"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/gcp-management/skills/gcp-quota-governance"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/gcp-management/skills/gcp-quota-governance"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:macos-hig-interaction",
@@ -548,11 +566,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "macos-hig/skills/macos-hig-interaction"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/macos-hig/skills/macos-hig-interaction"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/macos-hig/skills/macos-hig-interaction"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:macos-hig-layout",
@@ -562,11 +581,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "macos-hig/skills/macos-hig-layout"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/macos-hig/skills/macos-hig-layout"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/macos-hig/skills/macos-hig-layout"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:macos-hig-reviewer",
@@ -576,11 +596,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "macos-hig/skills/macos-hig-reviewer"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/macos-hig/skills/macos-hig-reviewer"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/macos-hig/skills/macos-hig-reviewer"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:mcp-auditor",
@@ -590,11 +611,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "mcp-security/skills/mcp-auditor"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/mcp-security/skills/mcp-auditor"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/mcp-security/skills/mcp-auditor"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:okf-author",
@@ -604,11 +626,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "okf-authoring/skills/okf-author"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/okf-authoring/skills/okf-author"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/okf-authoring/skills/okf-author"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:okf-validate",
@@ -618,11 +641,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "okf-authoring/skills/okf-validate"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/okf-authoring/skills/okf-validate"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/okf-authoring/skills/okf-validate"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:changelog-manager",
@@ -632,11 +656,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "repo-authoring/skills/changelog-manager"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/repo-authoring/skills/changelog-manager"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/repo-authoring/skills/changelog-manager"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:make-readme",
@@ -646,11 +671,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "repo-authoring/skills/make-readme"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/repo-authoring/skills/make-readme"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/repo-authoring/skills/make-readme"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:repository-change-recap",
@@ -660,11 +686,12 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "repo-authoring/skills/repository-change-recap"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/repo-authoring/skills/repository-change-recap"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/repo-authoring/skills/repository-change-recap"
     },
     {
       "identifier": "urn:air:github.com:ghchinoy:technical-post-editorial",
@@ -674,11 +701,72 @@
       "tags": [],
       "metadata": {
         "source": "ghchinoy/agent-skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "tier:zeroasterisk",
         "relativePath": "repo-authoring/skills/technical-post-editorial"
       },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/repo-authoring/skills/technical-post-editorial"
+      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/repo-authoring/skills/technical-post-editorial"
+    },
+    {
+      "identifier": "urn:air:github.com:voodootikigod:adlc",
+      "displayName": "adlc",
+      "type": "application/ai-skill+md",
+      "description": "Routes agentic development work to the right Agentic Development Lifecycle (ADLC) gate in Gemini (Antigravity/JetSki). Use when shaping a spec or ticket, deciding how to fan out work to models, protecting frozen rails during a build, prosecuting a change before merge, or distilling repeated review findings into defenses. Triggers on \"shape this spec\", \"is this ticket ready\", \"freeze these tests\", \"prosecute this change\", \"is this safe to merge\", \"ADLC\", \"which gate\", \"spec-lint\", \"premortem\", \"coldstart\", \"rails-guard\", \"hollow-test\", \"behavior-diff\".",
+      "tags": [],
+      "metadata": {
+        "source": "voodootikigod/adlc",
+        "tier": "zeroasterisk",
+        "audience": "public",
+        "agents": "tier:zeroasterisk",
+        "relativePath": "adlc/skills/adlc"
+      },
+      "url": "https://github.com/voodootikigod/adlc/tree/main/adlc/skills/adlc"
+    },
+    {
+      "identifier": "urn:air:github.com:voodootikigod:adlc-doctrine",
+      "displayName": "adlc-doctrine",
+      "type": "application/ai-skill+md",
+      "description": "Core operating rules for agents working inside an ADLC-orchestrated run (Antigravity Booster). Use whenever executing a ticket, reviewing a diff, or acting as part of an agb fleet. Encodes quota discipline, evidence rules, and scope discipline.",
+      "tags": [],
+      "metadata": {
+        "source": "voodootikigod/adlc",
+        "tier": "zeroasterisk",
+        "audience": "public",
+        "agents": "tier:zeroasterisk",
+        "relativePath": "adlc/skills/adlc-doctrine"
+      },
+      "url": "https://github.com/voodootikigod/adlc/tree/main/adlc/skills/adlc-doctrine"
+    },
+    {
+      "identifier": "urn:air:github.com:voodootikigod:adlc-prosecutor",
+      "displayName": "adlc-prosecutor",
+      "type": "application/ai-skill+md",
+      "description": "Refute-charter review discipline for prosecuting a diff against its ticket. Use when asked to act as a prosecutor, reviewer, or to find reasons a change must not merge.",
+      "tags": [],
+      "metadata": {
+        "source": "voodootikigod/adlc",
+        "tier": "zeroasterisk",
+        "audience": "public",
+        "agents": "tier:zeroasterisk",
+        "relativePath": "adlc/skills/adlc-prosecutor"
+      },
+      "url": "https://github.com/voodootikigod/adlc/tree/main/adlc/skills/adlc-prosecutor"
+    },
+    {
+      "identifier": "urn:air:github.com:voodootikigod:adlc-self-orchestrate",
+      "displayName": "adlc-self-orchestrate",
+      "type": "application/ai-skill+md",
+      "description": "How an Antigravity session decomposes a large build-out into a ticket DAG and drives the agb fleet itself (recursive orchestration). Use when asked to \"build X in parallel\", \"run a fleet\", \"orchestrate this with agb\", or when a task is too large for one session.",
+      "tags": [],
+      "metadata": {
+        "source": "voodootikigod/adlc",
+        "tier": "zeroasterisk",
+        "audience": "public",
+        "agents": "tier:zeroasterisk",
+        "relativePath": "adlc/skills/adlc-self-orchestrate"
+      },
+      "url": "https://github.com/voodootikigod/adlc/tree/main/adlc/skills/adlc-self-orchestrate"
     }
   ]
 }

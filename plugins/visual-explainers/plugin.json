@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "visual-explainers",
-  "version": "1.0.0",
-  "description": "Tools and quality evaluation rubrics for diagrams, terminal animations, and mathematical explainer videos.",
+  "version": "1.1.0",
+  "description": "Tools and quality evaluation rubrics for architecture diagrams, terminal animations, YouTube/social hero thumbnails, and mathematical explainer videos.",
   "author": {
     "name": "alanblount",
     "url": "https://github.com/zeroasterisk"
@@ -12,6 +12,7 @@
   "keywords": [
     "diagrams",
     "asciinema",
+    "thumbnails",
     "manim",
     "material-design",
     "svg",

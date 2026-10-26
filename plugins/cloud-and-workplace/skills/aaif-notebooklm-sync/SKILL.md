@@ -1,12 +1,12 @@
 ---
 name: aaif-notebooklm-sync
-description: Synchronizes all AAIF Working Group (wg-*) and foundation repositories, meeting minutes, charters, monthly reports, deliverables, reference architectures, and open pull requests from https://github.com/aaif/* into Google NotebookLM (https://notebooklm.google.com/notebook/3f4ea1ea-fe19-4afe-8cbe-ac5f9950412d). Features full state-based lifecycle management (skip unchanged, update modified, add new, remove deleted/merged) with gcert LOAS validation, bi-weekly lookback synthesis, and automated public GitHub Gist reporting.
+description: Synchronizes all AAIF Working Group (wg-*) and foundation repositories, meeting minutes, charters, monthly reports, deliverables, reference architectures, and open pull requests from https://github.com/aaif/* into Google NotebookLM (https://notebooklm.google.com/notebook/3f4ea1ea-fe19-4afe-8cbe-ac5f9950412d). Features full state-based lifecycle management (skip unchanged, update modified, add new, remove deleted/merged) with active credential validation, bi-weekly lookback synthesis, and automated public GitHub Gist reporting.
 license: Apache-2.0
 ---
 
 # AAIF Working Groups to NotebookLM Sync & Bi-Weekly Executive Reporting
 
-Directly synchronizes all documentation from `https://github.com/aaif/*` into Google NotebookLM using the NotebookLM MCP proxy (`corp-mcp-proxy`), generates 2-week lookback executive syntheses and visual artifacts (Bento Grid Infographic and Presentation Slide Deck), and automatically publishes dated public GitHub Gists.
+Directly synchronizes all documentation from `https://github.com/aaif/*` into Google NotebookLM via the NotebookLM MCP server, generates 2-week lookback executive syntheses and visual artifacts (Bento Grid Infographic and Presentation Slide Deck), and automatically publishes dated public GitHub Gists.
 
 ## Pipeline Features
 - **Direct Markdown Ingestion**: Ingests files directly as `textContent` markdown sources into NotebookLM without external Drive dependencies.
@@ -18,10 +18,10 @@ Directly synchronizes all documentation from `https://github.com/aaif/*` into Go
 - **Bi-Weekly Lookback Executive Digest & Artifacts**:
   - Synthesizes 2-week activity lookback across all 8 Working Groups.
   - Generates NotebookLM Infographic (Bento Grid) and Presentation Slide Deck (PDF).
-  - Automatically publishes a dated public GitHub Gist under Alan's account (`zeroasterisk`).
-- **Smart Session & `gcert` Awareness**:
-  - Validates `gcert` LOAS credentials before making MCP calls.
-  - Automatically runs when logging in or opening a shell if $\ge 7$ days have passed since the last sync.
+  - Automatically publishes a dated public GitHub Gist under `zeroasterisk`.
+- **Smart Session & Auth Awareness**:
+  - Validates active MCP session credentials before making API calls.
+  - Automatically runs when opening a shell if $\ge 7$ days have passed since the last sync.
 
 ## Target Notebook & Canonical Gist
 - **Notebook URL**: [https://notebooklm.google.com/notebook/3f4ea1ea-fe19-4afe-8cbe-ac5f9950412d](https://notebooklm.google.com/notebook/3f4ea1ea-fe19-4afe-8cbe-ac5f9950412d)
@@ -31,15 +31,15 @@ Directly synchronizes all documentation from `https://github.com/aaif/*` into Go
 
 ### Run Full Sync & Publish Gist
 ```bash
-python3 /usr/local/google/home/alanblount/Code/AAIF/scripts/sync_aaif_to_notebooklm.py --force
+python3 "${AAIF_REPO_DIR:-$HOME/Code/AAIF}/scripts/sync_aaif_to_notebooklm.py" --force
 ```
 
 ### Run Bi-Weekly Digest & Gist Generator Only
 ```bash
-python3 /usr/local/google/home/alanblount/Code/AAIF/scripts/generate_weekly_digest.py
+python3 "${AAIF_REPO_DIR:-$HOME/Code/AAIF}/scripts/generate_weekly_digest.py"
 ```
 
-### Run If Due ($\ge 7$ Days & `gcert` Active)
+### Run If Due ($\ge 7$ Days & Credentials Active)
 ```bash
-python3 /usr/local/google/home/alanblount/Code/AAIF/scripts/sync_aaif_to_notebooklm.py --if-due
+python3 "${AAIF_REPO_DIR:-$HOME/Code/AAIF}/scripts/sync_aaif_to_notebooklm.py" --if-due
 ```

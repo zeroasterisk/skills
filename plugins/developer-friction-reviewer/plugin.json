@@ -1,0 +1,22 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "developer-friction-reviewer",
+  "version": "1.0.0",
+  "description": "Orchestrates persona-based developer friction reviews and automated audit loops across onboarding flows, recipes, tools, and CLIs.",
+  "author": {
+    "name": "alanblount",
+    "url": "https://github.com/zeroasterisk"
+  },
+  "repository": "https://github.com/zeroasterisk/skills",
+  "license": "Apache-2.0",
+  "keywords": [
+    "friction-log",
+    "developer-experience",
+    "dx",
+    "onboarding",
+    "personas",
+    "subagent-loop",
+    "code-review",
+    "audit"
+  ]
+}

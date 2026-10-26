@@ -31,7 +31,7 @@ Real examples from Alan Blount's writing across internal documents, personal ref
 
 ---
 
-## 2. Technical Architecture & DevRel (From "Easy CUJs" go/easy-cujs)
+## 2. Technical Architecture & DevRel (CUJ & Analytics Framing)
 
 ### The "What with Why" Framing:
 > "Once you have a common semantic taxonomy which describes your product's CUJs and that taxonomy is represented in analytics, then measurement, monitoring, testing and insights become easy.

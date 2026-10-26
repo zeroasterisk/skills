@@ -1,0 +1,62 @@
+{
+  "name": "@adlc/opencode",
+  "version": "1.11.0",
+  "description": "ADLC integration for the OpenCode terminal coding agent",
+  "type": "module",
+  "main": "index.mjs",
+  "bin": {
+    "adlc-opencode": "bin/cli.mjs"
+  },
+  "opencode": {
+    "plugin": "./index.mjs",
+    "command": "./command/",
+    "agent": "./agent/",
+    "skill": "./skill/"
+  },
+  "files": [
+    "index.mjs",
+    "bin/",
+    "lib/",
+    "command/",
+    "agent/",
+    "skill/",
+    "gate-bins.mjs",
+    "generated-active-ticket.mjs",
+    "rails-checker.mjs",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "peerDependencies": {
+    "@opencode-ai/plugin": ">=1.17.13"
+  },
+  "peerDependenciesMeta": {
+    "@opencode-ai/plugin": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@adlc/build-gate": "^1.11.0",
+    "@adlc/context-handoff": "^1.11.0",
+    "@adlc/core": "^1.11.0",
+    "@adlc/flail-detector": "^1.11.0",
+    "@adlc/gate-manifest": "^1.11.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/voodootikigod/adlc.git",
+    "directory": "plugins/adlc-opencode"
+  },
+  "homepage": "https://github.com/voodootikigod/adlc/tree/main/plugins/adlc-opencode#readme",
+  "bugs": "https://github.com/voodootikigod/adlc/issues"
+}

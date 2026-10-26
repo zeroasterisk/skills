@@ -100,18 +100,49 @@ if len(parts) < 3:
 
 fm_text = parts[1]
 
-def get_val(key, text):
-    m = re.search(r'^' + key + r':\s*(.*)$', text, re.MULTILINE)
-    if not m:
-        return ''
-    val = m.group(1).strip()
-    if (val.startswith('\"') and val.endswith('\"')) or (val.startswith(\"'\") and val.endswith(\"'\")):
-        val = val[1:-1]
-    return val
+def parse_fm(text):
+    try:
+        import yaml
+        data = yaml.safe_load(text)
+        if isinstance(data, dict):
+            return {k: (str(v) if v is not None else '') for k, v in data.items()}
+    except Exception:
+        pass
+    fm = {}
+    key = None
+    folded = False
+    preserve_nl = False
+    buf = []
+    def flush():
+        nonlocal key, buf
+        if key is not None and buf:
+            if preserve_nl:
+                fm[key] = '\n'.join(buf).strip()
+            else:
+                fm[key] = ' '.join(s.strip() for s in buf if s.strip())
+        key = None
+        buf = []
+    for line in text.splitlines():
+        m = re.match(r'^([A-Za-z_][\w-]*):\s*(.*)$', line)
+        if m and not line.startswith((' ', '\t')):
+            flush()
+            key, val = m.group(1), m.group(2).strip()
+            folded = val in ('>', '>-', '|', '|-')
+            preserve_nl = val in ('|', '|-')
+            if not folded:
+                if (val.startswith('\"') and val.endswith('\"')) or (val.startswith(\"'\") and val.endswith(\"'\")):
+                    val = val[1:-1]
+                fm[key] = val
+                key = None
+        elif key is not None and folded:
+            buf.append(line)
+    flush()
+    return fm
 
-name = get_val('name', fm_text)
-desc = get_val('description', fm_text)
-lic = get_val('license', fm_text)
+fm = parse_fm(fm_text)
+name = fm.get('name', '').strip()
+desc = fm.get('description', '').strip()
+lic = fm.get('license', '').strip()
 
 print(json.dumps({'name': name, 'desc': desc, 'desc_len': len(desc), 'license': lic}))
 " 2>/dev/null || echo '{"error": "python parse error"}')"

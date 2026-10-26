@@ -1,5 +1,7 @@
 # Agent Skills & Plugins
 
+> **⚠️ Personal Hobby Project** — This is an independent, personal project by [Alan Blount](https://github.com/zeroasterisk). It is **not affiliated with, endorsed by, or supported by any employer, company, or organization**. No warranty; use at your own risk.
+
 [![Validate Plugins and Skills](https://github.com/zeroasterisk/skills/actions/workflows/validate.yml/badge.svg)](https://github.com/zeroasterisk/skills/actions/workflows/validate.yml)
 [![Sync Upstream Plugins](https://github.com/zeroasterisk/skills/actions/workflows/sync-upstream.yml/badge.svg)](https://github.com/zeroasterisk/skills/actions/workflows/sync-upstream.yml)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
@@ -44,18 +46,20 @@ skills/
 | Plugin | Version | Description | Included Skills |
 | :--- | :--- | :--- | :--- |
 | **`writing-and-editorial`** | `1.0.0` | Authoring, voice matching, style refinement, and anti-AI humanization tools for technical writing and social content. | `alan-writing-style`<br>`googlecloudtech-x-article`<br>`humanizer` |
-| **`visual-explainers`** | `1.0.0` | Tools and quality evaluation rubrics for diagrams, terminal animations, and mathematical explainer videos. | `diagram-design`<br>`asciinema-explainer-walkthroughs`<br>`manim-video-quality` |
+| **`visual-explainers`** | `1.1.0` | Tools and quality evaluation rubrics for architecture diagrams, terminal animations, YouTube/social thumbnails, and mathematical explainer videos. | `diagram-design`<br>`asciinema-explainer-walkthroughs`<br>`youtube-thumbnail-designer`<br>`manim-video-quality` |
 | **`frontend-engineering`** | `1.0.0` | Full-stack UI development workflows, React component isolation with Storybook, CUJ capturing, and product intent refinement. | `ui-developer`<br>`storybook`<br>`cuj-screenshots`<br>`intent-refinement` |
 | **`software-craft`** | `1.0.0` | Software engineering discipline, systematic debugging, Elixir best practices, secure web guidelines, and agent skill authoring. | `engineering-discipline`<br>`elixir-best-practices`<br>`mandatory-secure-web-skills`<br>`skill-creator` |
-| **`cloud-and-workplace`** | `1.0.0` | Google Cloud & Gemini Enterprise taxonomy, executive meeting triage, OPM Salesforce automation, and NotebookLM synchronization. | `gemini-enterprise-agent-platform`<br>`chief-of-staff-triage`<br>`opm-tracking`<br>`aaif-notebooklm-sync` |
+| **`cloud-and-workplace`** | `1.0.0` | Executive inbox/calendar chief-of-staff triage and open-source working group NotebookLM synchronization. | `chief-of-staff-triage`<br>`aaif-notebooklm-sync` |
 | **`developer-intel`** | `1.0.0` | Developer trend synthesis combining Plushcap MCP engineering blog data with Good AI List repository velocity. | `developer-trends-intel` |
+| **`developer-friction-reviewer`** | `1.0.0` | Persona-based developer friction reviews and automated audit loops across recipes, tools, and onboarding flows. | `developer-friction-reviewer` |
 
-### Consumed Upstream Plugins (`ghchinoy/agent-skills`)
+### Consumed Upstream Plugins (`ghchinoy/agent-skills` & `voodootikigod/adlc`)
 
-Mirrored and synchronized from [Hussain Chinoy's agent-skills repository](https://github.com/ghchinoy/agent-skills):
+Mirrored and synchronized from [Hussain Chinoy's agent-skills](https://github.com/ghchinoy/agent-skills) and [Chris Williams's ADLC toolkit](https://github.com/voodootikigod/adlc):
 
 | Plugin | Version | Description | Included Skills |
 | :--- | :--- | :--- | :--- |
+| **`adlc`** | `1.11.0` | Agentic Development Lifecycle (ADLC) toolkit integration: phase router, rail-guard hooks, slash commands, and prosecutor agents. | `adlc`<br>`adlc-doctrine`<br>`adlc-prosecutor`<br>`adlc-self-orchestrate` |
 | **`agent-aware-cli`** | `1.0.0` | Best practices and architectural guidelines for CLI tools optimized for both human users and AI coding agents. | `agent-aware-cli` |
 | **`agent-plugin-authoring`**| `1.1.0` | Authoring, migration, and linting tools for packaging Agent Skills into Agent Plugins v1.0.0 spec packages. | `skills-to-plugins` |
 | **`ai-pop`** | `1.0.0` | Virtual music artist production suite: lore planning, audio synthesis, visual design, player compilation, and deployment. | `ai-pop-producer`<br>`ai-pop-concept-planner`<br>`ai-pop-audio-synthesizer`<br>`ai-pop-visual-designer`<br>`ai-pop-compiler`<br>`ai-pop-publisher` |

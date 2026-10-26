@@ -1,6 +1,6 @@
 # Storytelling & Manim Toolbox — Cheatsheet
 
-> Shared vocabulary for talking about Agent Platform videos. Use these terms
+> Shared vocabulary for talking about Gemini platform videos. Use these terms
 > in feedback so we both mean the same thing quickly. Add to this file as we
 > discover new patterns — it's a living toolbox, not a fixed spec.
 

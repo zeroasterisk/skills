@@ -85,7 +85,16 @@ except ImportError:
     print(json.dumps({'critical_error': 'PyYAML is not installed. Please run: pip install pyyaml'}))
     sys.exit(0)
 
-ALLOWED_FIELDS = {'name', 'description', 'license', 'compatibility', 'metadata', 'allowed-tools'}
+ALLOWED_FIELDS = {
+    'name',
+    'description',
+    'license',
+    'compatibility',
+    'metadata',
+    'allowed-tools',
+    'disable-model-invocation',
+    'disable-slash-command',
+}
 NAME_RE = re.compile(r'^[a-z0-9]+(-[a-z0-9]+)*$')
 
 filepath = '$skill_md'
@@ -197,6 +206,11 @@ if 'license' not in data or not data['license']:
     warnings.append('Missing \'license\' in frontmatter')
 elif not isinstance(data['license'], str):
     errors.append(f'Field \'license\' must be a string, got {type(data[\"license\"]).__name__}')
+
+# optional invocation flags
+for bool_field in ('disable-model-invocation', 'disable-slash-command'):
+    if bool_field in data and data[bool_field] is not None and not isinstance(data[bool_field], bool):
+        errors.append(f'Field {bool_field!r} must be a boolean, got {type(data[bool_field]).__name__}')
 
 print(json.dumps({
     'errors': errors,

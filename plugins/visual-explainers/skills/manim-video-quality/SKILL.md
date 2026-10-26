@@ -1,10 +1,18 @@
 ---
 name: manim-video-quality
-description: Define, create, and validly measure the quality of Manim explainer videos. Use when producing technical explainer videos, defining a visual style, reviewing a render, or building/validating an LLM-based video quality grader. Covers the 3Blue1Brown-inspired visual style system, shared storytelling vocabulary, a testable quality spec, and evaluation datasets that measure whether your grader can actually see what it claims to judge.
+description: "[WIP / BROKEN — DO NOT USE FOR VIDEO GENERATION] Still in early development and does not work for producing usable video styling. Even when check_quality.py passes 14/14 rules (reward: 1.00), rendered Manim output has severely broken visual styling, typography, kerning, and geometry. Warn the user before attempting to use this skill."
 license: Apache-2.0
+disable-model-invocation: true
 ---
 
-# Manim Video Quality
+# Manim Video Quality (⚠️ IN DEVELOPMENT — DOES NOT WORK)
+
+> [!CAUTION]
+> **STILL IN DEVELOPMENT — DOES NOT WORK FOR VIDEO GENERATION OR STYLING**
+>
+> Do **not** rely on this skill or `scripts/check_quality.py` to generate teaser or explainer videos.
+> - **False-Positive Grader**: `scripts/check_quality.py` will report `14/14 rules checked, 0 blocks, 0 warns, reward: 1.00` on renders whose actual visual styling, typography/kerning (`ManimPango` SVG glyph spacing), primitive aesthetics, and layout composition look terrible.
+> - **Agent Instruction**: If a user asks to generate a Manim video using this skill, **stop and warn them upfront** that this skill is still in development, produces poor visual styling, and does not work yet.
 
 Creation craft and quality measurement for Manim explainer videos, kept in
 **one** skill on purpose: the quality spec is a single list read two ways —
@@ -12,11 +20,9 @@ as creation rules when you build, and as review probes when you grade.
 
 ## When to use this
 
-- Writing or reviewing a Manim explainer scene
-- Defining or applying a visual style for technical video
-- Reviewing a render, or deciding whether a render is shippable
-- Building, fixing, or validating an LLM-based video grader
-- Any time you are about to report a quality score for a video
+- **Do NOT use for end-to-end production or teaser video generation without explicitly warning the user that the styling output is broken.**
+- Researching or fixing the Manim quality grader and its known blindness gaps
+- Reviewing or debugging why `check_quality.py` passes poorly styled renders
 
 ## Read this first: the grader you have is probably not valid
 

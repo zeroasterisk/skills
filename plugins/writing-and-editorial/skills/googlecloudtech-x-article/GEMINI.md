@@ -18,11 +18,11 @@ Produce high-performing, viral X Articles for the **@GoogleCloudTech** brand acc
 
 ## Workflow Summary
 
-1. **Angles First:** Map trend to Google Cloud Agent Platform (`references/product-map.md`), pull live context via Plushcap MCP (`scripts/plushcap_mcp.py`), and present 3-4 angle candidates (title/hook, broken assumption, section spine, why it wins). Wait for Alan's choice.
+1. **Angles First:** Map trend to Google Cloud Gemini platform (`references/product-map.md`), pull live context via Plushcap MCP (`scripts/plushcap_mcp.py`), and present 3-4 angle candidates (title/hook, broken assumption, section spine, why it wins). Wait for Alan's choice.
 2. **Draft:** Write full article following `references/article-skeleton.md` and `references/voice-bank.md`.
 3. **Anti-AI Review:** Run `references/anti-ai-checklist.md` (Pass 1 deterministic, Pass 2 judgment).
 4. **Diagrams:** Generate hero and section diagrams.
 5. **Iterate in Chat:** Review and refine with Alan in chat before touching Google Docs.
 6. **Publish:** Push to Google Doc only upon explicit approval.
 
-See [SKILL.md](file:///usr/local/google/home/alanblount/Workspaces/skills/googlecloudtech-x-article/SKILL.md) for full instructions.
+See [SKILL.md](SKILL.md) for full instructions.

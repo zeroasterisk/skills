@@ -300,8 +300,10 @@ def main() -> int:
     except ImportError:
         sys.exit("pip install google-genai")
 
-    if os.environ.get('GOOGLE_APPLICATION_CREDENTIALS'):
-        client = genai.Client(vertexai=True, project="alanblount-sandbox", location="us-central1")
+    if os.environ.get('GOOGLE_APPLICATION_CREDENTIALS') or os.environ.get('GOOGLE_CLOUD_PROJECT'):
+        project_id = os.environ.get("GOOGLE_CLOUD_PROJECT", "your-gcp-project")
+        location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
+        client = genai.Client(vertexai=True, project=project_id, location=location)
     else:
         client = genai.Client()
 

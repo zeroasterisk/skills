@@ -1,0 +1,204 @@
+---
+name: adlc
+description: Routes agentic development work to the right Agentic Development Lifecycle (ADLC) gate in Gemini (Antigravity/JetSki). Use when shaping a spec or ticket, deciding how to fan out work to models, protecting frozen rails during a build, prosecuting a change before merge, or distilling repeated review findings into defenses. Triggers on "shape this spec", "is this ticket ready", "freeze these tests", "prosecute this change", "is this safe to merge", "ADLC", "which gate", "spec-lint", "premortem", "coldstart", "rails-guard", "hollow-test", "behavior-diff".
+---
+<!-- ADLC_GEMINI_SENTINEL_PHASE_ROUTER_V1 -->
+
+# ADLC — phase routing
+
+The Agentic Development Lifecycle treats agentic development as phases with
+explicit, machine-checkable **gates**. Each gate is a CLI invoked through the
+umbrella dispatcher: `adlc <tool> [args]`. Every tool exits `0` = gate passes,
+`1` = operational error, `2` = gate fails. Identify the phase, run the gate.
+
+**Claude is the model.** Every LLM-backed gate supports `--prompt-only`: it
+prints the exact prompt and exits without calling any provider. Inside Claude
+Code you do not need API keys — run the tool with `--prompt-only`, answer the
+printed prompt yourself, and apply the judgment. Prefer this over wiring keys.
+
+Prerequisite: the toolkit must be installed (`adlc --version` works). If not,
+the user runs `npm i -g @adlc/cli`. Run `/adlc-init` once per repo to create the
+`.adlc/` workspace.
+
+## Where am I? → which gate
+
+```
+Vague request, no ticket yet? ───────────────→ P0  /adlc-ticket (interrogate, then write)
+Have a spec / acceptance criteria? ──────────→ P1  adlc spec-lint · premortem · parallax · adversarial-review
+Have tickets, planning fan-out? ─────────────→ P2  adlc coldstart · model-router · merge-forecast
+About to build, want to freeze tests? ───────→ P3  adlc rails-guard · adversarial-review
+Mid-build, agent looping or drifting? ───────→ P4  adlc flail-detector
+Hard failing test, need a repair? ───────────→ P4  adlc consensus-fix
+Change done, pre-merge prosecution? ─────────→ P5  adlc hollow-test · behavior-diff · review-calibration · adversarial-review
+Recording / showing gate evidence? ──────────→ —   adlc gate-manifest
+Repeated review findings to bank? ───────────→ P7  /adlc-distill (lesson-foundry · rejection-mining)
+Mine the repo for reusable skills? ──────────→ P7  skill-mining (npx skills add voodootikigod/skill-mining)
+Idle-time / post-drift maintenance? ─────────→ —   /adlc-maintain (skill-rot · model-ratchet · gate-fuzzing)
+```
+
+**The adversarial-review loop.** A cross-model, fresh-context ship/no-ship review that
+loops review→fix→re-review until clean (`exit 0 = SHIP`). It only reviews a git diff/branch
+today (positional args are focus text, not a file path) — it is recommended practice at
+**P1** (design review of the ticket/spec) and **P3** (attack the declared rail *set* for
+adequacy — is every invariant covered and unbypassable) via `--prompt-only` or diff review,
+pending the deferred `--input` mode, and at **P5** (built code; ≥2 distinct providers on the
+risk gate) it runs directly. Flags: `--verify` (refute stale findings), `--loop` (autonomous
+fix loop over working-tree code changes only, needs a write sandbox), `--providers`
+(multi-provider quorum). Installed separately — invoke via `npx adversarial-review` if not
+on PATH. See ADR-0008 (adversarial-review coverage map) in the ADLC repo.
+
+## The phases
+
+### P0 — Triage → `/adlc-ticket`
+Turn a request into a self-contained ticket through the unified ticket service. New repositories
+use one canonical shard per ticket under `.adlc/tickets/`; legacy
+`.adlc/tickets.json` remains supported until an approved migration. Everything
+downstream reads the logical store. The mechanism is **human interrogation
+before the store write** (`docs/interrogation-protocol.md` in the ADLC repo):
+frontier rounds of numbered questions, each codebase-checked before it is
+asked; applicable `.adlc/lessons/interrogation-template.md` checkboxes are
+mandatory candidates. After the write, coldstart gaps drive the loop until
+none remain, and the verdict is recorded (`--record-verdict`) so the p0 gate
+has evidence.
+
+### P1 — Interrogate (spec is testable and stress-tested)
+The phase's mechanism is the interrogation loop (`docs/interrogation-protocol.md`
+in the ADLC repo): parallax divergences, premortem questions, and applicable
+`.adlc/lessons/interrogation-template.md` checkboxes form the frontier; each
+question is codebase-checked before it reaches the human; answers fold into the
+spec and parallax re-runs, capped at 3 rounds with an approved-assumptions
+escape hatch. Gate 1 is recorded as a `spec-approval` manifest entry through the
+`adlc` dispatcher:
+```
+adlc \
+  gate-manifest record spec-approval --ticket ID --files SPEC.MD --data '{
+  "approver":…,"verdict":"approved","spec_hash":…,"rounds":…,"questions":…,
+  "sources":[…],"unresolved":0,"approved_assumptions":[]}'
+```
+(the trailing `\` is a shell line-continuation — paste both lines as one
+command) — and `adlc-runner run p1` requires and validates that record: it
+rejects a missing `--ticket`/`--files` binding, a non-`"approved"` verdict, a
+`spec_hash` that does not match the file's actual hash, and an approval
+recorded before the ticket's own spec-lint/premortem evidence. The tools:
+- `adlc spec-lint SPEC.MD` — every acceptance criterion needs a concrete
+  verification method; a "wish" with no method gate-fails (exit 2). Add `--llm`
+  (or `--prompt-only`) to also catch vacuous methods. Once it
+  passes, record the evidence Gate 1 needs:
+  `adlc spec-lint SPEC.MD --record --ticket ID`.
+- `adlc premortem SPEC.MD [--prompt-only]` — stress-test the approved spec for
+  failure modes before implementation. Recording the verdict for Gate 1
+  requires `--prompt-only --record-verdict FILE-OR-DASH --ticket ID`.
+- `adlc parallax --request "…"` (or `--file req.md`) — fan out readers to expose
+  ambiguity, edge conflicts, or route conflicts. The accuracy dial (D3).
+  `--questions-json` emits the divergences as structured
+  `{questions: [{point, options}]}` for the interrogation loop.
+- Design review is recommended practice today via `adversarial-review --prompt-only`
+  (feed the ticket/spec to a model yourself) or `adversarial-review --base REF`
+  (review the diff that introduces it); `exit 0 = SHIP`. First-class artifact input
+  (`--input`) is a deferred follow-on — see ADR-0008 (adversarial-review coverage map).
+
+### P2 — Decompose (an agent can execute without guessing)
+- `adlc coldstart TICKET-ID --prompt-only` (or `--all`) — gate ticket
+  executability. LLM-backed: in Claude, use `--prompt-only` and answer the
+  printed audit yourself (the bare form needs an API key and exits 1 without one).
+- `adlc model-router [--floor N]` — assign tickets to frontier/direct/ladder
+  model strategies. The cost dial (D1).
+- `adlc merge-forecast` — estimate fan-out width, dependency pressure, and merge
+  backpressure. The time dial (D2).
+
+### P3 — Rail (frozen paths are protected)
+- `adlc rails-guard --base REF --ticket ID` — diff-based check that no
+  committed change touched a frozen rail (exit 2 = a rail was edited). This is the
+  **unbypassable commit-time backstop**; run it in CI. The plugin's **PreToolUse
+  rail hook** is the in-session layer: it precisely denies Edit/Write/MultiEdit to
+  declared rail paths. **Gemini note:** In this plugin the in-session
+  PreToolUse hook is **advisory** — the host (agy/jetski) fails OPEN on a non-zero hook exit, so it
+  is best-effort, not a guarantee. The unbypassable control is the CI diff gate
+  (`scripts/rails-guard-ci.mjs`). See the "Rails in Gemini (Antigravity/JetSki)" section
+  below. It freezes the active ticket store itself once rails exist.
+  **Bash is not gated in-session** — a shell can't be reliably parsed, so rail
+  mutations via Bash are caught by the CI diff gate (any spelling), not the hook.
+  Wire that gate with the template at `docs/ci/rails-guard.yml` and make it a
+  required check. Override deliberately with `ADLC_RAILS_BYPASS=1` (recorded to
+  the manifest).
+- Rail-set adequacy review — is every invariant covered and unbypassable — is
+  recommended practice today via `adversarial-review --prompt-only` (feed the declared
+  rail set + ticket + invariants to a model); `exit 0 = SHIP`. `--loop` reviews
+  working-tree code changes, not a not-yet-built rail set, so there is no runnable
+  `--loop` command at P3 yet. First-class artifact input (`--input`) is a deferred
+  follow-on — see ADR-0008 (adversarial-review coverage map).
+
+### P4 — Build (supervised execution)
+- `adlc flail-detector LOG-FILE [--scope GLOB]` — detect repeated errors,
+  scope violations, edit churn, oversized logs.
+- `adlc consensus-fix --test-cmd "…" --files a.mjs,b.mjs` — for a hard failing
+  test, fan out independent candidate repairs and select a gated consensus
+  winner. Exploits the generator–verifier gap (E1).
+
+### P5 — Prosecute (the change earns the merge)
+- `adlc hollow-test --test-cmd "node --test test/"` — mutate changed code to find
+  tests that pass without actually testing the behavior.
+- `adlc behavior-diff capture …` / `compare before.json after.json` — make
+  behavior change visible for the P6 human gate.
+- `adlc review-calibration --review-cmd "… {base} …"` — measure reviewer recall
+  by scoring whether review catches injected mutants ("who reviews the reviewer").
+- `adversarial-review --providers A,B [--verify]` — ≥2 distinct providers, cross-model
+  and fresh-context, on the risk gate; loop review→fix→re-review until `exit 0 = SHIP`.
+- **Cross-model is GATED (not just advised) for the trust-root tier.** If the change
+  touches an enforcement package (`packages/rails-guard|prosecute|gate-manifest|build-gate/`),
+  a gated-artifact producer (`packages/ticket-prune|ticket-sync/`), a rails deny-path, or a
+  trust-root file (`scripts/rails-guard-ci.mjs`, `docs/ci/rails-guard.yml`,
+  `scripts/test/rails-guard-workflow-hashes.json`, `.adlc/tickets.json`), a clean
+  **same-model** P5 is NOT enough: the P5 prosecute runner (given `--base REF`) exits 2
+  until the manifest holds a `cross-model-review` approve from a provider DISTINCT from the
+  author, bound to the reviewed revision. Record it with the runner's `record-cross-model`
+  subcommand (`--ticket ID --provider PROVIDER --author-provider AUTHOR-PROVIDER --verdict approve
+  [--input PASSES.JSON]`) (T39).
+
+### P6 — Integrate (the human gate)
+This gate is a human decision, not something an agent passes. Surface the
+evidence: `adlc gate-manifest show` and the `behavior-diff compare` output, then
+let the human decide. Record outcomes with `adlc gate-manifest record GATE`.
+
+### P7 — Distill (turn findings into defenses) → `/adlc-distill`
+- `adlc lesson-foundry --prompt-only` — mine repeated findings into deterministic
+  defenses (lint checks, skills). LLM-backed: answer the printed prompt yourself.
+- `adlc rejection-mining --prompt-only` — mine human PR rejections into reusable
+  review lenses (needs the `gh` CLI). `/adlc-distill` runs both.
+
+P7 has a second, complementary axis — mining the *codebase itself* (not its review
+findings) for reusable capabilities:
+- **skill-mining** (`npx skills add voodootikigod/skill-mining`, then "mine this
+  repo for skills") — surveys git churn/conventions/patterns, scores candidates on
+  a five-axis rubric, dedups against installed skills + the `skills.sh` registry,
+  red-teams each authored `SKILL.md` with a fresh-context agent (Gate B), and emits
+  a `SKILLS_MINED.md` report. It is an agentic skill, not a deterministic `adlc`
+  gate (no `--prompt-only`/exit codes). Two uses: (a) standalone, to bootstrap a
+  repo's skill portfolio; (b) as the validation/registry step for `SKILL.md` stubs
+  that `/adlc-distill`'s lesson-foundry scaffolds — dedup + Gate B before they PR.
+  lesson-foundry emits stubs; skill-mining manages the registry.
+
+### Maintenance (decay-driven, no human trigger) → `/adlc-maintain`
+- `adlc skill-rot [path…]` — flag skill files with stale validation metadata.
+- `adlc model-ratchet --dry-run` — identify hot files to re-prosecute after model
+  or repo drift (a plan, not a gate).
+- `adlc gate-fuzzing --suite .adlc/gate-suite.json --prompt-only` — play the
+  adversary against the gate suite to find calibration gaps (needs a suite file).
+- `/adlc-maintain` runs these; the deterministic two also run on a cron
+  (`docs/ci/adlc-maintenance.yml`).
+
+## Notes
+
+- Add `--json` to any tool for machine-readable output when orchestrating.
+- Writers default to dry-run; pass the documented `--write`/`--record`/`--append`
+  flag to actually mutate.
+- Run `adlc <tool> --help` for a tool's exact flags and exit-code specifics.
+
+## Rails in Gemini (Antigravity/JetSki)
+
+This plugin installs a `PreToolUse` rails-guard hook. It is **advisory** in-session —
+the host fails OPEN on a non-zero hook exit, so a frozen-rail write can slip through a hook
+crash/timeout. **The unbypassable guarantee is the commit-time CI gate**
+(`scripts/rails-guard-ci.mjs`). Enforcement activates only when `ADLC_P4_ENFORCEMENT=1`
+and an active ticket declares `rails[]`. Shell (`run_command`) writes are not gated
+in-session; the CI gate catches them.

@@ -1,4 +1,6 @@
-# Manim Video Quality
+# Manim Video Quality (⚠️ IN DEVELOPMENT — DOES NOT WORK)
+
+> **WARNING**: This skill is still in development and **does not work** for generating well-styled videos. `scripts/check_quality.py` produces false-positive `1.00` rewards on renders with severely broken styling, kerning, and primitive geometry. Always warn the user before using this skill for video creation.
 
 You have access to the manim-video-quality skill: creation craft and quality
 measurement for Manim explainer videos.

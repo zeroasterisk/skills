@@ -2,7 +2,7 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "cloud-and-workplace",
   "version": "1.0.0",
-  "description": "Google Cloud & Gemini Enterprise taxonomy, executive meeting triage, OPM Salesforce automation, and NotebookLM synchronization.",
+  "description": "Executive inbox/calendar chief-of-staff triage and open-source working group NotebookLM synchronization.",
   "author": {
     "name": "alanblount",
     "url": "https://github.com/zeroasterisk"
@@ -10,11 +10,10 @@
   "repository": "https://github.com/zeroasterisk/skills",
   "license": "Apache-2.0",
   "keywords": [
-    "google-cloud",
-    "gemini-enterprise",
     "chief-of-staff",
-    "salesforce",
+    "triage",
     "notebooklm",
+    "aaif",
     "automation"
   ]
 }

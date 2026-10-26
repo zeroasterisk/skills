@@ -5,6 +5,17 @@
   },
   "plugins": [
     {
+      "name": "adlc",
+      "source": "./plugins/adlc",
+      "description": "Agentic Development Lifecycle (ADLC) toolkit integration: phase router, rail-guard hooks, slash commands, and prosecutor agents.",
+      "skills": [
+        "./plugins/adlc/skills/adlc",
+        "./plugins/adlc/skills/adlc-doctrine",
+        "./plugins/adlc/skills/adlc-prosecutor",
+        "./plugins/adlc/skills/adlc-self-orchestrate"
+      ]
+    },
+    {
       "name": "agent-aware-cli",
       "source": "./plugins/agent-aware-cli",
       "description": "Best practices and architectural guidelines for CLI tools optimized for both human users and AI coding agents.",
@@ -53,12 +64,18 @@
     {
       "name": "cloud-and-workplace",
       "source": "./plugins/cloud-and-workplace",
-      "description": "Google Cloud & Gemini Enterprise taxonomy, executive meeting triage, OPM Salesforce automation, and NotebookLM synchronization.",
+      "description": "Executive inbox/calendar chief-of-staff triage and open-source working group NotebookLM synchronization.",
       "skills": [
         "./plugins/cloud-and-workplace/skills/aaif-notebooklm-sync",
-        "./plugins/cloud-and-workplace/skills/chief-of-staff-triage",
-        "./plugins/cloud-and-workplace/skills/gemini-enterprise-agent-platform",
-        "./plugins/cloud-and-workplace/skills/opm-tracking"
+        "./plugins/cloud-and-workplace/skills/chief-of-staff-triage"
+      ]
+    },
+    {
+      "name": "developer-friction-reviewer",
+      "source": "./plugins/developer-friction-reviewer",
+      "description": "Orchestrates persona-based developer friction reviews and automated audit loops across onboarding flows, recipes, tools, and CLIs.",
+      "skills": [
+        "./plugins/developer-friction-reviewer/skills/developer-friction-reviewer"
       ]
     },
     {
@@ -142,11 +159,12 @@
     {
       "name": "visual-explainers",
       "source": "./plugins/visual-explainers",
-      "description": "Tools and quality evaluation rubrics for diagrams, terminal animations, and mathematical explainer videos.",
+      "description": "Tools and quality evaluation rubrics for architecture diagrams, terminal animations, YouTube/social hero thumbnails, and mathematical explainer videos.",
       "skills": [
         "./plugins/visual-explainers/skills/asciinema-explainer-walkthroughs",
         "./plugins/visual-explainers/skills/diagram-design",
-        "./plugins/visual-explainers/skills/manim-video-quality"
+        "./plugins/visual-explainers/skills/manim-video-quality",
+        "./plugins/visual-explainers/skills/youtube-thumbnail-designer"
       ]
     },
     {

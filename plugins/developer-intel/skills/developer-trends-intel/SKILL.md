@@ -27,42 +27,42 @@ Combines enterprise tech momentum (via **Plushcap MCP**) with open-source develo
 
 | Source | Primary Scope | How to Invoke | Deep Reference |
 | :--- | :--- | :--- | :--- |
-| **Plushcap MCP** | Enterprise blogs, HN sentiment, YouTube reach, company spaces | `call_mcp_tool(ServerName="plushcap", ToolName="...", Arguments={...})` | [plushcap_mcp.md](file:///usr/local/google/home/alanblount/Workspaces/skills/developer-trends-intel/references/plushcap_mcp.md) |
-| **Good AI List** | Open-source GitHub repos, daily star velocity, top developers | Direct CLI helper: [goodailist.py](file:///usr/local/google/home/alanblount/Workspaces/skills/developer-trends-intel/scripts/goodailist.py) or REST API (`goodailist.com/api/repos`) | [goodailist_api.md](file:///usr/local/google/home/alanblount/Workspaces/skills/developer-trends-intel/references/goodailist_api.md) |
+| **Plushcap MCP** | Enterprise blogs, HN sentiment, YouTube reach, company spaces | `call_mcp_tool(ServerName="plushcap", ToolName="...", Arguments={...})` | [plushcap_mcp.md](references/plushcap_mcp.md) |
+| **Good AI List** | Open-source GitHub repos, daily star velocity, top developers | Direct CLI helper: [goodailist.py](scripts/goodailist.py) or REST API (`goodailist.com/api/repos`) | [goodailist_api.md](references/goodailist_api.md) |
 
 ---
 
 ## 1. Querying Good AI List (`goodailist.com`)
 
-Use the bundled [goodailist.py](file:///usr/local/google/home/alanblount/Workspaces/skills/developer-trends-intel/scripts/goodailist.py) script for instant querying and filtering of 19,500+ AI repositories.
+Use the bundled [goodailist.py](scripts/goodailist.py) script (relative to this skill directory) for instant querying and filtering of 19,500+ AI repositories.
 
 ### Common Recipes
 
 ```bash
 # Ecosystem overview (total repos, devs, stars, last update)
-/usr/local/google/home/alanblount/Workspaces/skills/developer-trends-intel/scripts/goodailist.py summary
+./scripts/goodailist.py summary
 
 # Top 1-day star gainers across the entire AI ecosystem
-/usr/local/google/home/alanblount/Workspaces/skills/developer-trends-intel/scripts/goodailist.py trending --window 1d --limit 15
+./scripts/goodailist.py trending --window 1d --limit 15
 
 # Top 7-day surging projects by percentage growth
-/usr/local/google/home/alanblount/Workspaces/skills/developer-trends-intel/scripts/goodailist.py trending --window 7d --by-pct --limit 15
+./scripts/goodailist.py trending --window 7d --by-pct --limit 15
 
 # Discover newly indexed repositories added today
-/usr/local/google/home/alanblount/Workspaces/skills/developer-trends-intel/scripts/goodailist.py new --limit 15
+./scripts/goodailist.py new --limit 15
 
 # Search repositories with specific keywords or category filters
-/usr/local/google/home/alanblount/Workspaces/skills/developer-trends-intel/scripts/goodailist.py repos --search "mcp" --category "AI Engineering" --limit 10
+./scripts/goodailist.py repos --search "mcp" --category "AI Engineering" --limit 10
 
 # Search repositories in agent orchestration subcategories
-/usr/local/google/home/alanblount/Workspaces/skills/developer-trends-intel/scripts/goodailist.py repos --subcat "Build agent workflow (SDK)" --sort star_1d --limit 10
+./scripts/goodailist.py repos --subcat "Build agent workflow (SDK)" --sort star_1d --limit 10
 
 # Search top developers by name, country, or city
-/usr/local/google/home/alanblount/Workspaces/skills/developer-trends-intel/scripts/goodailist.py devs --search "karpathy"
-/usr/local/google/home/alanblount/Workspaces/skills/developer-trends-intel/scripts/goodailist.py devs --city "San Francisco" --limit 10
+./scripts/goodailist.py devs --search "karpathy"
+./scripts/goodailist.py devs --city "San Francisco" --limit 10
 
 # Output raw JSON for programmatic analysis
-/usr/local/google/home/alanblount/Workspaces/skills/developer-trends-intel/scripts/goodailist.py repos --search "deepseek" --json
+./scripts/goodailist.py repos --search "deepseek" --json
 ```
 
 ---
@@ -131,4 +131,4 @@ Call tools on the `plushcap` MCP server using `call_mcp_tool`.
 1. **Plushcap Pagination:** `get_trend_topics`, `list_companies`, `get_hackernews_posts`, etc., use `page` (integer) and `page_size` (integer, max 200). Do NOT pass `limit` or `weeks` to `get_trend_topics`.
 2. **Company Slugs:** Always look up exact slugs via `list_companies(search="...")` or `detect_company_from_url(url="...")` before calling slug-specific tools like `get_company` or `compare_companies`.
 3. **Good AI List Star Velocity:** `star_1d` reflects absolute daily star gain, while `star_1d_pct` highlights viral small/new projects surging from a lower star base. Use `--by-pct` to catch early breakout signals.
-4. **Direct Script Execution:** When running Good AI List queries in terminal commands, use the direct absolute path `/usr/local/google/home/alanblount/Workspaces/skills/developer-trends-intel/scripts/goodailist.py` rather than relative paths or shell aliases.
+4. **Direct Script Execution:** Resolve `scripts/goodailist.py` relative to this `SKILL.md`'s parent directory when running Good AI List queries in terminal commands.

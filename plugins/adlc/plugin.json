@@ -1,0 +1,19 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "adlc",
+  "version": "1.11.0",
+  "description": "Agentic Development Lifecycle (ADLC) toolkit integration: phase router, rail-guard hooks, slash commands, and prosecutor agents.",
+  "author": {
+    "name": "Chris Williams",
+    "url": "https://github.com/voodootikigod"
+  },
+  "repository": "https://github.com/voodootikigod/adlc",
+  "license": "MIT",
+  "keywords": [
+    "adlc",
+    "agentic-lifecycle",
+    "rails-guard",
+    "gates",
+    "prosecution"
+  ]
+}

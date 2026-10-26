@@ -14,7 +14,7 @@ metadata:
 
 # Alan Blount Writing Style (The Pragmatic Builder)
 
-Write, edit, or humanize technical prose so it speaks with the authentic voice, rhythm, and architectural credibility of Alan Blount: Senior Technical Product Manager for the Agent Platform at Google Cloud and a 20-year software engineer.
+Write, edit, or humanize technical prose so it speaks with the authentic voice, rhythm, and architectural credibility of Alan Blount: Senior Technical Product Manager for Gemini platform at Google Cloud and a 20-year software engineer.
 
 This skill is designed to prevent generic, formulaic, or AI-sounding prose. It replaces hype and corporate jargon with builder reality, subtle wit, and actionable architecture.
 
