@@ -47,9 +47,10 @@
     {
       "name": "automation-governance",
       "source": "./plugins/automation-governance",
-      "description": "Framework and tooling for evaluating workflow, skill, and process automation readiness based on the Google DeepMind Intelligent AI Delegation framework.",
+      "description": "Frameworks and tooling for evaluating AI automation readiness (Google DeepMind Intelligent AI Delegation) and auditing AI agents against W3C User Agent fiduciary duties (Protection, Honesty, Loyalty).",
       "skills": [
-        "./plugins/automation-governance/skills/automation-readiness"
+        "./plugins/automation-governance/skills/automation-readiness",
+        "./plugins/automation-governance/skills/user-agent-duties"
       ]
     },
     {
@@ -59,6 +60,23 @@
       "skills": [
         "./plugins/beads-workflow/skills/bd-dolt-troubleshooter",
         "./plugins/beads-workflow/skills/grill-with-beads"
+      ]
+    },
+    {
+      "name": "brand-identity",
+      "source": "./plugins/brand-identity",
+      "description": "Extract brand identities and DESIGN.md design systems from live websites and sources for downstream brand-consistent image generation.",
+      "skills": [
+        "./plugins/brand-identity/skills/brand-extractor",
+        "./plugins/brand-identity/skills/brand-image-generator"
+      ]
+    },
+    {
+      "name": "c2pa-inspector",
+      "source": "./plugins/c2pa-inspector",
+      "description": "Inspect and audit C2PA Content Credentials, cryptographic signatures, provenance assertions, and AI generation metadata across media assets.",
+      "skills": [
+        "./plugins/c2pa-inspector/skills/c2pa-inspect"
       ]
     },
     {
@@ -102,9 +120,18 @@
       "source": "./plugins/gcp-management",
       "description": "Google Cloud Platform and Firebase project assessment, itemized BigQuery spend analysis, quota governance, and consolidation skills.",
       "skills": [
+        "./plugins/gcp-management/skills/gcp-cloud-run-audit",
         "./plugins/gcp-management/skills/gcp-project-assessment",
         "./plugins/gcp-management/skills/gcp-project-consolidation",
         "./plugins/gcp-management/skills/gcp-quota-governance"
+      ]
+    },
+    {
+      "name": "go-readability",
+      "source": "./plugins/go-readability",
+      "description": "Modern Go and Google readability standards, style guidelines, code review checklists, and testing patterns.",
+      "skills": [
+        "./plugins/go-readability/skills/go-readability"
       ]
     },
     {
@@ -115,6 +142,14 @@
         "./plugins/macos-hig/skills/macos-hig-interaction",
         "./plugins/macos-hig/skills/macos-hig-layout",
         "./plugins/macos-hig/skills/macos-hig-reviewer"
+      ]
+    },
+    {
+      "name": "macos-performance",
+      "source": "./plugins/macos-performance",
+      "description": "macOS and SwiftUI application performance assessment: launch-time (\"quick bounce\") first-frame readiness, main-actor I/O, Swift strict concurrency adoption, view-model/business-logic separation, and steady-state render budget.",
+      "skills": [
+        "./plugins/macos-performance/skills/quick-bounce-assessor"
       ]
     },
     {
@@ -135,14 +170,37 @@
       ]
     },
     {
+      "name": "python-readability",
+      "source": "./plugins/python-readability",
+      "description": "Modern Python and Google readability standards, style guidelines, code review checklists, and linter automation.",
+      "skills": [
+        "./plugins/python-readability/skills/python-readability"
+      ]
+    },
+    {
       "name": "repo-authoring",
       "source": "./plugins/repo-authoring",
-      "description": "Repository management skills for technical writing, README generation, changelog curation, and commit recaps.",
+      "description": "Repository management skills for technical writing, arXiv/Syntaxis academic preprints, editorial report artifacts, README generation, changelog curation, and commit recaps.",
       "skills": [
+        "./plugins/repo-authoring/skills/arxiv-preprint-authoring",
         "./plugins/repo-authoring/skills/changelog-manager",
+        "./plugins/repo-authoring/skills/editorial-report-artifact",
+        "./plugins/repo-authoring/skills/go-security-audit",
+        "./plugins/repo-authoring/skills/headless-fork-pr",
         "./plugins/repo-authoring/skills/make-readme",
+        "./plugins/repo-authoring/skills/node-security-audit",
         "./plugins/repo-authoring/skills/repository-change-recap",
         "./plugins/repo-authoring/skills/technical-post-editorial"
+      ]
+    },
+    {
+      "name": "scion-platform",
+      "source": "./plugins/scion-platform",
+      "description": "Scion platform administration, Hub bootstrap and GCE reconciliation, authorization and broker quota diagnostics, zero-downtime agent token re-minting, fleet model assessment, live model patching, and server lifecycle operations.",
+      "skills": [
+        "./plugins/scion-platform/skills/scion-agent-models",
+        "./plugins/scion-platform/skills/scion-hub-admin",
+        "./plugins/scion-platform/skills/scion-hub-setup"
       ]
     },
     {

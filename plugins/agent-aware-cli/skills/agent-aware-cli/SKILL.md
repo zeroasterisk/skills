@@ -27,8 +27,9 @@ When tasked with building or improving a Command Line Interface (CLI), follow th
 4. **Mutative Safety (`--dry-run`)**
    - For commands that create, update, or delete external state, implement a `--dry-run` flag. This allows an autonomous agent to test its parameter mapping and validate the resulting payload locally before executing the destructive action.
 
-5. **Context Window Protection**
+5. **Context Window Protection & Summary-First List Payloads**
    - Agents have limited context windows. Actively truncate massive text blobs, sort critical action items to the top, and mask raw credentials by default to prevent credential leakage.
+   - **Summary vs. Detail Payloads in `--output json` List Commands**: Commands like `list --output json` MUST emit compact summary objects (`id`, `name`, `status`, item counts, file paths, `updated_at`) rather than serializing full multi-kilobyte document bodies or raw analysis transcripts for every record. Reserve full entity payloads for `show <id> --output json` or an explicit `--full` flag.
    - Provide opt-in verbosity (e.g., `--full` or `--verbose`) for agents or humans who explicitly request unfiltered data.
 
 6. **Executable Proactive Error Hints**
@@ -81,6 +82,15 @@ When optimizing the CLI for human readability, draw on Tufte-inspired principles
   - `Muted` (Dark Grey): De-emphasis for metadata, types, or defaults.
   - `ID` (Teal/Mint): Unique identifiers.
 - **Color Degradation**: Ensure colors degrade gracefully when piped to a file, when `--json` is invoked, or when `NO_COLOR` is present.
+
+## Automated CLI Auditor (`scripts/audit-cobra-cli.mjs`)
+
+Run `scripts/audit-cobra-cli.mjs` against any Go/Cobra repository to verify `Short` / `Long` / `Example` documentation coverage, top-level `GroupID` assignment, subcommand `--output json` support, `NO_COLOR` / `*_NO_TUI` handling, and `--limit` / `--dry-run` flags:
+
+```bash
+./scripts/audit-cobra-cli.mjs /path/to/cobra-repo
+./scripts/audit-cobra-cli.mjs /path/to/cobra-repo --json
+```
 
 ## Mandatory Implementation Checklist for Agents
 

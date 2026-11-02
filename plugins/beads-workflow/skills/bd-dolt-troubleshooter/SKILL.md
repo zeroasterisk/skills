@@ -21,6 +21,24 @@ from a mismatch between four layers:
 2. **JSONL export** — `.beads/issues.jsonl` (git source of truth)
 3. **Auto-backup** — `.beads/backup/` (a local Dolt backup target)
 
+## Fast-Triage: Schema Skew & "Refusing to auto-apply migrations"
+
+When `bd` refuses to open with `refusing to auto-apply N pending schema migrations to a remote-backed database (vX -> vY)`:
+
+1. **Check with the human operator**: Confirm whether another clone has already migrated and pushed.
+2. **Run `bd dolt pull`**: Check if the remote already has the migrated schema.
+3. **If this machine is the single designated migrator**:
+   ```bash
+   cp .beads/issues.jsonl /tmp/beads-backup.jsonl
+   bd migrate --force
+   bd migrate --inspect
+   bd doctor
+   bd dolt push
+   ```
+4. **If another clone already migrated**: Do NOT run `--force`. Run `bd bootstrap` to adopt the remote schema.
+
+See `references/schema-version-skew.md` for full runbook, dirty working set recovery, and `unreadable-remote-state` handling.
+
 ## The Signature Failure: Writes Silently Revert
 
 **Symptom:** You run `bd close X` or `bd update X`, bd prints success, but the
@@ -344,8 +362,8 @@ project `AGENTS.md`.
 - `scripts/diagnose.sh` — read-only (or `--probe` for write test): primary health check for engine mode, schema skew, repo fingerprint, PATH shadowing, backup corruption, and Dolt/JSONL agreement
 - `scripts/repair.sh` — unified automated repair: creates a raw snapshot backup, clears corrupt backup files, applies schema migrations (`--force`), updates repo fingerprints, untracks local files, runs `bd doctor --fix --yes`, and exports clean JSONL
 - `scripts/repair-corrupt-backup.sh` — targeted repair for corrupt backup write-rollback loops
-- `scripts/restore-bd.sh` — utility to rebuild `bd` against `@main` with full CGO/ICU support
-  and automatically synchronize shadowed PATH binaries across macOS and Linux
+- `scripts/restore-bd.sh` — utility to rebuild `bd` against `@main` with full CGO/ICU support,
+  disk-space preflight checks, optional automated schema migration (`--migrate`), and automatic synchronization of shadowed PATH binaries across macOS and Linux
 - `scripts/find-dolt-server.sh` — read-only: list all `dolt sql-server` PIDs with
   their working dirs and flag the one owning the current repo's `.beads/`
 - `scripts/inspect-binary.sh` — read-only: scan PATH for installed `bd` binaries,

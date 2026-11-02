@@ -34,16 +34,24 @@ else
   ok "Found 'plugins/' directory."
 fi
 
-# Symlink safety check (skipping git-ignored paths)
-for symlink in $(find . -type l -not -path '*/.git/*' 2>/dev/null); do
+# Symlink safety check (skipping git-ignored paths and common dependency trees)
+ABS_ROOT="$(pwd -P)"
+while IFS= read -r symlink; do
+  [ -n "$symlink" ] || continue
   if git check-ignore -q "$symlink" 2>/dev/null; then
     continue
   fi
   target="$(readlink "$symlink")"
-  if [[ "$target" == /* ]] || [[ "$target" == ../* ]]; then
+  sym_dir="$(dirname "$symlink")"
+  if command -v realpath >/dev/null 2>&1 && realpath -m . >/dev/null 2>&1; then
+    real_target="$(cd "$sym_dir" 2>/dev/null && realpath -m "$target" 2>/dev/null || true)"
+  else
+    real_target="$(python3 -c "import os, sys; print(os.path.realpath(os.path.join(sys.argv[1], sys.argv[2])))" "$sym_dir" "$target" 2>/dev/null || true)"
+  fi
+  if [ -z "$real_target" ] || { [[ "$real_target" != "$ABS_ROOT" ]] && [[ "$real_target" != "$ABS_ROOT"/* ]]; }; then
     err "Symlink '$symlink' escapes repository root ($target)"
   fi
-done
+done < <(find . -type l -not -path '*/.git/*' -not -path '*/node_modules/*' 2>/dev/null)
 
 info "2. Validating Plugin Package Manifests (plugin.json)"
 for plugin_dir in plugins/*; do
@@ -100,49 +108,18 @@ if len(parts) < 3:
 
 fm_text = parts[1]
 
-def parse_fm(text):
-    try:
-        import yaml
-        data = yaml.safe_load(text)
-        if isinstance(data, dict):
-            return {k: (str(v) if v is not None else '') for k, v in data.items()}
-    except Exception:
-        pass
-    fm = {}
-    key = None
-    folded = False
-    preserve_nl = False
-    buf = []
-    def flush():
-        nonlocal key, buf
-        if key is not None and buf:
-            if preserve_nl:
-                fm[key] = '\n'.join(buf).strip()
-            else:
-                fm[key] = ' '.join(s.strip() for s in buf if s.strip())
-        key = None
-        buf = []
-    for line in text.splitlines():
-        m = re.match(r'^([A-Za-z_][\w-]*):\s*(.*)$', line)
-        if m and not line.startswith((' ', '\t')):
-            flush()
-            key, val = m.group(1), m.group(2).strip()
-            folded = val in ('>', '>-', '|', '|-')
-            preserve_nl = val in ('|', '|-')
-            if not folded:
-                if (val.startswith('\"') and val.endswith('\"')) or (val.startswith(\"'\") and val.endswith(\"'\")):
-                    val = val[1:-1]
-                fm[key] = val
-                key = None
-        elif key is not None and folded:
-            buf.append(line)
-    flush()
-    return fm
+def get_val(key, text):
+    m = re.search(r'^' + key + r':\s*(.*)$', text, re.MULTILINE)
+    if not m:
+        return ''
+    val = m.group(1).strip()
+    if (val.startswith('\"') and val.endswith('\"')) or (val.startswith(\"'\") and val.endswith(\"'\")):
+        val = val[1:-1]
+    return val
 
-fm = parse_fm(fm_text)
-name = fm.get('name', '').strip()
-desc = fm.get('description', '').strip()
-lic = fm.get('license', '').strip()
+name = get_val('name', fm_text)
+desc = get_val('description', fm_text)
+lic = get_val('license', fm_text)
 
 print(json.dumps({'name': name, 'desc': desc, 'desc_len': len(desc), 'license': lic}))
 " 2>/dev/null || echo '{"error": "python parse error"}')"

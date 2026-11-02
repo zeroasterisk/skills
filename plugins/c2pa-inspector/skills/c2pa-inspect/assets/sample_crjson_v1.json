@@ -1,0 +1,41 @@
+{
+  "spec_version": "1.4",
+  "manifests": [
+    {
+      "label": "urn:uuid:active-v1-manifest",
+      "title": "Landscape Photograph",
+      "format": "image/jpeg",
+      "claim": {
+        "claim_generator_info": {
+          "name": "Credentio C2PA Tool",
+          "version": "1.4.2"
+        },
+        "signature_info": {
+          "issuer": "Google Authenticity CA",
+          "alg": "es256",
+          "time": "2026-08-30T12:00:00Z",
+          "cert_serial_number": "9876543210"
+        }
+      },
+      "assertions": {
+        "c2pa.actions": {
+          "actions": [
+            { "action": "c2pa.created" },
+            { "action": "c2pa.color_adjustments" }
+          ]
+        },
+        "c2pa.hash.data": {
+          "hash_value": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+        }
+      },
+      "validation": {
+        "status": [
+          {
+            "code": "claimSignature.validated",
+            "explanation": "Signature is cryptographically valid"
+          }
+        ]
+      }
+    }
+  ]
+}

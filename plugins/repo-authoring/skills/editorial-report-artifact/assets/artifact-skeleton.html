@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{REPORT_TITLE}} — Technical Experiment &amp; Architecture Record</title>
+<style>
+  :root {
+    --ivory: #FAF9F5;
+    --paper: #FFFFFF;
+    --oat: #E3DACC;
+    --sand: #F0EEE6;
+    --slate: #141413;
+    --g900: #262624;
+    --g700: #3D3D3A;
+    --g500: #5E5D59;
+    --g400: #87867F;
+    --g300: #B0AEA5;
+    --g200: #D1CFC5;
+    --g100: #E8E6DC;
+    --clay: #D97757;
+    --clay-soft: rgba(217, 119, 87, 0.12);
+    --clay-deep: #8A3B1E;
+    --olive: #788C5D;
+    --olive-soft: rgba(120, 140, 93, 0.14);
+    --olive-deep: #4B5C39;
+    --rust: #C44536;
+    --rust-soft: rgba(196, 69, 54, 0.12);
+    --sky: #6A9BCC;
+    --sky-soft: rgba(106, 155, 204, 0.14);
+    --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    --radius: 10px;
+    --border: 1px solid var(--g200);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--ivory);
+    color: var(--g900);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    padding: 44px 28px 96px;
+  }
+  .page { max-width: 1180px; margin: 0 auto; }
+  code, pre { font-family: var(--mono); font-size: 0.88em; }
+  code { background: var(--g100); padding: 2px 6px; border-radius: 5px; color: var(--slate); }
+
+  /* offline typographic math (zero CDN dependencies) */
+  .math {
+    font-family: "STIX Two Math", "Cambria Math", "Times New Roman", Georgia, serif;
+    font-size: 1.03em;
+    white-space: nowrap;
+    color: var(--slate);
+  }
+  .math i { font-style: italic; }
+  .math sub { font-size: 0.76em; vertical-align: -0.18em; }
+  .math sup { font-size: 0.76em; vertical-align: 0.35em; }
+
+  /* header */
+  header.hero { border-bottom: 1px solid var(--g300); padding-bottom: 28px; margin-bottom: 28px; }
+  .eyebrow { font-family: var(--mono); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--clay-deep); margin-bottom: 10px; }
+  h1 { font-family: var(--serif); font-weight: 500; font-size: clamp(30px, 4vw, 44px); line-height: 1.12; color: var(--slate); letter-spacing: -0.015em; margin-bottom: 14px; }
+  h1 em { font-style: italic; color: var(--clay-deep); }
+  .lead { font-size: 16.5px; color: var(--g700); max-width: 900px; margin-bottom: 18px; }
+  .status-line { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill { font-family: var(--mono); font-size: 11.5px; padding: 5px 11px; border-radius: 999px; background: var(--sand); border: var(--border); color: var(--g700); }
+  .pill.live { background: var(--olive-soft); border-color: var(--olive); color: var(--olive-deep); font-weight: 600; }
+  .pill.clay { background: var(--clay-soft); border-color: var(--clay); color: var(--clay-deep); font-weight: 600; }
+
+  /* toc */
+  nav.toc {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 18px 0 36px;
+    padding: 10px 0;
+    background: rgba(250, 249, 245, 0.95);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--g200);
+  }
+  nav.toc a { font-size: 12.5px; padding: 7px 14px; border: var(--border); border-radius: 999px; color: var(--g700); background: var(--paper); text-decoration: none; display: inline-flex; gap: 7px; align-items: center; cursor: pointer; transition: all 0.15s ease; }
+  nav.toc a .n { font-family: var(--mono); font-size: 10px; color: var(--clay-deep); font-weight: 700; }
+  nav.toc a:hover { border-color: var(--slate); color: var(--slate); transform: translateY(-1px); }
+  nav.toc a.active { background: var(--slate); border-color: var(--slate); color: var(--ivory); }
+  nav.toc a.active .n { color: var(--clay); }
+
+  /* summary strip */
+  .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 56px; }
+  @media (max-width: 900px) { .summary { grid-template-columns: repeat(2, 1fr); } }
+  .cell { background: var(--paper); border: var(--border); border-radius: var(--radius); padding: 18px 20px; }
+  .cell .k { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--g500); margin-bottom: 6px; }
+  .cell .v { font-family: var(--serif); font-size: 28px; line-height: 1.1; color: var(--slate); font-weight: 500; }
+  .cell .s { font-size: 12.5px; color: var(--g500); margin-top: 8px; }
+  .cell.accent { border-left: 4px solid var(--clay); }
+  .cell.olive { border-left: 4px solid var(--olive); }
+
+  /* sections & grids */
+  section { margin-bottom: 68px; scroll-margin-top: 76px; }
+  .sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+  .sec-head .num { font-family: var(--mono); font-size: 12px; background: var(--oat); color: var(--slate); padding: 3px 9px; border-radius: 8px; }
+  .sec-head h2 { font-family: var(--serif); font-weight: 500; font-size: 28px; color: var(--slate); letter-spacing: -0.01em; }
+  .sec-intro { font-size: 15px; color: var(--g700); max-width: 840px; margin-bottom: 24px; }
+  h3 { font-family: var(--serif); font-weight: 500; font-size: 20px; color: var(--slate); margin: 28px 0 10px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 14px 0 22px; }
+  @media (max-width: 880px) { .grid2 { grid-template-columns: 1fr; } }
+  .panel { background: var(--paper); border: var(--border); border-radius: var(--radius); padding: 22px 24px; margin: 14px 0 22px; }
+  .small { font-size: 12.5px; color: var(--g500); }
+
+  /* tables */
+  .tscroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table.t { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--paper); border: var(--border); border-radius: var(--radius); overflow: hidden; font-size: 13.5px; margin: 12px 0 20px; }
+  table.t th { text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--g500); background: var(--g100); padding: 11px 13px; border-bottom: 1px solid var(--g300); white-space: nowrap; }
+  table.t td { padding: 10px 13px; border-bottom: 1px solid var(--g100); vertical-align: top; }
+  table.t tr:last-child td { border-bottom: none; }
+  table.t td.num, table.t th.num { text-align: right; font-family: var(--mono); font-size: 12.5px; white-space: nowrap; }
+  table.t td.best { color: var(--olive-deep); font-weight: 600; }
+  table.t td.bad { color: var(--rust); font-weight: 600; }
+  table.t tr.highlight { background: rgba(120, 140, 93, 0.08); }
+
+  /* code & callouts */
+  pre.code { background: var(--slate); color: var(--ivory); padding: 14px 16px; border-radius: 8px; overflow-x: auto; line-height: 1.5; margin: 10px 0; }
+  pre.code .c { color: var(--g400); }
+  pre.code .k { color: #E8A678; }
+  pre.code .s { color: #A8C686; }
+  .callout { border-radius: var(--radius); padding: 16px 18px; border: var(--border); background: var(--paper); }
+  .callout .ct { font-family: var(--mono); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-bottom: 6px; }
+  .callout.ok { background: var(--olive-soft); border-color: var(--olive); }
+  .callout.ok .ct { color: var(--olive-deep); }
+  .callout.warn { background: var(--clay-soft); border-color: var(--clay); }
+  .callout.warn .ct { color: var(--clay-deep); }
+
+  /* proportional bar charts */
+  .bars { display: flex; flex-direction: column; gap: 9px; }
+  .bar-row { display: grid; grid-template-columns: 240px 1fr 150px; align-items: center; gap: 12px; font-size: 12.5px; }
+  .bar-row .lbl { font-family: var(--mono); color: var(--g700); }
+  .bar-row .track { height: 14px; background: var(--sand); border: 1px solid var(--g200); border-radius: 4px; overflow: hidden; }
+  .bar-row .fill { height: 100%; border-radius: 3px; }
+  .bar-row .fill.olive { background: var(--olive); }
+  .bar-row .fill.clay { background: var(--clay); }
+  .bar-row .fill.rust { background: var(--rust); }
+  .bar-row .val { font-family: var(--mono); text-align: right; color: var(--slate); }
+
+  /* interactive pipeline explorer */
+  .explorer { display: grid; grid-template-columns: 1.35fr 1fr; gap: 18px; align-items: start; }
+  @media (max-width: 960px) { .explorer { grid-template-columns: 1fr; } }
+  .graph-wrap { background: var(--paper); border: var(--border); border-radius: var(--radius); padding: 18px; }
+  .gnode { cursor: pointer; transition: opacity 0.15s ease; }
+  .gnode rect { fill: var(--ivory); stroke: var(--g300); stroke-width: 1.5; transition: all 0.15s ease; }
+  .gnode.active rect { fill: var(--clay-soft); stroke: var(--clay); stroke-width: 2.2; }
+  .inspector { position: sticky; top: 20px; background: var(--paper); border: var(--border); border-radius: var(--radius); padding: 20px; }
+  .inspector .tag { font-family: var(--mono); font-size: 11px; text-transform: uppercase; color: var(--clay-deep); margin-bottom: 4px; }
+  .inspector h4 { font-family: var(--serif); font-size: 20px; color: var(--slate); margin-bottom: 8px; }
+  .inspector .kv { display: grid; grid-template-columns: 120px 1fr; gap: 6px 10px; font-size: 12.5px; border-top: 1px solid var(--g100); padding-top: 10px; margin-top: 10px; }
+  .inspector .kv .k { font-family: var(--mono); color: var(--g500); }
+  .inspector .kv .v { font-family: var(--mono); color: var(--slate); }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="hero">
+    <div class="eyebrow">Experiment Record · {{PROJECT_NAME}} · {{DATE_ISO}}</div>
+    <h1>{{HERO_HEADLINE_PREFIX}} <em>{{HERO_HEADLINE_EMPHASIS}}</em></h1>
+    <p class="lead">
+      Summary of experimental methodology, mathematical formulation (<span class="math"><i>H&#771;</i><sub><i>m</i></sub> = <i>H</i><sub><i>m</i></sub> / ln|<i>V</i><sub><i>m</i></sub>|</span>),
+      and empirical verification receipts.
+    </p>
+    <div class="status-line">
+      <span class="pill live">Primary Metric · 98.0%</span>
+      <span class="pill clay">Mechanism · Active</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <a href="#s1"><span class="n">01</span> Formulation &amp; Architecture</a>
+    <a href="#s2"><span class="n">02</span> Empirical Ablation</a>
+    <a href="#s3"><span class="n">03</span> Interactive Pipeline Explorer</a>
+  </nav>
+
+  <div class="summary">
+    <div class="cell olive">
+      <div class="k">Headline Accuracy</div>
+      <div class="v">98.0%</div>
+      <div class="s">+12.0% over baseline</div>
+    </div>
+    <div class="cell accent">
+      <div class="k">Target Subsystem Lift</div>
+      <div class="v">0% → 100%</div>
+      <div class="s">Verified across all adversarial cases</div>
+    </div>
+    <div class="cell">
+      <div class="k">Early-Exit Savings</div>
+      <div class="v">66.0%</div>
+      <div class="s">100% precision at Tier 1</div>
+    </div>
+    <div class="cell">
+      <div class="k">Mean Wall Latency</div>
+      <div class="v">712 ms</div>
+      <div class="s">Single-pass readout</div>
+    </div>
+  </div>
+
+  <section id="s1">
+    <div class="sec-head"><span class="n num">01</span><h2>Mathematical formulation &amp; system schematic</h2></div>
+    <p class="sec-intro">
+      Use semantic <code>&lt;span class="math"&gt;</code> elements for equations such as
+      <span class="math"><i>H&#771;</i><sub><i>m</i></sub> = <i>H</i><sub><i>m</i></sub> / ln|<i>V</i><sub><i>m</i></sub>| &in; [0, 1]</span>
+      so formulas render cleanly offline without external CDN dependencies.
+    </p>
+  </section>
+
+  <section id="s2">
+    <div class="sec-head"><span class="n num">02</span><h2>Empirical ablation &amp; verification</h2></div>
+    <p class="sec-intro">
+      Document multi-way benchmark comparisons with right-aligned monospace numeric columns.
+    </p>
+  </section>
+
+  <section id="s3">
+    <div class="sec-head"><span class="n num">03</span><h2>Interactive pipeline explorer</h2></div>
+    <p class="sec-intro">
+      Click any SVG stage node to inspect the live implementation and receipt metrics.
+    </p>
+  </section>
+</div>
+
+<script>
+  // Universal TOC smooth-scroll handler (fixes WebView/iframe previewers blocking bare #fragment anchor jumps)
+  document.querySelectorAll('nav.toc a[href^="#"]').forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      const targetId = this.getAttribute('href').slice(1);
+      const targetEl = document.getElementById(targetId);
+      if (targetEl) {
+        document.querySelectorAll('nav.toc a').forEach(a => a.classList.remove('active'));
+        this.classList.add('active');
+        targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        try { history.replaceState(null, '', '#' + targetId); } catch (_) {}
+      }
+    });
+  });
+
+  // Highlight active TOC pill as user scrolls
+  if ('IntersectionObserver' in window) {
+    const sections = document.querySelectorAll('section[id^="s"]');
+    const tocLinks = document.querySelectorAll('nav.toc a[href^="#"]');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.getAttribute('id');
+          tocLinks.forEach(a => {
+            a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+          });
+        }
+      });
+    }, { rootMargin: '-15% 0px -75% 0px', threshold: 0 });
+    sections.forEach(sec => observer.observe(sec));
+  }
+</script>
+</body>
+</html>
