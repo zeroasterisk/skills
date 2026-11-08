@@ -52,6 +52,7 @@ skills/
 | **`cloud-and-workplace`** | `1.0.0` | Executive inbox/calendar chief-of-staff triage and open-source working group NotebookLM synchronization. | `chief-of-staff-triage`<br>`aaif-notebooklm-sync` |
 | **`developer-intel`** | `1.0.0` | Developer trend synthesis combining Plushcap MCP engineering blog data with Good AI List repository velocity. | `developer-trends-intel` |
 | **`developer-friction-reviewer`** | `1.0.0` | Persona-based developer friction reviews and automated audit loops across recipes, tools, and onboarding flows. | `developer-friction-reviewer` |
+| **`agent-evals`** | `1.0.0` | Framing agent evals, benchmarks and leaderboards as held-constant ablations across model, harness and task adaptation, with progressive-disclosure reporting and integrity checks. | `eval-ablation-framing` |
 
 ### Consumed Upstream Plugins (`ghchinoy/agent-skills` & `voodootikigod/adlc`)
 

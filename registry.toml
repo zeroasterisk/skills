@@ -94,6 +94,7 @@ include = [
   "cloud-and-workplace/**",
   "developer-intel/**",
   "developer-friction-reviewer/**",
+  "agent-evals/**",
 ]
 
 # Upstream plugins — github.com/ghchinoy/agent-skills
