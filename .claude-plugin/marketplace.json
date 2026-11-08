@@ -24,6 +24,14 @@
       ]
     },
     {
+      "name": "agent-evals",
+      "source": "./plugins/agent-evals",
+      "description": "Designing, running and reporting agent evaluations and leaderboards: held-constant ablations across model, harness and task adaptation, with integrity checks.",
+      "skills": [
+        "./plugins/agent-evals/skills/eval-ablation-framing"
+      ]
+    },
+    {
       "name": "agent-plugin-authoring",
       "source": "./plugins/agent-plugin-authoring",
       "description": "Authoring, migration, and linting tools for packaging Agent Skills into Agent Plugins v1.0.0 spec packages.",
