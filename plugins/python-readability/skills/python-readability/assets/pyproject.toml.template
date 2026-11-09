@@ -1,0 +1,88 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "my-project"
+version = "0.1.0"
+description = "Project following Google Python Readability standards"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "mypy>=1.10.0",
+    "pytest>=8.0.0",
+    "ruff>=0.5.0",
+]
+
+[tool.ruff]
+# Google Python Style Guide recommends 80 characters.
+# In modern teams, 88 (Black standard) is widely accepted.
+line-length = 80
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "F",     # pyflakes
+    "I",     # isort (import sorting)
+    "N",     # pep8-naming
+    "D",     # pydocstyle (Google docstring convention)
+    "UP",    # pyupgrade (modern Python syntax)
+    "B",     # flake8-bugbear (common bugs and design issues)
+    "C4",    # flake8-comprehensions
+    "SIM",   # flake8-simplify
+    "TID",   # flake8-tidy-imports (ban relative imports)
+    "PLC",   # pylint conventions
+    "PLE",   # pylint errors
+    "PLR",   # pylint refactorings
+    "PLW",   # pylint warnings
+    "RUF",   # ruff-specific rules
+]
+ignore = [
+    # Allow deliberate exceptions matching Google style guidelines
+    "D100",  # Missing docstring in public module (enforce at PR/package level)
+    "D104",  # Missing docstring in public package
+    "PLR0913", # Too many arguments in function definition (domain-dependent)
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.flake8-tidy-imports]
+# Google style strictly forbids relative imports
+ban-relative-imports = "all"
+
+[tool.ruff.lint.isort]
+known-first-party = ["my_project"]
+combine-as-imports = true
+lines-after-imports = 2
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+docstring-code-format = true
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+show_error_codes = true
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-ra -q --strict-markers"
+testpaths = ["tests"]

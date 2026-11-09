@@ -2,7 +2,7 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "automation-governance",
   "version": "1.0.0",
-  "description": "Framework and tooling for evaluating workflow, skill, and process automation readiness based on the Google DeepMind Intelligent AI Delegation framework.",
+  "description": "Frameworks and tooling for evaluating AI automation readiness (Google DeepMind Intelligent AI Delegation) and auditing AI agents against W3C User Agent fiduciary duties (Protection, Honesty, Loyalty).",
   "author": {
     "name": "ghchinoy",
     "url": "https://github.com/ghchinoy"
@@ -13,6 +13,10 @@
     "delegation",
     "governance",
     "automation-readiness",
+    "user-agents",
+    "w3c",
+    "fiduciary-duties",
+    "ethics",
     "safety",
     "deepmind",
     "multi-agent",

@@ -5,11 +5,63 @@
 #
 set -euo pipefail
 
-TARGET="${1:-main}"
+TARGET="main"
+AUTO_MIGRATE=0
+AUTO_CLEAN=0
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --migrate)
+            AUTO_MIGRATE=1
+            shift
+            ;;
+        --clean-cache)
+            AUTO_CLEAN=1
+            shift
+            ;;
+        --help|-h)
+            echo "Usage: restore-bd.sh [--migrate] [--clean-cache] [revision/tag]"
+            echo ""
+            echo "Options:"
+            echo "  --migrate      Automatically apply pending schema migrations (--force) and update repo ID"
+            echo "  --clean-cache  Automatically run 'go clean -cache' if disk space is low (<1500 MB)"
+            echo "  revision/tag   Target Git branch, tag, or commit on beads repo (default: main)"
+            exit 0
+            ;;
+        -*)
+            echo "Unknown flag: $1"
+            echo "Usage: restore-bd.sh [--migrate] [--clean-cache] [revision/tag]"
+            exit 1
+            ;;
+        *)
+            TARGET="$1"
+            shift
+            ;;
+    esac
+done
+
 PKG_URL="github.com/steveyegge/beads/cmd/bd"
 GO_BIN_DIR="${GOBIN:-$HOME/go/bin}"
 
 echo "==> Restoring 'bd' client (target revision/tag: @${TARGET})..."
+
+# 0. Disk Space Pre-flight Check
+CHECK_DIR="$(go env GOCACHE 2>/dev/null || echo "$HOME")"
+[ -d "$CHECK_DIR" ] || CHECK_DIR="$HOME"
+AVAIL_KB=$(df -k "$CHECK_DIR" 2>/dev/null | awk 'NR==2 {print $(NF-2)}')
+if [ -n "$AVAIL_KB" ] && [ "$AVAIL_KB" -eq "$AVAIL_KB" ] 2>/dev/null; then
+    AVAIL_MB=$((AVAIL_KB / 1024))
+    echo "    Disk space check: ${AVAIL_MB} MB available in $(dirname "$CHECK_DIR")."
+    if [ "$AVAIL_MB" -lt 1500 ]; then
+        if [ "$AUTO_CLEAN" -eq 1 ]; then
+            echo "    [WARN] Available disk space is below 1500 MB. Automatically running 'go clean -cache'..."
+            go clean -cache || true
+        else
+            echo "    [WARN] Available disk space is low (${AVAIL_MB} MB < 1500 MB). Beads dependencies require ~1-1.5 GB."
+            echo "    Hint: If 'go install' fails with 'no space left on device', run 'go clean -cache' or pass --clean-cache."
+        fi
+    fi
+fi
 
 # 1. OS and ICU detection for CGO support
 OS="$(uname -s)"
@@ -115,4 +167,35 @@ FINAL_BIN="$(command -v bd 2>/dev/null || echo "$COMPILED_BIN")"
 echo "    Active binary  : $FINAL_BIN"
 echo "    Module details : $(go version -m "$FINAL_BIN" 2>/dev/null | grep -E '(mod|dep)\s+' | head -n 2 | tr -d '\n' || echo "built from source")"
 echo ""
+
+# 4. Post-build schema check & migration
+if [ -d .beads ] && command -v "$FINAL_BIN" >/dev/null 2>&1; then
+    echo "==> Checking local repository schema & fingerprint status..."
+    SKEW_OR_MIG="$("$FINAL_BIN" migrate --inspect 2>&1 || true)"
+    REPO_MISMATCH="$("$FINAL_BIN" doctor 2>&1 | grep -i "Database belongs to different repository" || true)"
+
+    if echo "$SKEW_OR_MIG" | grep -qi -E "refusing to auto-apply|pending schema migration|schema version mismatch"; then
+        if [ "$AUTO_MIGRATE" -eq 1 ]; then
+            echo "    Pending schema migrations detected. Applying with --force (--migrate active)..."
+            "$FINAL_BIN" migrate --force || true
+        else
+            echo "    [NOTE] Pending schema migrations detected."
+            echo "    To apply migrations as the designated migrator, run:"
+            echo "      bd migrate --force"
+            echo "    (Or re-run: $0 --migrate ${TARGET})"
+        fi
+    fi
+
+    if [ -n "$REPO_MISMATCH" ]; then
+        if [ "$AUTO_MIGRATE" -eq 1 ]; then
+            echo "    Repo ID mismatch detected. Updating repo fingerprint (--migrate active)..."
+            "$FINAL_BIN" migrate --update-repo-id --yes || true
+        else
+            echo "    [NOTE] Repo ID mismatch detected."
+            echo "    To update repo fingerprint, run:"
+            echo "      bd migrate --update-repo-id --yes"
+        fi
+    fi
+fi
+
 echo "==> Restoration complete! Run 'bd doctor' and 'bd list' to verify schema and CGO diagnostics."

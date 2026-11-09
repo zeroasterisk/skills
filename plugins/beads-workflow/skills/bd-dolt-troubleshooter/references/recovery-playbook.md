@@ -226,16 +226,14 @@ error running query ... error="column "<col>" could not be found in any table in
 
 1. On the **primary** host (where the main bd server runs):
    ```bash
-   # The gate-bypass surface has moved between bd versions — check
-   # `bd migrate --help` for your build. bd 1.1.x: top-level flag
-   # `bd migrate --force` (equiv. to BD_ALLOW_REMOTE_MIGRATE=1). Older
-   # builds: `BD_ALLOW_REMOTE_MIGRATE=1 bd migrate schema`. Without one of
-   # these the gate fires first and reports "Schema already at vX" even
-   # though nothing was applied. `--force` cannot combine with `--dry-run`.
-   bd migrate --force                            # apply vX → vY (bd 1.1.x+)
-   # BD_ALLOW_REMOTE_MIGRATE=1 bd migrate schema # equivalent on older builds
-   bd migrate --inspect                           # confirm Schema Version is now vY
-   bd dolt push                                   # push to remote
+   # In bd 1.3.x+, `bd migrate --force` alone updates Dolt metadata without
+   # applying SQL table migrations (0054-0066). Always run `bd migrate schema --force`
+   # FIRST, followed by `bd migrate --force`, then commit any dirty config rows:
+   bd migrate schema --force                     # apply SQL table migrations (vX → vY)
+   bd migrate --force                            # update Dolt metadata version stamp
+   bd vc commit -m "chore(bd): commit config working set" 2>/dev/null || true
+   bd migrate --inspect                          # confirm Schema Version is now vY
+   bd dolt push                                  # push to remote
    ```
 
 2. On **every other clone** (including the watcher machine):

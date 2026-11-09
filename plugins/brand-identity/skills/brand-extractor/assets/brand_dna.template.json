@@ -1,0 +1,32 @@
+{
+  "colors": [
+    {
+      "name": "Primary Brand",
+      "hex": "#1D54D8"
+    },
+    {
+      "name": "Canvas Background",
+      "hex": "#F8FAFC"
+    },
+    {
+      "name": "Surface White",
+      "hex": "#FFFFFF"
+    },
+    {
+      "name": "Text Slate",
+      "hex": "#475569"
+    }
+  ],
+  "fonts": {
+    "headline": "Inter",
+    "body": "Inter",
+    "classification": "Modern Neo-Grotesque Sans-serif"
+  },
+  "tone": [
+    "minimalist",
+    "focused",
+    "approachable",
+    "utilitarian"
+  ],
+  "summary": "A modern, approachable design language built on clarity and structural elegance."
+}

@@ -53,9 +53,11 @@ fi
 info "3. Checking and applying pending schema migrations"
 MIG_CHECK=$(bd migrate --inspect 2>&1 || true)
 DOCTOR_CHECK=$(bd doctor 2>&1 || true)
-if echo "$MIG_CHECK $DOCTOR_CHECK" | grep -qi -E "refusing to auto-apply|pending schema migration|schema version mismatch"; then
-  yellow "    Pending schema migrations detected. Applying with --force..."
+if echo "$MIG_CHECK $DOCTOR_CHECK" | grep -qi -E "refusing to auto-apply|pending schema migration|schema version mismatch|Database: version .* \(CLI:"; then
+  yellow "    Pending schema migrations detected. Applying schema + metadata migrations with --force..."
+  bd migrate schema --force 2>&1 | sed 's/^/    /' || true
   bd migrate --force 2>&1 | sed 's/^/    /' || true
+  bd vc commit -m "chore(bd): commit config working set" >/dev/null 2>&1 || true
 else
   green "    No pending schema migrations."
 fi
@@ -73,7 +75,7 @@ info "5. Untracking local-only files from git"
 UNTRACKED_ANY=0
 for f in $(git ls-files .beads/ 2>/dev/null); do
   case "$f" in
-    .beads/backup/*|.beads/dolt-server.pid|.beads/dolt-server.port|.beads/dolt-server.lock)
+    .beads/backup/*|.beads/backup.*/*|.beads/dolt/*|.beads/dolt.*/*|.beads/dolt-server*|.beads/dolt-config.log)
       git rm --cached "$f" >/dev/null 2>&1 && { echo "    untracked $f"; UNTRACKED_ANY=1; } ;;
   esac
 done

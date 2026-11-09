@@ -81,36 +81,37 @@ else
 fi
 
 info "0b. Schema version skew & pending migrations (client binary vs database)"
+SKEW=""
 if [ "${SKIP_DB_CALLS:-0}" -eq 1 ]; then
   yellow "    Skipping schema checks (resolve lock contention / unreachable server first)."
 else
   DOCTOR_OUT=$(bd doctor 2>&1 || true)
-  SKEW=$(echo "$DOCTOR_OUT" | grep -i -E "schema version mismatch|schema skew|pending schema migration|refusing to auto-apply" | head -1 || true)
+  SKEW=$(echo "$DOCTOR_OUT" | grep -i -E "schema version mismatch|schema skew|pending schema migration|refusing to auto-apply|Database: version .* \(CLI:" | head -1 || true)
   if [ -z "$SKEW" ]; then
-    # Also check bd list or bd migrate --inspect output for migration gates
+    # Also check bd migrate --inspect output for migration gates or schema version mismatch
     MIG_CHECK=$(bd migrate --inspect 2>&1 || true)
-    if echo "$MIG_CHECK" | grep -qi -E "refusing to auto-apply|pending schema migration"; then
-      SKEW=$(echo "$MIG_CHECK" | grep -i -E "refusing to auto-apply|pending schema migration" | head -1)
+    if echo "$MIG_CHECK" | grep -qi -E "refusing to auto-apply|pending schema migration|schema version mismatch"; then
+      SKEW=$(echo "$MIG_CHECK" | grep -i -E "refusing to auto-apply|pending schema migration|schema version mismatch" | head -1)
     fi
   fi
-fi
 
-if [ -n "$SKEW" ]; then
-  red "    PROBLEM: schema version skew / pending migrations detected:"
-  printf "      %s\n" "$SKEW"
-  if echo "$SKEW" | grep -qi -E "binary knows up to|is ahead of binary"; then
-    red "    Your bd binary is BEHIND the database (another agent/machine migrated it forward)."
-    red "    Reads warn; writes FAIL (\"Field 'id' doesn't have a default value\" or unexpected schema errors)."
-    red "    Fix: UPGRADE the client to match — scripts/restore-bd.sh (or go install github.com/steveyegge/beads/cmd/bd@main)"
-    red "         (CGO/ICU + PATH-copy caveats: SKILL.md 'Client BEHIND the Database')."
-    red "    Do NOT run 'bd migrate' on the old binary; it can't apply a schema it doesn't know."
+  if [ -n "$SKEW" ]; then
+    red "    PROBLEM: schema version skew / pending migrations detected:"
+    printf "      %s\n" "$SKEW"
+    if echo "$SKEW" | grep -qi -E "binary knows up to|is ahead of binary"; then
+      red "    Your bd binary is BEHIND the database (another agent/machine migrated it forward)."
+      red "    Reads warn; writes FAIL (\"Field 'id' doesn't have a default value\" or unexpected schema errors)."
+      red "    Fix: UPGRADE the client to match — scripts/restore-bd.sh (or go install github.com/steveyegge/beads/cmd/bd@main)"
+      red "         (CGO/ICU + PATH-copy caveats: SKILL.md 'Client BEHIND the Database')."
+      red "    Do NOT run 'bd migrate' on the old binary; it can't apply a schema it doesn't know."
+    else
+      red "    Database has pending migrations blocked by remote-sync gate (or .local_version skipped prompt)."
+      red "    Fix: bd migrate schema --force && bd migrate --force && bd vc commit -m 'chore(bd): commit config working set' && bd dolt push"
+    fi
+    ISSUES=$((ISSUES+1))
   else
-    red "    Database has pending migrations blocked by remote-sync gate."
-    red "    Fix: bd migrate --force (or BD_ALLOW_REMOTE_MIGRATE=1 bd migrate) followed by bd dolt push."
+    green "    No schema version skew or pending migrations."
   fi
-  ISSUES=$((ISSUES+1))
-else
-  green "    No schema version skew or pending migrations."
 fi
 
 info "0c. Client binary & PATH shadowing check"
@@ -149,19 +150,40 @@ else
 fi
 
 info "1. Dolt server status"
-bd dolt status 2>&1 | sed 's/^/    /' || yellow "    bd dolt status failed"
+DOLT_STATUS=$(bd dolt status 2>&1 || true)
+if [ -n "$DOLT_STATUS" ]; then
+  printf "%s\n" "$DOLT_STATUS" | sed 's/^/    /'
+else
+  yellow "    bd dolt status failed"
+fi
+if echo "$DOLT_STATUS" | grep -q "dolt.local-only=true" && grep -q "remote:" .beads/config.yaml 2>/dev/null; then
+  yellow "    WARNING: dolt.local-only=true is disabling remote sync even though .beads/config.yaml defines sync.remote."
+  yellow "    If remote viewers (e.g. beads-run / GCS federation) rely on this repo, remove 'local-only: true' from"
+  yellow "    .beads/config.yaml, point origin & sync.remote to gs://<bucket>/<project-id>, and run 'bd sync'."
+fi
 
 info "2. PRIMARY: local-only files tracked in git (deterministic)"
 TRACKED_BAD=""
+TRACKED_COUNT=0
 for f in $(git ls-files .beads/ 2>/dev/null); do
   case "$f" in
-    .beads/backup/*|.beads/dolt-server.pid|.beads/dolt-server.port|.beads/dolt-server.lock)
-      TRACKED_BAD="$TRACKED_BAD $f" ;;
+    .beads/backup/*|.beads/backup.*/*|.beads/dolt/*|.beads/dolt.*/*|.beads/dolt-server*|.beads/dolt-config.log)
+      TRACKED_BAD="$TRACKED_BAD $f"
+      TRACKED_COUNT=$((TRACKED_COUNT+1)) ;;
   esac
 done
 if [ -n "$TRACKED_BAD" ]; then
-  red "    These local files are committed to git (corruption will spread to clones):"
-  for f in $TRACKED_BAD; do echo "      $f"; done
+  red "    These local files are committed to git ($TRACKED_COUNT file(s); corruption/bloat will spread to clones):"
+  SHOWN=0
+  for f in $TRACKED_BAD; do
+    SHOWN=$((SHOWN+1))
+    if [ "$SHOWN" -le 10 ]; then
+      echo "      $f"
+    fi
+  done
+  if [ "$TRACKED_COUNT" -gt 10 ]; then
+    echo "      ... and $((TRACKED_COUNT-10)) more (run: git rm --cached -r .beads/backup* .beads/dolt* .beads/dolt-server* .beads/dolt-config.log)"
+  fi
   ISSUES=$((ISSUES+1))
 else
   green "    No backup/runtime files tracked. Good."
