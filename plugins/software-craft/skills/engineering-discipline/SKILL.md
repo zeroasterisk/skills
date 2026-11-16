@@ -10,7 +10,26 @@ The full engineering lifecycle in one process: define → build → debug → ve
 
 > Distilled from [obra/superpowers](https://github.com/obra/superpowers) (Apache 2.0) and [Intelligent-Internet/zenith](https://github.com/Intelligent-Internet/zenith) (Apache 2.0).
 
+> Trust pyramid + correction-encoding from Lauren Tan (poteto), "Slop to Gold" (https://youtu.be/O_zcc6Xl12g) and [pstack](https://github.com/cursor/plugins/tree/main/pstack) (MIT).
+
 ---
+
+## 0. Invest in the Environment, Not the Prompt (Trust Pyramid)
+
+Agents copy the codebase. Code is their largest input, so workarounds, deprecated APIs, and dead code get replicated as "the established pattern." Spend effort top-down:
+
+1. **Code/architecture** — one owner per state, one supported way per task, wrong imports fail (directory boundaries + dep-graph lint). Ban nuance-heavy footguns outright (e.g. `useEffect` in product code, raw timers) behind a safe API.
+2. **Static checks** — types, lint rules, compilers, CI. Lint error messages name the fix ("use X from Y"), not just the violation. If the pattern is widespread, fail only on new occurrences, then clean up the old ones.
+3. **Verification** — runtime (drive the real app via a project `verify-<app>` skill + feature map), property-based tests, formal (TLA+/Lean) for races, retries, state machines.
+4. **Prose last** — AGENTS.md, rules, skills: only for judgment calls. Nothing fails when an agent skips them.
+
+**Every correction becomes enforcement.** When the user corrects an agent (or a reviewer flags a repeat), fix the instance AND encode the class at the highest level that works. Prove the new check fails on the real past mistake. Keep a `Rule | Enforced by` table in the repo's AGENTS.md; an unenforced rule that gets violated again must be escalated to code/lint in the same change. Use pstack's [`correct`](https://github.com/cursor/plugins/tree/main/pstack/skills/correct) skill for a repo-wide pass. Table template: `templates/AGENTS-rule-table.md`. pstack skill map + install/adapt notes: `references/pstack-skills.md`.
+
+**Comments are not enforcement.** Agent-written comments justifying a workaround ("quick fix because…", "IMPORTANT: do not remove") are a smell — fix the root cause or encode the constraint as a check, then delete the comment. Keep only: license headers, public API contracts, external-constraint notes with a link. Use pstack's [`no-comments`](https://github.com/cursor/plugins/tree/main/pstack/skills/no-comments) skill before review.
+
+**Don't automate slop.** If the inner loop (one agent, one change) produces slop, an outer loop (crons, fleets, auto-merge) produces more. Auto-merge is earned when review finds nothing the checks didn't.
+
+**Review shifts to verification artifacts.** Reviewers look at screenshots, videos, test/CLI transcripts, statecharts — not line-by-line diffs. Make every PR carry them.
 
 ## 1. Before You Build — Define What Done Means
 
@@ -116,3 +135,6 @@ When you think any of these, STOP — you're about to skip a step:
 | "The user can test it themselves" | Delegating verification is not performing it. Provide exact steps AND mark unverified. |
 | "I verified against the mock" | Mocks verify your assumptions, not the surface. State the limitation. |
 | "This is too simple for assertions" | Simple capabilities are the easiest to assert. No excuse. |
+| "I'll add a line to AGENTS.md so it doesn't happen again" | Prose is unenforced. Make it a type, lint, or test first; doc only what needs judgment. |
+| "I'll leave a comment explaining why this workaround is fine" | A justification comment is a confession. Fix the root cause. |
+| "The existing code does it this way" | Existing code may be the weed. Check it against the rule table before copying. |

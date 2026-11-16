@@ -34,6 +34,8 @@ When finishing UI work, don't just say "done" — capture CUJs, update the GIFs,
 
 This gives your human instant visual feedback without them needing to run the app.
 
+**Per-repo durable version:** for repos with a UI/CLI/service, generate a project-local `verify-<app>` skill + `features/` map with pstack's [`create-verification-skill`](https://github.com/cursor/plugins/tree/main/pstack/skills/create-verification-skill) (keep it honest with `maintain-verification-skill`). CUJs here become feature-map entries; the screenshots/GIFs become the PR's review artifacts.
+
 ## What It Does
 
 1. Launches headless Chromium via Playwright
