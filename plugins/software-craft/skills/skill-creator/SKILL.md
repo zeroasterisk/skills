@@ -70,6 +70,9 @@ Watch for:
 ### 6. Verify, Don't Trust
 Every instruction should be verifiable. If the agent cannot test whether it followed the instruction correctly, the instruction is too vague. Include runnable validation commands, expected outputs, or concrete success criteria.
 
+### 7. Structure Before Prose
+A skill is prose, and prose is the weakest way to constrain an agent. Before you write an instruction, ask whether a script, lint rule, type, or check could enforce it instead. If yes, ship that (in the skill's `scripts/` or in the target repo) and keep only the line that tells the agent to run it. A bundled, tested script also costs fewer tokens than asking the agent to rebuild the same logic every run.
+
 ---
 
 ## The Lifecycle

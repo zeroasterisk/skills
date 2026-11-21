@@ -6,6 +6,21 @@
   },
   "entries": [
     {
+      "identifier": "urn:air:github.com:zeroasterisk:eval-ablation-framing",
+      "displayName": "eval-ablation-framing",
+      "type": "application/ai-skill+md",
+      "description": "Frames agent evaluations, benchmarks and leaderboards as held-constant ablations across three factors: Model, Harness, and Task Adaptation (none, pre-baked skill, or self-customization where the agent builds its own tools first). Use when deciding which eval cells to run next, designing a benchmark matrix, writing an eval report, or laying out a leaderboard UI so each product category gets a clear story without overwhelming viewers. Don't use for writing a single grader or task (build those first), or for generic statistics questions unrelated to agent evals.",
+      "tags": [],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "tier": "zeroasterisk",
+        "audience": "personal",
+        "agents": "tier:zeroasterisk",
+        "relativePath": "agent-evals/skills/eval-ablation-framing"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/agent-evals/skills/eval-ablation-framing"
+    },
+    {
       "identifier": "urn:air:github.com:zeroasterisk:aaif-notebooklm-sync",
       "displayName": "aaif-notebooklm-sync",
       "type": "application/ai-skill+md",
@@ -78,7 +93,7 @@
       "identifier": "urn:air:github.com:zeroasterisk:cuj-screenshots",
       "displayName": "cuj-screenshots",
       "type": "application/ai-skill+md",
-      "description": "Capture Critical User Journey (CUJ) screenshots and GIFs from web apps using headless Chromium. Use when you need to create visual demos, verify UI changes, or document user flows.",
+      "description": "Capture Critical User Journey (CUJ) screenshots and GIFs from web apps using headless Chromium, keyed to the repo's feature map so each journey proves one named feature. Use when you need to verify UI changes through the real app, produce reviewable visual evidence for a PR, or document user flows. Don't use for component-level stories (use storybook).",
       "tags": [
         "testing",
         "ui",
@@ -138,7 +153,7 @@
       "identifier": "urn:air:github.com:zeroasterisk:ui-developer",
       "displayName": "ui-developer",
       "type": "application/ai-skill+md",
-      "description": "Full-stack UI development workflow with component isolation, testing, visual documentation, and CUJ capture. Use for React/TypeScript frontend development.",
+      "description": "End-to-end loop for building React/TypeScript UI features with agents - typed component, behavior tests, Storybook isolation, property tests for stateful UI, and feature-map-driven visual verification. Use when building or changing a UI feature end to end. Don't use for writing stories alone (use storybook) or capturing journeys alone (use cuj-screenshots).",
       "tags": [
         "ui",
         "react",
@@ -153,6 +168,21 @@
         "relativePath": "frontend-engineering/skills/ui-developer"
       },
       "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/frontend-engineering/skills/ui-developer"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:codebase-gardening",
+      "displayName": "codebase-gardening",
+      "type": "application/ai-skill+md",
+      "description": "Audits a repository and moves its rules down the trust order (structure, then verification, then prose) before agents write more code in it. Turns repeated corrections into lints with agent-actionable messages, enforces architecture with directory boundaries, bans nuance-heavy APIs behind one blessed wrapper, deletes dead code and comment slop, slims AGENTS.md, and sets up a feature map plus a reusable verification driver. Use when preparing a repo for heavy agent use or an autonomous loop, when the same review finding keeps coming back, when AGENTS.md keeps growing, or when asked to \"garden\", \"de-slop\", or \"harden\" a codebase. Don't use for a single feature or bug fix (use engineering-discipline) or for reviewing one diff (use adlc-prosecutor).",
+      "tags": [],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "tier": "zeroasterisk",
+        "audience": "personal",
+        "agents": "tier:zeroasterisk",
+        "relativePath": "software-craft/skills/codebase-gardening"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/software-craft/skills/codebase-gardening"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:elixir-best-practices",
@@ -178,7 +208,7 @@
       "identifier": "urn:air:github.com:zeroasterisk:engineering-discipline",
       "displayName": "engineering-discipline",
       "type": "application/ai-skill+md",
-      "description": "Full engineering lifecycle \u2014 define what done means, debug systematically, verify through real surfaces before claiming completion.",
+      "description": "Per-task engineering lifecycle. Define what done means, debug from root cause, encode recurring corrections as lints or types instead of prose, and verify through real surfaces before claiming completion. Use for any non-trivial build, fix, or refactor. Don't use for repo-wide cleanup before scaling agent output (use codebase-gardening).",
       "tags": [],
       "metadata": {
         "source": "zeroasterisk/skills",

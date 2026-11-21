@@ -1,6 +1,6 @@
 ---
 name: engineering-discipline
-description: Full engineering lifecycle — define what done means, debug systematically, verify through real surfaces before claiming completion.
+description: Per-task engineering lifecycle. Define what done means, debug from root cause, encode recurring corrections as lints or types instead of prose, and verify through real surfaces before claiming completion. Use for any non-trivial build, fix, or refactor. Don't use for repo-wide cleanup before scaling agent output (use codebase-gardening).
 license: Apache-2.0
 ---
 
@@ -8,7 +8,25 @@ license: Apache-2.0
 
 The full engineering lifecycle in one process: define → build → debug → verify. Follow this for every non-trivial task.
 
-> Distilled from [obra/superpowers](https://github.com/obra/superpowers) (Apache 2.0) and [Intelligent-Internet/zenith](https://github.com/Intelligent-Internet/zenith) (Apache 2.0).
+> Distilled from [obra/superpowers](https://github.com/obra/superpowers) (Apache 2.0), [Intelligent-Internet/zenith](https://github.com/Intelligent-Internet/zenith) (Apache 2.0), and Lauren Tan's talk "All Code Is Slop (Except Mine)" with her [pstack](https://github.com/cursor/plugins/tree/main/harness/pstack) principles (MIT).
+
+---
+
+## 0. Trust Order: Structure, Then Verification, Then Prose
+
+Agents copy the patterns in front of them. Prose rules need judgment, and judgment is where slop comes from. Put each constraint at the lowest layer that can hold it:
+
+1. **Structure** (cheapest to obey, impossible to skip): types, compiler errors, lint rules, directory boundaries, import restrictions, CI checks.
+2. **Verification**: tests, runtime drivers, property-based tests, model checks. These prove intent.
+3. **Prose** (last resort): `AGENTS.md`, skills, comments. Only for rules that need judgment and cannot be checked.
+
+Rules that follow from this order:
+
+- **Encode the second correction.** When you correct the same mistake twice (yours, a reviewer's, or another agent's), add a lint, type, test, or script that catches it. Then delete the prose that described it. If it truly cannot be encoded, make the prose prominent and add an example of the failure.
+- **Write lint messages for agents.** Name the banned pattern, give the reason in one sentence, and name the blessed replacement (API, file, or directory). A message that only says "not allowed" invites an escape hatch.
+- **Fix the root cause, not the check.** Never add a lint suppression, `@ts-ignore`, `# type: ignore`, `nolint`, or skipped test to get green. If the rule is wrong, change the rule in its own change.
+- **No justification comments.** A comment that explains a workaround ("we need this because X is flaky") marks a root cause you did not fix. Fix it, or encode the constraint as a check. Keep comments only for facts the code cannot express: an external contract, a spec reference, or a surprising choice that a check cannot enforce.
+- **Prefer one blessed way.** When a feature needs nuance to use well (for example React `useEffect`, raw timers, manual locks), use or create a wrapper with a narrow API and ban the raw form outside it.
 
 ---
 
@@ -50,7 +68,7 @@ Form ONE hypothesis. **Before testing**, write down what you predict you'll obse
 If the prediction was wrong: form a NEW hypothesis. Do NOT layer fixes on top of a wrong diagnosis. Change ONE variable at a time.
 
 ### Phase 4: Fix the Root Cause
-Fix the cause, not the symptom. Then verify through the real surface (see section 3).
+Fix the cause, not the symptom. Then verify through the real surface (see section 3). If this class of bug can recur, add the check that would have caught it (section 0).
 
 ### Escalation Rules
 - **3+ failed fix attempts** → question the architecture, not the code
@@ -78,6 +96,9 @@ If either lane fails, the task is not complete.
 | CLI tool | Command + actual output (not expected output) |
 | Database | Query showing the data is correct |
 | Deployed service | Health check + one real operation |
+
+### Reuse the Driver
+Verify through the project's scripted driver (a `verify` script, CLI, or project-local verification skill) instead of writing a fresh harness each time. A reused driver costs fewer tokens and is itself tested. If none exists and the surface is a UI or a multi-step flow, propose one (see codebase-gardening). Name features with the words in the project's feature map, so you and the user mean the same screen.
 
 ### Freshness Rule
 Evidence is fresh only if collected AFTER the last code change. Any edit — including "trivial" ones — invalidates prior evidence. Re-verify.
@@ -116,3 +137,6 @@ When you think any of these, STOP — you're about to skip a step:
 | "The user can test it themselves" | Delegating verification is not performing it. Provide exact steps AND mark unverified. |
 | "I verified against the mock" | Mocks verify your assumptions, not the surface. State the limitation. |
 | "This is too simple for assertions" | Simple capabilities are the easiest to assert. No excuse. |
+| "I'll add a note to AGENTS.md" | If a check can enforce it, write the check. Prose is the last resort. |
+| "A quick disable comment gets this green" | A suppression hides the root cause. Fix it or block. |
+| "I'll leave a comment explaining the workaround" | The comment documents a bug you chose not to fix. Fix it. |

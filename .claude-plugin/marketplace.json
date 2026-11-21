@@ -156,8 +156,9 @@
     {
       "name": "software-craft",
       "source": "./plugins/software-craft",
-      "description": "Software engineering discipline, systematic debugging, Elixir best practices, secure web guidelines, and agent skill authoring.",
+      "description": "Software engineering discipline (structure over prose, root-cause debugging, real-surface verification), codebase gardening before agent automation, Elixir best practices, secure web guidelines, and agent skill authoring.",
       "skills": [
+        "./plugins/software-craft/skills/codebase-gardening",
         "./plugins/software-craft/skills/elixir-best-practices",
         "./plugins/software-craft/skills/engineering-discipline",
         "./plugins/software-craft/skills/mandatory-secure-web-skills",

@@ -1,6 +1,6 @@
 ---
 name: cuj-screenshots
-description: Capture Critical User Journey (CUJ) screenshots and GIFs from web apps using headless Chromium. Use when you need to create visual demos, verify UI changes, or document user flows.
+description: Capture Critical User Journey (CUJ) screenshots and GIFs from web apps using headless Chromium, keyed to the repo's feature map so each journey proves one named feature. Use when you need to verify UI changes through the real app, produce reviewable visual evidence for a PR, or document user flows. Don't use for component-level stories (use storybook).
 license: Apache-2.0
 ---
 
@@ -76,14 +76,12 @@ async def capture_my_cuj():
         )
         page = await context.new_page()
         
-        # Step 1
         await page.goto("http://localhost:5173")
-        await page.wait_for_timeout(1500)
+        await page.get_by_role("heading", name="Tasks").wait_for()
         await page.screenshot(path=f"{output_dir}/01-initial.png")
-        
-        # Step 2: Interact
-        await page.click("button:has-text('Submit')")
-        await page.wait_for_timeout(1000)
+
+        await page.get_by_role("button", name="Submit").click()
+        await page.get_by_role("status").filter(has_text="Saved").wait_for()
         await page.screenshot(path=f"{output_dir}/02-submitted.png")
         
         # ... more steps
@@ -131,17 +129,17 @@ git push
 ## Common Interactions
 
 ```python
-# Click button by text
-await page.click("button:has-text('Submit')")
+# Click by role and accessible name
+await page.get_by_role("button", name="Submit").click()
 
-# Fill input
-await page.fill("input[name='email']", "test@example.com")
+# Fill input by label
+await page.get_by_label("Email").fill("test@example.com")
 
 # Select dropdown
-await page.select_option("select#plan", "premium")
+await page.get_by_label("Plan").select_option("premium")
 
-# Wait for element
-await page.wait_for_selector(".success-message")
+# Wait for the resulting state, not for a fixed time
+await page.get_by_role("status").filter(has_text="Saved").wait_for()
 
 # Scroll
 await page.evaluate("window.scrollBy(0, 300)")
@@ -160,71 +158,44 @@ See `scripts/capture-cujs.py` for a complete example that:
 
 ## Tips
 
-- **Wait times**: Use `wait_for_timeout(1000)` after interactions for animations
-- **Selectors**: Prefer `text=` or `has-text()` over fragile CSS selectors
+- **Waits**: Wait for the state the user would see (`wait_for()` on a role, text, or URL). Fixed `wait_for_timeout` sleeps make captures flaky and slow; use one only to let an animation settle before a screenshot.
+- **Selectors**: Prefer `get_by_role` and `get_by_label` over CSS selectors. They match the feature map's names and survive restyling.
 - **Error handling**: Wrap interactions in try/except, screenshot on error
 - **Naming**: Use numbered prefixes (`01-`, `02-`) for sort order
 - **GIF size**: Keep under 500KB for GitHub README display
 
-## CUJs.md Documentation
+## Feature map (`docs/CUJs.md`)
 
-Create a `docs/CUJs.md` file to document each journey with embedded GIFs:
+Each CUJ proves one feature from the repo's feature map. If the repo has a `docs/features/` map (see the codebase-gardening skill), name each CUJ after a feature there and link it. Otherwise keep `docs/CUJs.md` with one section per journey, from the user's point of view:
 
 ```markdown
-# Critical User Journeys (CUJs)
+## CUJ 2: Create task
 
-## CUJ 1: App Tour
+**Goal:** Create a task from the board view.
 
-**Goal:** Navigate the main app layout.
-
-**Steps:**
-1. Open app → Activity tab
-2. Switch to Live tab
-3. Return to Activity
-
-![App Tour](./gifs/cuj1-app-tour.gif)
-
----
-
-## CUJ 2: Create Task
-
-**Goal:** Create a new plan and task.
+**Entry points:** `+ Task` button, `n` key, `tasks create` CLI.
 
 **Steps:**
-1. Click "+ Plan"
-2. Enter name, submit
-3. Click "+ Task"
-4. Enter name, submit
+1. Choose `+ Task`.
+2. Enter `Write docs` in `Title`, choose `Save`.
 
-![Create Task](./gifs/cuj2-create-task.gif)
+**Proof:** status `Saved` appears and the board lists `Write docs` after reload.
+
+![Create task](./gifs/cuj2-create-task.gif)
 ```
 
-This serves as both documentation and visual regression baseline.
+Rules:
 
-## Verifying UI Changes
+- Use the exact names the UI shows, so prompts, tickets, and tests mean the same thing.
+- Cover every entry point listed. A capture through one path does not prove the others.
+- The proof is the end state after the action (ideally confirmed from a second view, such as a reload), not just the last screen.
+- Update the map in the same change that adds or renames a feature.
 
-After making UI changes:
-1. Run the CUJ capture scripts
-2. Review the new screenshots (you can read image files!)
-3. If they look correct, update GIFs and commit
-4. Update `CUJs.md` if steps changed
-5. If something's wrong, you caught a bug!
+## Verify and share
 
-## Full Workflow
-
-```bash
-# 1. Make UI changes
-# 2. Start servers
-# 3. Capture CUJs
-uv run --with playwright python scripts/capture-cujs.py
-
-# 4. Review screenshots (agent can view these)
-# 5. Create GIFs
-convert -delay 150 -loop 0 /tmp/cuj-screenshots/cuj1/*.png docs/gifs/cuj1.gif
-
-# 6. Update CUJs.md with new steps/descriptions
-# 7. Commit everything
-git add docs/CUJs.md docs/gifs/
-git commit -m "docs: update CUJ screenshots after UI changes"
-git push
-```
+1. Make the UI change.
+2. Start the app with the repo's launch command.
+3. Run the captures: `uv run --with playwright python scripts/capture-cujs.py`.
+4. Look at every new screenshot (you can read image files). If one looks wrong, you found a bug. Fix it and rerun.
+5. Build GIFs: `convert -delay 150 -loop 0 /tmp/cuj-screenshots/cuj1/*.png docs/gifs/cuj1.gif`.
+6. Commit the map and GIFs with the code, and put the GIF in the PR description.
