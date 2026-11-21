@@ -117,6 +117,14 @@ Paste **raw output**, not summaries. "Tests passed" without counts is a claim, n
 
 If an assertion fails — or can't be run — report it as FAILED or BLOCKED with specifics. A documented failure is more valuable than a fabricated pass.
 
+## Inside an ADLC Ticket
+
+When you work an ADLC ticket (an `agb` fleet run, or a ticket with declared `scope` and `rails`), `adlc-doctrine` wins on scope, rails, and completion. Specifically:
+
+- **Acceptance criteria are your VAL-\* assertions.** Do not write a second set.
+- **Do not add checks outside scope.** If a lint, type, or test would prevent a recurring defect but lives outside the ticket's scope or in a rail (CI config, contracts, frozen tests), record it with `adlc prosecute --record-finding`. P7 (`lesson-foundry`) turns it into a check.
+- **End with the doctrine's markers.** Where this skill says "Implemented, UNVERIFIED", end with `TICKET-BLOCKED: <reason>` instead. Use `TICKET-DONE` only when every gate is green and you ran it.
+
 ---
 
 ## Anti-Rationalization Table
