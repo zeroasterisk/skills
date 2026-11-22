@@ -166,6 +166,11 @@
       ]
     },
     {
+      "name": "spec-gate",
+      "source": "./plugins/spec-gate",
+      "description": "Pre-edit hook that makes a coding agent declare a task tier, and write a spec with Verify: criteria for medium or large work, before its first file edit. Claude Code, OpenCode/CloudCode, and Antigravity/Jetski (advisory)."
+    },
+    {
       "name": "visual-explainers",
       "source": "./plugins/visual-explainers",
       "description": "Tools and quality evaluation rubrics for architecture diagrams, terminal animations, YouTube/social hero thumbnails, and mathematical explainer videos.",

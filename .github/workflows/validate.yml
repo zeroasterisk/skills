@@ -25,3 +25,11 @@ jobs:
 
       - name: Run validate-plugins.sh
         run: ./scripts/validate-plugins.sh
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Test spec-gate hooks
+        run: node --test plugins/spec-gate/test/*.test.mjs

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "spec-gate",
+  "version": "0.1.0",
+  "description": "Pre-edit hook that makes a coding agent declare a task tier (.agent/tier), and write a spec with Verify: criteria for medium or large work, before its first file edit. Adapters for Claude Code, OpenCode/CloudCode, and Antigravity/Jetski (advisory).",
+  "author": {
+    "name": "alanblount",
+    "url": "https://github.com/zeroasterisk"
+  },
+  "repository": "https://github.com/zeroasterisk/skills",
+  "license": "Apache-2.0",
+  "keywords": [
+    "hooks",
+    "spec",
+    "tier",
+    "pre-tool-use",
+    "claude-code",
+    "opencode",
+    "cloudcode",
+    "antigravity",
+    "verification"
+  ]
+}
