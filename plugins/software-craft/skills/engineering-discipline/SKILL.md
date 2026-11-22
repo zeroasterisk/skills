@@ -1,150 +1,130 @@
 ---
 name: engineering-discipline
-description: Per-task engineering lifecycle. Define what done means, debug from root cause, encode recurring corrections as lints or types instead of prose, and verify through real surfaces before claiming completion. Use for any non-trivial build, fix, or refactor. Don't use for repo-wide cleanup before scaling agent output (use codebase-gardening).
+description: Core engineering loop for any code change bigger than a trivial edit. Picks a size tier, writes a short spec whose acceptance criteria each end in "Verify:" for medium work, debugs from root cause, never weakens tests or adds suppressions, and verifies through the real surface before claiming done. Use for a multi-file feature, a bug or ticket whose cause you still have to find, a refactor, or an unclear request, and load it together with any specialized skill (UI, Elixir, security). Don't use for a new project, a multi-PR build, or a risky migration (use spec-kit-adlc), or for repo-wide cleanup (use codebase-gardening).
 license: Apache-2.0
+metadata:
+  author: alanblount
+  version: "2.0.0"
 ---
 
 # Engineering Discipline
 
-The full engineering lifecycle in one process: define → build → debug → verify. Follow this for every non-trivial task.
+The per-task loop: size it, spec it if needed, build in small verified steps, debug from root cause, prove it works. Specialized skills (UI, Elixir, security) add domain rules on top of this loop. They never replace it.
 
-> Distilled from [obra/superpowers](https://github.com/obra/superpowers) (Apache 2.0), [Intelligent-Internet/zenith](https://github.com/Intelligent-Internet/zenith) (Apache 2.0), and Lauren Tan's talk "All Code Is Slop (Except Mine)" with her [pstack](https://github.com/cursor/plugins/tree/main/harness/pstack) principles (MIT).
+> Distilled from [obra/superpowers](https://github.com/obra/superpowers) (Apache 2.0), [Intelligent-Internet/zenith](https://github.com/Intelligent-Internet/zenith) (Apache 2.0), Lauren Tan's [pstack](https://github.com/cursor/plugins/tree/main/harness/pstack) principles (MIT), Addy Osmani's [agent-skills](https://github.com/addyosmani/agent-skills) (MIT), and the [ADLC](https://github.com/voodootikigod/adlc) doctrine.
 
----
+## 1. Pick the tier
 
-## 0. Trust Order: Structure, Then Verification, Then Prose
+State it in one line before the first edit: `Tier: medium (3 files, sharing rules unclear)`. Pick by blast radius and clarity, not line count.
 
-Agents copy the patterns in front of them. Prose rules need judgment, and judgment is where slop comes from. Put each constraint at the lowest layer that can hold it:
+| Tier | Signal | Process |
+|---|---|---|
+| Trivial / small | One place, clear ask, easy to revert | Core rules only. No spec. |
+| Medium | Several files, new behavior, unclear ask, or a bug with no known cause | Short spec (section 2), then sections 3-5 |
+| Large | New project, several PRs, risky migration, or a data, auth, or public-API change that is hard to revert | Stop and load `spec-kit-adlc` |
 
-1. **Structure** (cheapest to obey, impossible to skip): types, compiler errors, lint rules, directory boundaries, import restrictions, CI checks.
-2. **Verification**: tests, runtime drivers, property-based tests, model checks. These prove intent.
-3. **Prose** (last resort): `AGENTS.md`, skills, comments. Only for rules that need judgment and cannot be checked.
+When in doubt between two tiers, pick the higher one and keep its artifacts short.
 
-Rules that follow from this order:
+## 2. Medium: write a short spec first
 
-- **Encode the second correction.** When you correct the same mistake twice (yours, a reviewer's, or another agent's), add a lint, type, test, or script that catches it. Then delete the prose that described it. If it truly cannot be encoded, make the prose prominent and add an example of the failure.
-- **Write lint messages for agents.** Name the banned pattern, give the reason in one sentence, and name the blessed replacement (API, file, or directory). A message that only says "not allowed" invites an escape hatch.
-- **Fix the root cause, not the check.** Never add a lint suppression, `@ts-ignore`, `# type: ignore`, `nolint`, or skipped test to get green. If the rule is wrong, change the rule in its own change.
-- **No justification comments.** A comment that explains a workaround ("we need this because X is flaky") marks a root cause you did not fix. Fix it, or encode the constraint as a check. Keep comments only for facts the code cannot express: an external contract, a spec reference, or a surprising choice that a check cannot enforce.
-- **Prefer one blessed way.** When a feature needs nuance to use well (for example React `useEffect`, raw timers, manual locks), use or create a wrapper with a narrow API and ban the raw form outside it.
+Show the spec before code. Fill it from the codebase and the request; do not interrogate the user. Ask only what the code, docs, or a quick experiment cannot answer, in one message, each question with your recommended answer. Then continue on your assumptions unless the user objects.
 
----
+```markdown
+## Goal
+<one or two sentences: who gets what>
 
-## 1. Before You Build — Define What Done Means
+## Non-goals
+- <what this change will not do>
 
-Write a **VAL-* assertion** for each capability before writing code. If you can't specify what evidence proves it works, you don't know what "done" means.
+## Assumptions
+- <each guess you made; the user corrects these>
 
+## Acceptance criteria
+- AC-1: <observable behavior>. Verify: `<command>` or <surface check>
+- AC-2: <failure or edge path>. Verify: ...
 ```
-VAL-001: <capability name>
-  Surface:  <where to test it — API, browser, CLI>
-  Needs:    <prerequisites — running server, test data, auth token>
-  Behavior: <what should happen — specific, observable, falsifiable>
-  Evidence: <what constitutes proof — request/response, screenshot, test output>
-```
 
-A good assertion is **falsifiable** (it can fail), **observable** (no source code reading), and **specific** (names the surface, inputs, and expected output). One assertion per user-observable capability. A typical feature needs 3–7. Every capability needs at least one failure-path assertion.
+Rules for criteria:
 
-## 2. When It Breaks — Debug Systematically
+- Each one is observable (no source reading), falsifiable (it can fail), and ends in `Verify:` with a command or a surface check. One per user-visible capability, usually 3-7, with at least one failure path.
+- This format passes `adlc spec-lint`. Run `adlc spec-lint <file>` when the spec lives in a file; exit 0 means every criterion has a verification method.
+- Put the spec in the PR description, or in `specs/<slug>/spec.md` if it should outlive the PR. The same layout grows into a spec-kit spec if the work turns large.
+- If the user says to skip the spec, say once what the risk is, then do what they ask.
 
-Never guess at fixes. Find the root cause first.
+## 3. Build in small verified steps
 
-### Phase 0: Reproduce
-Read the complete error message and stack trace. Create a minimal, reliable reproduction — one command if possible. If you cannot reproduce, you cannot verify any fix. Stop and get repro info first.
+- Make the smallest change that meets the goal. Delete before you add. Do not add layers, flags, or abstractions the spec does not need.
+- Split the work into units that each end in a state you can check. Check each unit before you start the next.
+- Stay in scope. Report nearby problems; do not fix them unasked.
+- Name the data shape before you write logic that depends on it.
 
-### Phase 1: Trace Boundaries
-Log what data enters and exits each component boundary:
-```
-Client → Gateway → Service → Data layer
-         ↑ input    ↑ transformed   ↑ stored
-```
-The first point where data diverges from expectation is where the bug lives.
+## 4. Debug from root cause
 
-### Phase 2: Compare
-What's different between a working case and the broken case? Check: input, environment, and what changed since it last worked (git log, deploy history, config).
+Never guess at fixes.
 
-### Phase 3: Hypothesize with Prediction
-Form ONE hypothesis. **Before testing**, write down what you predict you'll observe if correct, and what you'd observe if wrong. THEN run the test. If you didn't predict the outcome before observing it, you're rationalizing, not testing.
+1. **Reproduce.** Read the full error and stack trace. Get one command that shows the failure. If you cannot reproduce it, you cannot verify a fix; get repro information first.
+2. **Trace boundaries.** Log what enters and leaves each component. The first point where data diverges from expectation is where the bug lives.
+3. **Compare.** What differs between a working case and the broken one: input, environment, recent changes (`git log`, deploys, config)?
+4. **Predict, then test.** Write down one hypothesis and what you expect to see if it is right and if it is wrong. Then run it. Change one variable at a time.
+5. **Fix the cause, not the symptom.** A guard is a fix only when the state it handles is legitimate. If this class of bug can recur, add the check that would have caught it (section 6).
 
-If the prediction was wrong: form a NEW hypothesis. Do NOT layer fixes on top of a wrong diagnosis. Change ONE variable at a time.
+Escalate: after two failed fixes that share one premise, write the premise down and test it directly. After three, question the design. "Works locally, fails in CI" means an environment difference. "Works sometimes" means a race; timestamp the boundary logs.
 
-### Phase 4: Fix the Root Cause
-Fix the cause, not the symptom. Then verify through the real surface (see section 3). If this class of bug can recur, add the check that would have caught it (section 0).
+## 5. Verify through the real surface
 
-### Escalation Rules
-- **3+ failed fix attempts** → question the architecture, not the code
-- **Works locally but not in CI/prod** → environment difference (versions, config, deps)
-- **Works sometimes** → race condition; add timestamps to boundary logs
+No completion claim without fresh evidence. Name the success signal before you run the check, then point at it in the output.
 
-## 3. Before You Claim Done — Verify Through Real Surfaces
+Every change needs both lanes:
 
-**No completion claims without fresh verification evidence.** Run it, read the output, then claim the result.
+1. **Scrutiny**: builds, tests pass, lint clean, no new warnings.
+2. **Real surface**: exercise the feature through its actual interface.
 
-### Two-Lane Validation
-Every completion needs BOTH lanes:
+| Surface | Minimum evidence |
+|---|---|
+| HTTP API | Request and response with status and relevant body |
+| Web UI | Golden path and one edge case in a browser |
+| CLI | The command and its actual output |
+| Database | A query that shows the data is right |
+| Deployed service | Health check and one real operation |
 
-1. **Scrutiny lane** — compiles, tests pass, linter clean, no new warnings
-2. **Real-surface lane** — exercise the feature through its actual interface
+- **Freshness.** Evidence counts only if collected after the last edit. Any edit, even a "trivial" one, invalidates it.
+- **Reuse the driver.** Use the repo's `verify` script or verification skill instead of a fresh harness. If none exists for a UI or multi-step flow, propose one (codebase-gardening).
+- **Raw output.** "Tests passed" without counts is a claim, not evidence.
+- **When you cannot verify**, end with: `Implemented, UNVERIFIED. Blocked by: <reason>. To verify: <exact steps>.` An honest "unverified" beats a false "done".
 
-If either lane fails, the task is not complete.
+Before you call it done:
 
-### Minimum Evidence by Surface
+- Check each acceptance criterion against its `Verify:` line.
+- For a risky diff (shared code, data, auth, concurrency), find what it could break outside the diff. Name the one fact that makes it safe and prove that fact by running code.
+- For a high-stakes change, offer an independent review: `adlc-prosecutor` (one refute pass against the spec) or `council` (multi-model loop).
+- Report the outcome as done, partial, failed, or blocked, with evidence.
 
-| Surface | Minimum Evidence |
-|---------|-----------------|
-| HTTP API | Request + response with status code and relevant body |
-| Web UI | Browser verification of golden path + one edge case |
-| CLI tool | Command + actual output (not expected output) |
-| Database | Query showing the data is correct |
-| Deployed service | Health check + one real operation |
+## 6. Put rules in structure, not prose
 
-### Reuse the Driver
-Verify through the project's scripted driver (a `verify` script, CLI, or project-local verification skill) instead of writing a fresh harness each time. A reused driver costs fewer tokens and is itself tested. If none exists and the surface is a UI or a multi-step flow, propose one (see codebase-gardening). Name features with the words in the project's feature map, so you and the user mean the same screen.
+Agents copy the patterns in front of them, and prose rules need judgment. Put each rule at the lowest layer that holds it: structure (types, lint, import boundaries, CI), then verification (tests, a driver), then prose (AGENTS.md, skills, comments).
 
-### Freshness Rule
-Evidence is fresh only if collected AFTER the last code change. Any edit — including "trivial" ones — invalidates prior evidence. Re-verify.
+- **Encode the second correction.** When the same mistake is corrected twice, add a lint, type, test, or script that catches it, then delete the prose that described it.
+- **Lint messages name the fix**: what is banned, why in one sentence, and the blessed replacement.
+- **Never lower the bar to get green.** No `eslint-disable`, `@ts-ignore`, `# type: ignore`, `noqa`, `nolint`, skipped or weakened tests, or lowered thresholds. If a rule is wrong, change the rule in its own change.
+- **No justification comments.** A comment that explains a workaround marks a root cause you did not fix. Keep comments only for facts the code cannot express.
+- **One blessed way.** Wrap a nuance-heavy API (React `useEffect`, raw timers, manual locks) in a narrow wrapper and ban the raw form.
 
-### When Verification Is Impossible
-If real-surface verification is impossible (no creds, no running env, prod-only behavior):
+## 7. Inside an ADLC ticket
 
-> "Implemented, UNVERIFIED. Blocked by: [specific reason]. To verify: [exact commands/steps for a human]."
+In an ADLC ticket (an `agb` fleet run, or a ticket with declared `scope` and `rails`), the ticket governs scope and completion. These rules hold whether or not `adlc-doctrine` is loaded, and it wins where it says more:
 
-An honest "unverified" beats a false "done." Never convert "I couldn't test it" into "it works."
+- The ticket's acceptance criteria are the spec. Do not write a second set.
+- Edit only files inside `scope`. Never edit a `rails` path or weaken a test to pass a gate.
+- Do not add checks outside scope. Record a finding that needs one with `adlc prosecute --record-finding`.
+- End with `TICKET-DONE` (every gate green, run by you) or `TICKET-BLOCKED: <reason>`, not "UNVERIFIED".
 
-### Evidence Format
-Paste **raw output**, not summaries. "Tests passed" without counts is a claim, not evidence.
-
-## Honest Failure
-
-If an assertion fails — or can't be run — report it as FAILED or BLOCKED with specifics. A documented failure is more valuable than a fabricated pass.
-
-## Inside an ADLC Ticket
-
-When you work an ADLC ticket (an `agb` fleet run, or a ticket with declared `scope` and `rails`), `adlc-doctrine` wins on scope, rails, and completion. Specifically:
-
-- **Acceptance criteria are your VAL-\* assertions.** Do not write a second set.
-- **Do not add checks outside scope.** If a lint, type, or test would prevent a recurring defect but lives outside the ticket's scope or in a rail (CI config, contracts, frozen tests), record it with `adlc prosecute --record-finding`. P7 (`lesson-foundry`) turns it into a check.
-- **End with the doctrine's markers.** Where this skill says "Implemented, UNVERIFIED", end with `TICKET-BLOCKED: <reason>` instead. Use `TICKET-DONE` only when every gate is green and you ran it.
-
----
-
-## Anti-Rationalization Table
-
-When you think any of these, STOP — you're about to skip a step:
+## Anti-rationalization
 
 | Thought | Reality |
-|---------|---------|
-| "I'm confident this works" | Confidence is not evidence. Run the verification. |
-| "The tests cover this" | Existing tests weren't written for this change. Check the real surface. |
-| "It's a simple change" | Simple changes break things. Verify. |
-| "I'll verify later" | Later never comes. Verify now. |
-| "The CI will catch it" | CI catches syntax failures, not feature correctness. Run the real-surface check. |
-| "Let me just try this fix" | That's guessing, not debugging. Trace the data first. |
-| "I think I know what's wrong" | Thinking is not tracing. Verify with evidence. |
-| "I'll add some error handling" | Adding error handling without knowing the root cause converts a loud bug into a silent one. |
-| "I don't have access to the environment" | Then it's "unverified," not "complete." Say so explicitly. |
-| "The user can test it themselves" | Delegating verification is not performing it. Provide exact steps AND mark unverified. |
-| "I verified against the mock" | Mocks verify your assumptions, not the surface. State the limitation. |
-| "This is too simple for assertions" | Simple capabilities are the easiest to assert. No excuse. |
-| "I'll add a note to AGENTS.md" | If a check can enforce it, write the check. Prose is the last resort. |
-| "A quick disable comment gets this green" | A suppression hides the root cause. Fix it or block. |
-| "I'll leave a comment explaining the workaround" | The comment documents a bug you chose not to fix. Fix it. |
+|---|---|
+| "It's a simple change" / "The tests cover this" | Existing tests were not written for this change. Check the real surface. |
+| "Let me just try this fix" | That is guessing. Trace the data first. |
+| "I verified against the mock" | Mocks check your assumptions, not the surface. Say so. |
+| "A quick disable gets this green" | A suppression hides the root cause. Fix it or report blocked. |
+| "I'll add a note to AGENTS.md" | If a check can enforce it, write the check. |
+| "This needs a spec, I'll ask ten questions" | Draft the spec from the code, list assumptions, ask only what is left. |
