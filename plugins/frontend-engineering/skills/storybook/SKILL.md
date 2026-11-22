@@ -1,6 +1,6 @@
 ---
 name: storybook
-description: Write and test Storybook stories for React components. Use for component isolation, visual testing, and documentation.
+description: Writes and tests Storybook stories for React components: one story per state, play functions, and batch screenshots. Use when asked for stories or component isolation. Don't use for building a whole UI feature (use ui-developer) or capturing app journeys (use cuj-screenshots).
 license: Apache-2.0
 ---
 

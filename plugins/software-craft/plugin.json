@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "software-craft",
-  "version": "1.0.0",
-  "description": "Software engineering discipline, systematic debugging, Elixir best practices, secure web guidelines, and agent skill authoring.",
+  "version": "1.2.0",
+  "description": "Core engineering loop (size tiers, short specs with verifiable acceptance criteria, root-cause debugging, real-surface verification), spec-kit plus ADLC gates for large work, codebase gardening before agent automation, Elixir best practices, secure web guidelines, and agent skill authoring.",
   "author": {
     "name": "alanblount",
     "url": "https://github.com/zeroasterisk"
@@ -15,6 +15,12 @@
     "elixir",
     "security",
     "skill-creator",
-    "best-practices"
+    "best-practices",
+    "lint",
+    "verification",
+    "codebase-gardening",
+    "spec-kit",
+    "adlc",
+    "spec"
   ]
 }

@@ -30,7 +30,7 @@
         "source": "voodootikigod/adlc",
         "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "tier:zeroasterisk",
+        "agents": "jetski",
         "relativePath": "adlc/skills/adlc-doctrine"
       },
       "url": "https://github.com/voodootikigod/adlc/tree/main/adlc/skills/adlc-doctrine"
@@ -60,7 +60,7 @@
         "source": "voodootikigod/adlc",
         "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "tier:zeroasterisk",
+        "agents": "jetski",
         "relativePath": "adlc/skills/adlc-self-orchestrate"
       },
       "url": "https://github.com/voodootikigod/adlc/tree/main/adlc/skills/adlc-self-orchestrate"

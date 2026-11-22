@@ -6,6 +6,21 @@
   },
   "entries": [
     {
+      "identifier": "urn:air:github.com:zeroasterisk:eval-ablation-framing",
+      "displayName": "eval-ablation-framing",
+      "type": "application/ai-skill+md",
+      "description": "Frames agent evaluations, benchmarks and leaderboards as held-constant ablations across three factors: Model, Harness, and Task Adaptation (none, pre-baked skill, or self-customization where the agent builds its own tools first). Use when deciding which eval cells to run next, designing a benchmark matrix, writing an eval report, or laying out a leaderboard UI so each product category gets a clear story without overwhelming viewers. Don't use for writing a single grader or task (build those first), or for generic statistics questions unrelated to agent evals.",
+      "tags": [],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "tier": "zeroasterisk",
+        "audience": "personal",
+        "agents": "tier:zeroasterisk",
+        "relativePath": "agent-evals/skills/eval-ablation-framing"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/agent-evals/skills/eval-ablation-framing"
+    },
+    {
       "identifier": "urn:air:github.com:zeroasterisk:aaif-notebooklm-sync",
       "displayName": "aaif-notebooklm-sync",
       "type": "application/ai-skill+md",
@@ -39,7 +54,7 @@
       "identifier": "urn:air:github.com:zeroasterisk:developer-friction-reviewer",
       "displayName": "developer-friction-reviewer",
       "type": "application/ai-skill+md",
-      "description": "Orchestrates persona-based developer friction reviews and audit loops on onboarding flows, recipes, tools, and CLIs. Spawns a persona subagent to execute documented steps from a cold start, record errors into a structured Friction Log artifact, and remediate verified issues across iterative review loops. Use when testing developer experience (DX), walking new developer journeys, auditing README instructions, validating recipes, or running cold-start onboarding audits. Don't use for generic unit testing or standalone code formatting without a persona walkthrough.",
+      "description": "Orchestrates persona-based developer friction reviews on onboarding flows, recipes, tools, and CLIs. Spawns a persona subagent to follow documented steps from a cold start, records errors in a Friction Log artifact, and fixes verified issues across review loops. Use when testing developer experience (DX), walking a new developer journey, auditing README instructions, or validating recipes. Don't use for code review (use adlc-prosecutor or council), unit tests, or running agents in containers (use podman-agent-harness).",
       "tags": [],
       "metadata": {
         "source": "zeroasterisk/skills",
@@ -78,7 +93,7 @@
       "identifier": "urn:air:github.com:zeroasterisk:cuj-screenshots",
       "displayName": "cuj-screenshots",
       "type": "application/ai-skill+md",
-      "description": "Capture Critical User Journey (CUJ) screenshots and GIFs from web apps using headless Chromium. Use when you need to create visual demos, verify UI changes, or document user flows.",
+      "description": "Capture Critical User Journey (CUJ) screenshots and GIFs from web apps using headless Chromium, keyed to the repo's feature map so each journey proves one named feature. Use when you need to verify UI changes through the real app, produce reviewable visual evidence for a PR, or document user flows. Don't use for component-level stories (use storybook).",
       "tags": [
         "testing",
         "ui",
@@ -95,30 +110,10 @@
       "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/frontend-engineering/skills/cuj-screenshots"
     },
     {
-      "identifier": "urn:air:github.com:zeroasterisk:intent-refinement",
-      "displayName": "intent-refinement",
-      "type": "application/ai-skill+md",
-      "description": "Identify, draft, validate, and refine product intent and plan specifications using Narrative-Driven Development (NDD) taxonomy. Use when designing new features, refining requirements, or preparing specs for AI agents.",
-      "tags": [
-        "product",
-        "ndd",
-        "planning",
-        "requirements"
-      ],
-      "metadata": {
-        "source": "zeroasterisk/skills",
-        "tier": "zeroasterisk",
-        "audience": "personal",
-        "agents": "tier:zeroasterisk",
-        "relativePath": "frontend-engineering/skills/intent-refinement"
-      },
-      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/frontend-engineering/skills/intent-refinement"
-    },
-    {
       "identifier": "urn:air:github.com:zeroasterisk:storybook",
       "displayName": "storybook",
       "type": "application/ai-skill+md",
-      "description": "Write and test Storybook stories for React components. Use for component isolation, visual testing, and documentation.",
+      "description": "Writes and tests Storybook stories for React components: one story per state, play functions, and batch screenshots. Use when asked for stories or component isolation. Don't use for building a whole UI feature (use ui-developer) or capturing app journeys (use cuj-screenshots).",
       "tags": [
         "ui",
         "react",
@@ -138,7 +133,7 @@
       "identifier": "urn:air:github.com:zeroasterisk:ui-developer",
       "displayName": "ui-developer",
       "type": "application/ai-skill+md",
-      "description": "Full-stack UI development workflow with component isolation, testing, visual documentation, and CUJ capture. Use for React/TypeScript frontend development.",
+      "description": "End-to-end loop for building React/TypeScript UI features with agents - typed component, behavior tests, Storybook isolation, property tests for stateful UI, and feature-map-driven visual verification. Use when building or changing a UI feature or component, together with engineering-discipline. Don't use for a one-line style or copy tweak (core rules only), stories alone (use storybook), or journey capture alone (use cuj-screenshots).",
       "tags": [
         "ui",
         "react",
@@ -155,10 +150,25 @@
       "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/frontend-engineering/skills/ui-developer"
     },
     {
+      "identifier": "urn:air:github.com:zeroasterisk:codebase-gardening",
+      "displayName": "codebase-gardening",
+      "type": "application/ai-skill+md",
+      "description": "Audits a whole repository and moves its rules down the trust order (structure, then verification, then prose) before agents write more code in it: lints with agent-actionable messages, directory boundaries, one blessed wrapper per nuance-heavy API, dead code and comment slop removed, a feature map, and a reusable verification driver. Use when preparing a repo for heavy agent use or an autonomous loop, when the same review finding or correction keeps coming back, or when asked to garden, de-slop, or harden a codebase. Don't use for a single feature or bug fix (use engineering-discipline), for slimming AGENTS.md alone (use checkup), or for reviewing one diff (use adlc-prosecutor).",
+      "tags": [],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "tier": "zeroasterisk",
+        "audience": "personal",
+        "agents": "tier:zeroasterisk",
+        "relativePath": "software-craft/skills/codebase-gardening"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/software-craft/skills/codebase-gardening"
+    },
+    {
       "identifier": "urn:air:github.com:zeroasterisk:elixir-best-practices",
       "displayName": "elixir-best-practices",
       "type": "application/ai-skill+md",
-      "description": "Elixir coding standards and best practices. Use when writing, reviewing, or refactoring Elixir code to ensure idiomatic patterns, proper error handling, and Phoenix conventions.",
+      "description": "Elixir and Phoenix coding standards: pattern matching, error tuples, OTP, Ecto, and LiveView conventions. Use when writing, reviewing, or refactoring Elixir code, together with engineering-discipline for anything beyond a trivial edit. Don't use for non-Elixir backends or for repo-wide boundary rules (use codebase-gardening).",
       "tags": [
         "elixir",
         "phoenix",
@@ -178,8 +188,14 @@
       "identifier": "urn:air:github.com:zeroasterisk:engineering-discipline",
       "displayName": "engineering-discipline",
       "type": "application/ai-skill+md",
-      "description": "Full engineering lifecycle \u2014 define what done means, debug systematically, verify through real surfaces before claiming completion.",
-      "tags": [],
+      "description": "Core engineering loop for any code change bigger than a trivial edit. Picks a size tier, writes a short spec whose acceptance criteria each end in \"Verify:\" for medium work, debugs from root cause, never weakens tests or adds suppressions, and verifies through the real surface before claiming done. Use for a multi-file feature, a bug or ticket whose cause you still have to find, a refactor, or an unclear request, and load it together with any specialized skill (UI, Elixir, security). Don't use for a new project, a multi-PR build, or a risky migration (use spec-kit-adlc), or for repo-wide cleanup (use codebase-gardening).",
+      "tags": [
+        "core",
+        "verification",
+        "debugging",
+        "spec",
+        "best-practices"
+      ],
       "metadata": {
         "source": "zeroasterisk/skills",
         "tier": "zeroasterisk",
@@ -193,7 +209,7 @@
       "identifier": "urn:air:github.com:zeroasterisk:mandatory-secure-web-skills",
       "displayName": "mandatory-secure-web-skills",
       "type": "application/ai-skill+md",
-      "description": "Mandatory secure coding rules and vulnerability prevention for web applications covering input validation, output encoding, session management, and auth.",
+      "description": "Secure coding rules for web apps: input validation, output encoding, sessions, authentication, authorization, and secrets. Use when a change touches untrusted input, login, tokens, cookies, or access control, together with engineering-discipline. Don't use for auditing MCP server configs (use mcp-auditor) or for general code review.",
       "tags": [],
       "metadata": {
         "source": "zeroasterisk/skills",
@@ -208,16 +224,37 @@
       "identifier": "urn:air:github.com:zeroasterisk:skill-creator",
       "displayName": "skill-creator",
       "type": "application/ai-skill+md",
-      "description": "Guide and best practices for creating, evaluating, and iteratively improving high-leverage skills for AI coding agents.",
+      "description": "Guide and best practices for creating, evaluating, and iteratively improving high-leverage skills for AI coding agents: when a skill is warranted, trigger descriptions, structure, and eval loops. Use when authoring or refining a SKILL.md outside CloudCode. Don't use in CloudCode (use skill-author) or for packaging skills into plugins (use skills-to-plugins).",
       "tags": [],
       "metadata": {
         "source": "zeroasterisk/skills",
         "tier": "zeroasterisk",
         "audience": "personal",
-        "agents": "tier:zeroasterisk",
+        "agents": "jetski,gemini-cli,claude,codex",
         "relativePath": "software-craft/skills/skill-creator"
       },
       "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/software-craft/skills/skill-creator"
+    },
+    {
+      "identifier": "urn:air:github.com:zeroasterisk:spec-kit-adlc",
+      "displayName": "spec-kit-adlc",
+      "type": "application/ai-skill+md",
+      "description": "Plans and de-risks a large build by pairing GitHub spec-kit (spec.md, plan.md, tasks.md) with ADLC gates (spec-lint, premortem, rails-guard, prosecution) and, for parallel work, an agb fleet. Use when starting a new project or service, a feature that spans several PRs or weeks, or a risky migration or data, auth, or public-API change that is hard to revert. Don't use for a single-PR feature or a bug fix (use engineering-discipline), or for running one named ADLC gate on an existing spec (use adlc).",
+      "tags": [
+        "spec-kit",
+        "adlc",
+        "planning",
+        "large-projects",
+        "risk"
+      ],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "tier": "zeroasterisk",
+        "audience": "personal",
+        "agents": "tier:zeroasterisk",
+        "relativePath": "software-craft/skills/spec-kit-adlc"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/software-craft/skills/spec-kit-adlc"
     },
     {
       "identifier": "urn:air:github.com:zeroasterisk:asciinema-explainer-walkthroughs",
@@ -330,7 +367,7 @@
       "identifier": "urn:air:github.com:zeroasterisk:humanizer",
       "displayName": "humanizer",
       "type": "application/ai-skill+md",
-      "description": "Rewrite AI-sounding text so it reads naturally without changing what it says. Use when editing or reviewing prose for inflated claims, sales language, vague sources, repetitive structure, stock AI words, passive voice, filler, or chatbot artifacts. Based on Wikipedia's \"Signs of AI writing.\"",
+      "description": "Rewrite AI-sounding text so it reads naturally without changing what it says. Use when editing or reviewing prose for inflated claims, sales language, vague sources, repetitive structure, stock AI words, passive voice, filler, or chatbot artifacts. Based on Wikipedia's \"Signs of AI writing.\" Don't use for writing new text in Alan's voice (use alan-writing-style or alanblount_voice).",
       "tags": [
         "writing",
         "humanizer",

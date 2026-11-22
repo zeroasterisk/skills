@@ -97,10 +97,9 @@
     {
       "name": "frontend-engineering",
       "source": "./plugins/frontend-engineering",
-      "description": "Full-stack UI development workflows, React component isolation with Storybook, CUJ capturing, and product intent refinement.",
+      "description": "Full-stack UI development workflows, React component isolation with Storybook, and CUJ capturing.",
       "skills": [
         "./plugins/frontend-engineering/skills/cuj-screenshots",
-        "./plugins/frontend-engineering/skills/intent-refinement",
         "./plugins/frontend-engineering/skills/storybook",
         "./plugins/frontend-engineering/skills/ui-developer"
       ]
@@ -156,12 +155,14 @@
     {
       "name": "software-craft",
       "source": "./plugins/software-craft",
-      "description": "Software engineering discipline, systematic debugging, Elixir best practices, secure web guidelines, and agent skill authoring.",
+      "description": "Core engineering loop (size tiers, short specs with verifiable acceptance criteria, root-cause debugging, real-surface verification), spec-kit plus ADLC gates for large work, codebase gardening before agent automation, Elixir best practices, secure web guidelines, and agent skill authoring.",
       "skills": [
+        "./plugins/software-craft/skills/codebase-gardening",
         "./plugins/software-craft/skills/elixir-best-practices",
         "./plugins/software-craft/skills/engineering-discipline",
         "./plugins/software-craft/skills/mandatory-secure-web-skills",
-        "./plugins/software-craft/skills/skill-creator"
+        "./plugins/software-craft/skills/skill-creator",
+        "./plugins/software-craft/skills/spec-kit-adlc"
       ]
     },
     {

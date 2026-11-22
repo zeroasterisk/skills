@@ -1,6 +1,6 @@
 ---
 name: elixir-best-practices
-description: Elixir coding standards and best practices. Use when writing, reviewing, or refactoring Elixir code to ensure idiomatic patterns, proper error handling, and Phoenix conventions.
+description: Elixir and Phoenix coding standards: pattern matching, error tuples, OTP, Ecto, and LiveView conventions. Use when writing, reviewing, or refactoring Elixir code, together with engineering-discipline for anything beyond a trivial edit. Don't use for non-Elixir backends or for repo-wide boundary rules (use codebase-gardening).
 license: Apache-2.0
 ---
 

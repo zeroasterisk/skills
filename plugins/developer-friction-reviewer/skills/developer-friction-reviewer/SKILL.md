@@ -1,7 +1,7 @@
 ---
 name: developer-friction-reviewer
 description: >-
-  Orchestrates persona-based developer friction reviews and audit loops on onboarding flows, recipes, tools, and CLIs. Spawns a persona subagent to execute documented steps from a cold start, record errors into a structured Friction Log artifact, and remediate verified issues across iterative review loops. Use when testing developer experience (DX), walking new developer journeys, auditing README instructions, validating recipes, or running cold-start onboarding audits. Don't use for generic unit testing or standalone code formatting without a persona walkthrough.
+  Orchestrates persona-based developer friction reviews on onboarding flows, recipes, tools, and CLIs. Spawns a persona subagent to follow documented steps from a cold start, records errors in a Friction Log artifact, and fixes verified issues across review loops. Use when testing developer experience (DX), walking a new developer journey, auditing README instructions, or validating recipes. Don't use for code review (use adlc-prosecutor or council), unit tests, or running agents in containers (use podman-agent-harness).
 license: Apache-2.0
 compatibility: Requires POSIX shell, python3, and git. Supports subagent orchestration via invoke_subagent.
 metadata:

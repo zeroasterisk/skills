@@ -349,21 +349,6 @@
         "relativePath": "repo-authoring/skills/repository-change-recap"
       },
       "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/repo-authoring/skills/repository-change-recap"
-    },
-    {
-      "identifier": "urn:air:github.com:ghchinoy:technical-post-editorial",
-      "displayName": "technical-post-editorial",
-      "type": "application/ai-skill+md",
-      "description": "Edit and review technical blog posts, specs, and engineering write-ups to ensure clean house-style conformity and pitch-appropriate readability. Use as a post-hoc acceptance gate or review tool.",
-      "tags": [],
-      "metadata": {
-        "source": "ghchinoy/agent-skills",
-        "tier": "zeroasterisk",
-        "audience": "public",
-        "agents": "tier:zeroasterisk",
-        "relativePath": "repo-authoring/skills/technical-post-editorial"
-      },
-      "url": "https://github.com/ghchinoy/agent-skills/tree/main/plugins/repo-authoring/skills/technical-post-editorial"
     }
   ]
 }
