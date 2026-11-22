@@ -103,7 +103,7 @@ Before you call it done:
 
 Agents copy the patterns in front of them, and prose rules need judgment. Put each rule at the lowest layer that holds it: structure (types, lint, import boundaries, CI), then verification (tests, a driver), then prose (AGENTS.md, skills, comments).
 
-- **Encode the second correction.** When the same mistake is corrected twice, add a lint, type, test, or script that catches it, then delete the prose that described it.
+- **Encode the second correction.** When the same mistake is corrected twice, add a lint, type, test, or script that catches it, then delete the prose that described it. Prove the new check fails on the real past mistake. If the pattern is widespread, fail only on new occurrences first, then clean up the old ones.
 - **Lint messages name the fix**: what is banned, why in one sentence, and the blessed replacement.
 - **Never lower the bar to get green.** No `eslint-disable`, `@ts-ignore`, `# type: ignore`, `noqa`, `nolint`, skipped or weakened tests, or lowered thresholds. If a rule is wrong, change the rule in its own change.
 - **No justification comments.** A comment that explains a workaround marks a root cause you did not fix. Keep comments only for facts the code cannot express.

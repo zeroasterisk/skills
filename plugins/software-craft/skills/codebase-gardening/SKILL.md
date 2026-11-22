@@ -100,7 +100,7 @@ Every repo with a UI, CLI, or multi-step flow needs one scripted way to drive th
 
 ### 7. Slim the prose
 
-Re-read the instruction files. For each bullet: if a check now enforces it, delete it. If it duplicates the tool's own help or another file, delete it. What remains should be judgment calls, each with one example of the failure it prevents. A short `AGENTS.md` that points at `verify` and the feature map beats a long one that restates the linter.
+Re-read the instruction files. For each bullet: if a check now enforces it, delete it. If it duplicates the tool's own help or another file, delete it. What remains should be judgment calls, each with one example of the failure it prevents. A short `AGENTS.md` that points at `verify` and the feature map beats a long one that restates the linter. If prose rules remain, keep them in one `Rule | Enforced by | Level` table so a prose-only row that gets violated again is visibly the next one to encode.
 
 ## Gate: ready for automation
 
