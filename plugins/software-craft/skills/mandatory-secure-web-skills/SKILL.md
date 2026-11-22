@@ -1,6 +1,6 @@
 ---
 name: mandatory-secure-web-skills
-description: Mandatory secure coding rules and vulnerability prevention for web applications covering input validation, output encoding, session management, and auth.
+description: Secure coding rules for web apps: input validation, output encoding, sessions, authentication, authorization, and secrets. Use when a change touches untrusted input, login, tokens, cookies, or access control, together with engineering-discipline. Don't use for auditing MCP server configs (use mcp-auditor) or for general code review.
 license: Apache-2.0
 ---
 

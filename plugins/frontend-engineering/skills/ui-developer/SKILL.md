@@ -1,6 +1,6 @@
 ---
 name: ui-developer
-description: End-to-end loop for building React/TypeScript UI features with agents - typed component, behavior tests, Storybook isolation, property tests for stateful UI, and feature-map-driven visual verification. Use when building or changing a UI feature end to end. Don't use for writing stories alone (use storybook) or capturing journeys alone (use cuj-screenshots).
+description: End-to-end loop for building React/TypeScript UI features with agents - typed component, behavior tests, Storybook isolation, property tests for stateful UI, and feature-map-driven visual verification. Use when building or changing a UI feature or component, together with engineering-discipline. Don't use for a one-line style or copy tweak (core rules only), stories alone (use storybook), or journey capture alone (use cuj-screenshots).
 license: Apache-2.0
 ---
 
