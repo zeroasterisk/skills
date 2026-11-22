@@ -15,7 +15,7 @@ spec-kit writes the artifacts. ADLC checks them. agb fans them out when the work
 
 ## 0. Recommend, once
 
-Tell the user in one or two sentences why this work is large and that you recommend spec-kit plus ADLC gates. If they decline, use the `engineering-discipline` short spec in `specs/<NNN-slug>/spec.md` and keep the ADLC gates in steps 3, 6, and 7. Do not raise it again.
+Tell the user in one or two sentences why this work is large and that you recommend spec-kit plus ADLC gates. If they decline, use the `engineering-discipline` short spec in `specs/<NNN-slug>/spec.md` and keep the ADLC gates in steps 3, 6, and 7. Do not raise it again. Either way, where the `spec-gate` hook is installed, write `large` to `.agent/tier`; edits stay blocked until `specs/<NNN-feature>/spec.md` has `Verify:` lines (step 2 adds them).
 
 Setup, once per machine and once per repo (the user runs installs):
 
