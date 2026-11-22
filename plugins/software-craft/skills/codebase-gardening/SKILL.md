@@ -1,6 +1,6 @@
 ---
 name: codebase-gardening
-description: Audits a whole repository and moves its rules down the trust order (structure, then verification, then prose) before agents write more code in it: lints with agent-actionable messages, directory boundaries, one blessed wrapper per nuance-heavy API, dead code and comment slop removed, a feature map, and a reusable verification driver. Use when preparing a repo for heavy agent use or an autonomous loop, when the same review finding or correction keeps coming back, or when asked to garden, de-slop, or harden a codebase. Don't use for a single feature or bug fix (use engineering-discipline), for slimming AGENTS.md alone (use checkup), or for reviewing one diff (use adlc-prosecutor).
+description: "Audits a whole repository and moves its rules down the trust order (structure, then verification, then prose) before agents write more code in it: lints with agent-actionable messages, directory boundaries, one blessed wrapper per nuance-heavy API, dead code and comment slop removed, a feature map, and a reusable verification driver. Use when preparing a repo for heavy agent use or an autonomous loop, when the same review finding or correction keeps coming back, or when asked to garden, de-slop, or harden a codebase. Don't use for a single feature or bug fix (use engineering-discipline), for slimming AGENTS.md alone (use checkup), or for reviewing one diff (use adlc-prosecutor)."
 license: Apache-2.0
 metadata:
   author: alanblount

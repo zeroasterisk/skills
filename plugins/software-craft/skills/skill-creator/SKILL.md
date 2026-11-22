@@ -1,6 +1,6 @@
 ---
 name: skill-creator
-description: Guide and best practices for creating, evaluating, and iteratively improving high-leverage skills for AI coding agents: when a skill is warranted, trigger descriptions, structure, and eval loops. Use when authoring or refining a SKILL.md outside CloudCode. Don't use in CloudCode (use skill-author) or for packaging skills into plugins (use skills-to-plugins).
+description: "Guide and best practices for creating, evaluating, and iteratively improving high-leverage skills for AI coding agents: when a skill is warranted, trigger descriptions, structure, and eval loops. Use when authoring or refining a SKILL.md outside CloudCode. Don't use in CloudCode (use skill-author) or for packaging skills into plugins (use skills-to-plugins)."
 license: Apache-2.0
 ---
 
