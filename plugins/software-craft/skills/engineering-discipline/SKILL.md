@@ -27,7 +27,7 @@ When in doubt between two tiers, pick the higher one and keep its artifacts shor
 
 ## 2. Medium: write a short spec first
 
-Show the spec before code. Fill it from the codebase and the request; do not interrogate the user. Ask only what the code, docs, or a quick experiment cannot answer, in one message, each question with your recommended answer. Then continue on your assumptions unless the user objects.
+Write the spec in your reply before the first edit, even when nobody is there to approve it; the assumptions list is how the user corrects you later. Fill it from the codebase and the request; do not interrogate the user. Ask only what the code, docs, or a quick experiment cannot answer, in one message, each question with your recommended answer. Then continue on your assumptions.
 
 ```markdown
 ## Goal
