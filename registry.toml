@@ -183,14 +183,34 @@ include = [
 [skill.manim-video-quality]
 active = false
 
+# Core loop and large-work planning (see AGENTS.md "Engineering core").
+[skill.engineering-discipline]
+tags = ["core", "verification", "debugging", "spec", "best-practices"]
+
+[skill.spec-kit-adlc]
+tags = ["spec-kit", "adlc", "planning", "large-projects", "risk"]
+
+# agb fleet rules and fan-out are Antigravity-specific. In CloudCode they
+# collide with engineering-discipline on ordinary tickets.
+[skill.adlc-doctrine]
+agents = ["jetski"]
+
+[skill.adlc-self-orchestrate]
+agents = ["jetski"]
+
+# CloudCode ships skill-author built in.
+[skill.skill-creator]
+agents = ["jetski", "gemini-cli", "claude", "codex"]
+
+# Overlaps alan-writing-style (review mode) and humanizer.
+[skill.technical-post-editorial]
+active = false
+
 [skill.elixir-best-practices]
 tags = ["elixir", "phoenix", "liveview", "language"]
 
 [skill.cuj-screenshots]
 tags = ["testing", "ui", "screenshots", "automation"]
-
-[skill.intent-refinement]
-tags = ["product", "ndd", "planning", "requirements"]
 
 [skill.storybook]
 tags = ["ui", "react", "testing", "storybook"]
