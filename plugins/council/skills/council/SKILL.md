@@ -1,7 +1,7 @@
 ---
 name: council
 description: >-
-  Convenes three independent, cold-start subagent delegates in parallel (using configured multi-model seats in ~/.config/council/roster.json with automatic fallback, or pro-tier council-delegate subagents) with isolated context, read-only tools, and findings-first adversarial scoring, looping by default until all three delegates score >= 9/10 while fighting scope creep. Trigger on "/council", "c9" (shorthand for "keep working until 9/10 from the council"), "/council <N>", "/council once", "council", "the council", "ask the council", or common misspellings ("counsil", "coucil", "concil", "councel"). Use only when the user asks for the council or a multi-model review loop. Don't use for an ordinary single-reviewer code review or a single refute pass of a diff against its spec (use adlc-prosecutor), or for persona onboarding walkthroughs (use developer-friction-reviewer).
+  Convenes three independent, cold-start subagent delegates in parallel (using configured multi-model seats in ~/.config/council/roster.json with automatic fallback, or pro-tier built-in research subagents) with isolated context, read-only tools, and findings-first adversarial scoring, looping by default until all three delegates score >= 9/10 while fighting scope creep. Trigger on "/council", "c9" (shorthand for "keep working until 9/10 from the council"), "/council <N>", "/council once", "council", "the council", "ask the council", or common misspellings ("counsil", "coucil", "concil", "councel"). Use only when the user asks for the council or a multi-model review loop. Don't use for an ordinary single-reviewer code review or a single refute pass of a diff against its spec (use adlc-prosecutor), or for persona onboarding walkthroughs (use developer-friction-reviewer).
 license: Apache-2.0
 compatibility: Designed for Jetski / Antigravity (run_workflow, invoke_subagent, Markdown custom subagents) with fallback to T3 Code and standard subagent harnesses.
 metadata:
@@ -22,8 +22,8 @@ Unless the user overrides a setting in their prompt, run with these defaults:
 | Setting | Default | Override Behavior |
 | :--- | :--- | :--- |
 | **Delegates** | `3` neutral delegates (`seats[0..2]`) | Identical prompt, zero persona framing unless the user names council members or focus roles. |
-| **Model Roster** | `~/.config/council/roster.json` -> `pro` fallback | When `~/.config/council/roster.json` exists, runs its 3 custom-agent seats (`seats[0..2]`; one tier each unless the harness pins a model per agent; substituting `fallback` if any primary seat fails or is unavailable). Otherwise runs `council-delegate` on `model="pro"` (or 3 flagship providers in T3 Code). |
-| **Tools & State** | Read-only | The bundled `agents/council-delegate.md` declares a read-only `tools` list (`view_file`, `grep_search`; no `replace_file_content`, `run_command`, or subagent tools). The workflow template reads each roster seat's Markdown agent file, replaces a seat whose `tools` go beyond read and search tools with `council-delegate`, and marks a seat it cannot read as tools unverified. In T3 Code, read-only is requested in the brief, not enforced, so run delegates with `isolation: "worktree"`. `Workspace: "inherit"`, isolated `<appDataDir>/brain/<subConvID>/`. Uses `Workspace: "branch"` only when executing tests or competing prototypes. |
+| **Model Roster** | `~/.config/council/roster.json` -> `pro` fallback | When `~/.config/council/roster.json` exists, runs its 3 custom-agent seats (`seats[0..2]`; one tier each unless the harness pins a model per agent; substituting `fallback` if any primary seat fails or is unavailable). Otherwise runs the built-in `research` subagent on `model="pro"` (or 3 flagship providers in T3 Code). |
+| **Tools & State** | Read-only | See **State & tool isolation** in section 2. |
 | **Context** | Cold start every round | No inherited conversation context, no `swarm` board, no author rationale, fresh conversations every round. |
 | **Scoring Rubric** | Findings-first adversarial (`10.0` minus deductions) | Delegates generate `findings` (`blocker` = `-2.0`, `major` = `-1.0`, `minor` = `-0.5`) *before* `score` to prevent 1-round `10/10` rubber-stamping. |
 | **Convergence Gate** | All `3` score `>= 9/10` & satisfied | Default for scored reviews (`/council` or `c9`). Override with `/council <N>` (supports half-points such as `/council 9.5`), `c<N>`, or `/council once` for a single pass. Non-scored ideation runs `1` round. |
@@ -53,7 +53,7 @@ Every council round must preserve three strict isolation boundaries so delegates
 * **Neutrality by default**:
   * Unless the user explicitly names focus personas, give all three delegates the **exact same neutral prompt** with zero persona roleplay. Diversity comes from distinct models (`roster.json`) and independent cold-start exploration paths.
 * **State & tool isolation**:
-  * **Review / feedback (default)**: Keep delegates **read-only** (no write, edit, shell, or subagent tools). The bundled delegate enforces this with a `tools` list; check roster seats' agent files before the round. Each delegate gets its own isolated conversation and `<appDataDir>/brain/<subConvID>/` state directory, and cannot mutate files or run shell commands.
+  * **Review / feedback (default)**: Keep delegates **read-only** (`view_file`, `grep_search`; no `replace_file_content`, `run_command`, or subagent tools) with `Workspace: "inherit"`. Default seats use the built-in read-only `research` subagent. The workflow template reads each roster seat's Markdown agent file, swaps a seat whose `tools` go beyond read and search for `research`, and labels a seat it cannot read as tools unverified. In T3 Code, read-only is requested in the brief, not enforced, so run delegates with `isolation: "worktree"`.
   * **Competing prototypes or test execution (only when required)**: If delegates must execute commands or prototype competing approaches, define a separate worker subagent and spawn each with `Workspace: "branch"` (`workspace="branch"` in `run_workflow`) so each delegate works in its own isolated Git worktree.
 
 ## 3. Multi-Model Roster, Pinning & Fallback Rules
@@ -63,7 +63,7 @@ Every council round must preserve three strict isolation boundaries so delegates
    * **Model pinning**: Request-time `model` values and documented custom-agent frontmatter accept only tiers (`inherit`, `flash`, `pro`). Distinct models per seat need per-agent pinning from the harness; see [`references/jetski-harness.md`](references/jetski-harness.md). Custom agents are discovered at conversation start, so start a new conversation after adding one.
    * **Automatic fallback seat**: If a requested model is unavailable in the harness's model list or errors out at runtime (e.g., quota/capacity exhaustion), substitute the `fallback` seat from `roster.json` and label the delegate row transparently with the actual model that ran.
 2. **Default fallback when no `roster.json` exists**:
-   * **Jetski / Antigravity**: Run three isolated `council-delegate` subagents on `model="pro"`.
+   * **Jetski / Antigravity**: Run three isolated built-in `research` subagents on `model="pro"`.
    * **T3 Code**: Use `orchestrator_capabilities` + `delegate_task` to pick three flagship models across providers at high reasoning effort, with `isolation: "worktree"` (tool restrictions are not enforced there).
 3. **Never fake or silently substitute**: Always verify live availability when configuring new models and label every row in `## Council review` with the exact model or delegate type that actually executed. A roster `label` is the intended model; unless the harness reports the model that ran, label the row with the seat's `type_name` and tier and mark the model as unverified.
 
@@ -72,7 +72,7 @@ Every council round must preserve three strict isolation boundaries so delegates
 See [`references/jetski-harness.md`](references/jetski-harness.md) for copy-pasteable `roster.json` and `run_workflow` templates.
 
 1. **Ensure read-only subagent types exist**:
-   * Load `~/.config/council/roster.json` if present (each seat's custom agent must already be discoverable), or fall back to `council-delegate`.
+   * Load `~/.config/council/roster.json` if present (each seat's custom agent must already be discoverable), or fall back to the built-in `research` subagent.
 2. **Prepare an objective, pointer-based brief**:
    * State the user's goal/requirement, list target files (or write a clean diff/document snapshot to your conversation `scratch/` directory, never inside the repository working tree), and state what checks already passed.
    * Explicitly instruct each delegate to follow the **findings-first adversarial rubric**: list concrete findings (`blocker` = `-2.0`, `major` = `-1.0`, `minor` = `-0.5`) *first*, then compute `score` out of 10 (`N/10`, starting from `10.0` minus deductions) and `satisfied` (`true/false`).

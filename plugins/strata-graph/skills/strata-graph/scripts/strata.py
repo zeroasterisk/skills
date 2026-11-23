@@ -1436,7 +1436,7 @@ def _normalize_jetski_jsonl(
                     arg_preview = ", ".join(
                         f"{k}={str(v)[:28]}" for k, v in list(args.items())[:1]
                     )
-                    key = f"{fn}:error" if out_err else fn
+                    key = f"{fn}:error:{idx_tc}" if out_err else fn
                     label = f"{fn}({arg_preview})" if arg_preview else fn
 
                     bucket = grouped_by_tool.setdefault(

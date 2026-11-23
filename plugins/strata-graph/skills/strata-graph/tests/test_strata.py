@@ -140,6 +140,25 @@ class CompileAtifTest(unittest.TestCase):
         self.assertEqual(events[0]["count"], 3)
         self.assertIn("×3", events[0]["label"])
 
+    def test_failed_calls_to_one_tool_in_a_turn_stay_separate(self):
+        rows = [
+            {
+                "type": "PLANNER_RESPONSE",
+                "tool_calls": [
+                    {"name": "run_command", "args": {"CommandLine": "a"}},
+                    {"name": "run_command", "args": {"CommandLine": "b"}},
+                ],
+            },
+            {"type": "GENERIC", "status": "ERROR", "content": "first failed"},
+            {"type": "GENERIC", "status": "ERROR", "content": "second failed"},
+        ]
+        events = strata._normalize_jetski_jsonl(Path("t.jsonl"), rows)["events"]
+        errors = [e for e in events if e["is_error"]]
+        self.assertEqual(len(errors), 2)
+        self.assertEqual(
+            [e["observation"] for e in errors], ["first failed", "second failed"]
+        )
+
     def test_no_event_cap(self):
         rows = []
         for i in range(40):

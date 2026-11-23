@@ -351,23 +351,30 @@ info "7. Checking agent frontmatter"
 # Agents use only the documented custom-subagent keys, and an agent described as read-only
 # must list tools, every one of them a read or search tool.
 readonly_report="$(python3 - plugins/*/agents/*.md <<'PY'
-import sys, yaml
+import os, sys, yaml
 # Tool names the Antigravity custom-subagent docs list; an unknown name can hang a subagent.
 TOOLS = {"view_file", "grep_search", "replace_file_content", "run_command"}
 READ_ONLY = {"view_file", "grep_search"}
 KEYS = {"name", "description", "tools", "mainAgent", "subagent", "model",
         "commandExecutionPolicy", "mcpServers", "skills", "plugins"}
 MODELS = {"inherit", "flash", "pro"}
+POLICIES = {"off", "auto", "eager", "sandbox"}
 for path in sys.argv[1:]:
+    if not os.path.isfile(path):  # unmatched glob when no plugin ships agents
+        continue
     text = open(path, encoding="utf-8").read()
-    if not text.startswith("---"):
+    parts = text.split("---", 2)
+    if not text.startswith("---") or len(parts) < 3:
         print(f"ERR {path} has no YAML frontmatter")
         continue
-    fm = yaml.safe_load(text.split("---", 2)[1]) or {}
+    fm = yaml.safe_load(parts[1]) or {}
     if extra := sorted(set(fm) - KEYS):
         print(f"ERR {path} uses undocumented frontmatter keys: {', '.join(extra)}")
     if "model" in fm and fm["model"] not in MODELS:
         print(f"ERR {path} model must be one of {sorted(MODELS)}, got {fm['model']!r}")
+    # YAML 1.1 reads a bare `off` as false, so the policy must be a quoted string.
+    if "commandExecutionPolicy" in fm and fm["commandExecutionPolicy"] not in POLICIES:
+        print(f"ERR {path} commandExecutionPolicy must be a quoted string in {sorted(POLICIES)}")
     tools = fm.get("tools")
     if tools is not None and not (isinstance(tools, list) and all(isinstance(x, str) for x in tools)):
         print(f"ERR {path} tools must be a YAML list of strings")

@@ -6,15 +6,15 @@ Concrete execution templates for running isolated 3-delegate council rounds insi
 
 ## 1. Subagent Registration and Multi-Model Roster
 
-### A. Default Single-Tier Subagent (`council-delegate`)
+### A. Default Seats (built-in `research` subagent)
 
-When the `council` plugin is enabled before a conversation starts and no `~/.config/council/roster.json` is configured, `council-delegate` (`plugins/council/agents/council-delegate.md`) is registered as a subagent (`subagent: true`, `mainAgent: false`) on the `pro` tier with a read-only `tools` list (`view_file`, `grep_search`) and shell execution off.
+Without a roster, the template runs three seats on Antigravity's built-in `research` subagent, which the docs describe as read-only codebase research, on the `pro` tier. The plugin ships no agent file, so it does not depend on any one harness's agent frontmatter.
 
 ### B. Multi-Model Roster (`~/.config/council/roster.json`)
 
-Request-time `model` values in `invoke_subagent` and `run_workflow` accept only tiers (`inherit`, `flash`, `pro`), and a documented custom agent's `model` frontmatter takes the same tiers. For three distinct models, define one custom agent per seat with whatever per-agent model pinning your harness supports, and list them in a machine-local roster. If the harness cannot pin a model per agent, use the default three `council-delegate` seats and say in the scorecard that all three ran on one tier.
+Request-time `model` values in `invoke_subagent` and `run_workflow` accept only tiers (`inherit`, `flash`, `pro`), and a documented custom agent's `model` frontmatter takes the same tiers. For three distinct models, define one custom agent per seat with whatever per-agent model pinning your harness supports, and list them in a machine-local roster. If the harness cannot pin a model per agent, use the default three `research` seats and say in the scorecard that all three ran on one tier.
 
-Each seat agent is a documented custom agent (`~/.gemini/config/agents/<type_name>.md` or `<type_name>/agent.md`) with the same read-only `tools` list as `council-delegate` (`view_file`, `grep_search`).
+Each seat agent is a documented custom agent (`~/.gemini/config/agents/<type_name>.md` or `<type_name>/agent.md`) with a read-only `tools` list (`view_file`, `grep_search`). The template checks this before the round (see section 2).
 
 Example machine-local `~/.config/council/roster.json` (kept outside public git repos):
 
@@ -32,7 +32,6 @@ Example machine-local `~/.config/council/roster.json` (kept outside public git r
 
 Custom agents are discovered when a conversation starts. An agent added mid-conversation is visible only after a new conversation starts.
 
-> **Why omitting write/command tools matters**: Omitting `replace_file_content` and `run_command` strips mutation capabilities at tool-schema construction time. Three delegates can inspect `Workspace: "inherit"` in parallel with zero risk of mutating working-tree files, git index locks, or build caches, while each delegate's own trajectory lives under `<appDataDir>/brain/<subConvID>/`.
 
 ---
 
@@ -74,9 +73,9 @@ elif roster_path.is_file():
     fallback_seat = roster.get("fallback")
 else:
     seats = [
-        {"label": "Delegate 1 (pro)", "type_name": "council-delegate", "model": "pro"},
-        {"label": "Delegate 2 (pro)", "type_name": "council-delegate", "model": "pro"},
-        {"label": "Delegate 3 (pro)", "type_name": "council-delegate", "model": "pro"},
+        {"label": "Delegate 1 (pro)", "type_name": "research", "model": "pro"},
+        {"label": "Delegate 2 (pro)", "type_name": "research", "model": "pro"},
+        {"label": "Delegate 3 (pro)", "type_name": "research", "model": "pro"},
     ]
 
 READ_ONLY_TOOLS = {"view_file", "grep_search"}
@@ -84,32 +83,45 @@ AGENTS_DIR = Path.home() / ".gemini" / "config" / "agents"
 
 
 def seat_tools(seat):
-    """The seat's declared tools, or None when no Markdown agent file is found."""
+    """The `tools` list from the seat's Markdown agent file, or None if it cannot be read."""
     for f in (AGENTS_DIR / f"{seat['type_name']}.md", AGENTS_DIR / seat["type_name"] / "agent.md"):
-        if f.is_file():
-            fm = f.read_text(encoding="utf-8").split("---", 2)[1]
-            return [ln.strip()[2:].strip() for ln in fm.splitlines() if ln.strip().startswith("- ")]
+        if not f.is_file():
+            continue
+        parts = f.read_text(encoding="utf-8").split("---", 2)
+        if len(parts) < 3 or parts[0].strip():
+            return None
+        tools, in_tools = [], False
+        for line in parts[1].splitlines():
+            if not line.strip():
+                continue
+            if not line.startswith((" ", "\t", "-")):  # a new top-level key ends the tools block
+                key, _, value = line.partition(":")
+                in_tools = key.strip() == "tools"
+                if in_tools and value.strip().startswith("["):
+                    tools += [t.strip().strip("'\"") for t in value.strip().strip("[]").split(",") if t.strip()]
+                    in_tools = False
+            elif in_tools and line.strip().startswith("- "):
+                tools.append(line.strip()[2:].strip().strip("'\""))
+        return tools
     return None
 
 
 def vet(seat, idx):
-    if seat["type_name"] == "council-delegate":
+    if seat["type_name"] == "research":
         return seat
     tools = seat_tools(seat)
     if tools is None:
-        log(f"{seat['type_name']}: no Markdown agent file found; tools unverified")
+        log(f"{seat['type_name']}: agent file missing or unreadable; tools unverified")
         return {**seat, "label": f"{seat['label']}, tools unverified"}
     if not tools or not set(tools) <= READ_ONLY_TOOLS:
-        log(f"{seat['type_name']}: tools {tools} are not read-only; using council-delegate")
-        return {"label": f"Delegate {idx + 1} (pro)", "type_name": "council-delegate", "model": "pro"}
+        log(f"{seat['type_name']}: tools {tools} are not read-only; using research")
+        return {"label": f"Delegate {idx + 1} (pro)", "type_name": "research", "model": "pro"}
     return seat
 
 
 seats = [vet(s, i) for i, s in enumerate(seats)]
-if fallback_seat and fallback_seat["type_name"] != "council-delegate":
-    tools = seat_tools(fallback_seat)
-    if tools is not None and (not tools or not set(tools) <= READ_ONLY_TOOLS):
-        fallback_seat = None
+if fallback_seat:
+    fallback_seat = vet(fallback_seat, len(seats))
 
 scoring_block = (
     """Scoring rubric (findings-first):
@@ -127,7 +139,9 @@ scoring_block = (
 prompt = f"""Independent cold-start Council evaluation (Round {round_num}).
 
 Read the request and target artifacts at: {ctx_path}
-Inspect any referenced files directly with `view_file` to verify claims, boundaries, and edge cases.
+Inspect any referenced files directly with `view_file` and `grep_search` to verify claims, boundaries, and edge cases.
+Do not edit, create, or delete files. You have no view of the author's conversation or other reviewers' work.
+Focus on concrete correctness bugs, edge cases, missing invariants, and simpler alternatives; skip praise.
 
 {scoring_block}
 Keep recommendations strictly within the requested scope; do not penalize for out-of-scope feature ideas."""
@@ -223,7 +237,7 @@ print(json.dumps(output, indent=2))
 
 If `run_workflow` is unavailable:
 
-1. Issue **three `invoke_subagent` calls in the same assistant turn** using the `type_name` values from `~/.config/council/roster.json` (with `Model: "inherit"`, which runs the parent conversation's model unless the harness pins one per agent), or `TypeName: "council-delegate"` with `Model: "pro"` if no `roster.json` exists.
+1. Issue **three `invoke_subagent` calls in the same assistant turn** using the `type_name` values from `~/.config/council/roster.json` (with `Model: "inherit"`, which runs the parent conversation's model unless the harness pins one per agent), or `TypeName: "research"` with `Model: "pro"` if no `roster.json` exists.
 2. **Stop calling tools** at the end of that turn. Jetski wakes your conversation reactively as each subagent sends its completion message; never sleep or poll in a loop.
 3. For Round 2+, always launch three fresh subagents rather than calling `send_message` on Round 1's `conversationId`s, so Round 2 evaluates the updated work from a clean cold start.
 
