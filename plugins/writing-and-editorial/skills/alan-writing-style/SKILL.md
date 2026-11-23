@@ -24,7 +24,7 @@ This skill is designed to prevent generic, formulaic, or AI-sounding prose. It r
 ## When to Use
 
 - Writing or drafting articles, technical whitepapers, curriculum guides, blog posts (e.g., Google Developers Blog, Medium, @GoogleCloudTech), or explainers that should sound like Alan.
-- Editorially reviewing or critiquing multi-author drafts to strip formulaic LLM whitepaper slop and sharpen technical depth.
+- Editorially reviewing drafts to remove formulaic, generic phrasing and sharpen technical depth.
 - Rewriting AI-generated or corporate drafts to sound human, punchy, and authentic.
 - Drafting design docs, PR descriptions, or technical proposals using the "Meaning + Mechanism + Practice" framework.
 - Any request where Alan says "make it sound like me", "review this like me", "humanize this", or "give it my voice".

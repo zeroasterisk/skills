@@ -9,8 +9,12 @@ stay on one release.
 
 Usage:
   python3 scripts/sync-adlc.py               # Vendor the latest vX.Y.Z tag
-  python3 scripts/sync-adlc.py --ref v1.13.0 # Vendor a specific tag
+  python3 scripts/sync-adlc.py --ref v1.12.0 # Vendor a specific tag
   python3 scripts/sync-adlc.py --dry-run     # Print the tag that would be vendored
+
+adlc >= 1.13.0 exports the OpenCode v2 plugin shape ({id, setup}), which
+CloudCode cannot load. The script refuses such a tag before it touches
+plugins/adlc, unless --allow-v2 is given.
 """
 
 from __future__ import annotations
@@ -29,6 +33,7 @@ UPSTREAM_URL = "https://github.com/voodootikigod/adlc.git"
 REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
 PLUGINS_DIR = REPO_ROOT / "plugins"
 ADLC_PLUGIN_DIR = PLUGINS_DIR / "adlc"
+V2_EXPORT = re.compile(r"^export default \{", re.M)
 
 
 def log(msg: str) -> None:
@@ -79,9 +84,21 @@ def extract(repo_root: pathlib.Path, tree: str, dest: pathlib.Path) -> None:
     log(f"Extracting {tree} into {dest}...")
     dest.mkdir(parents=True, exist_ok=True)
     archive = subprocess.Popen(["git", "archive", tree], cwd=repo_root, stdout=subprocess.PIPE)
-    tar = subprocess.run(["tar", "-x", "-C", str(dest)], stdin=archive.stdout)
-    if archive.wait() != 0 or tar.returncode != 0:
+    tar = subprocess.Popen(["tar", "-x", "-C", str(dest)], stdin=archive.stdout)
+    archive.stdout.close()  # let git archive get SIGPIPE if tar exits early
+    if tar.wait() != 0 or archive.wait() != 0:
         raise RuntimeError(f"Failed to extract {tree}")
+
+
+def uses_v2_export(repo_root: pathlib.Path, ref: str) -> bool:
+    index = subprocess.run(
+        ["git", "show", f"{ref}:plugins/adlc-opencode/index.mjs"],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+    return V2_EXPORT.search(index) is not None
 
 
 def sync_adlc(repo_root: pathlib.Path, ref: str) -> None:
@@ -110,12 +127,6 @@ def sync_adlc(repo_root: pathlib.Path, ref: str) -> None:
         f.write("\n")
     log(f"Wrote plugin.json (version {version})")
 
-    # adlc >= 1.13.0 exports the OpenCode v2 shape ({id, setup}); CloudCode's loader
-    # rejects it ("must default export an object with server()").
-    if re.search(r"^export default \{", (ADLC_PLUGIN_DIR / "index.mjs").read_text(), re.M):
-        log(f"WARNING: {ref} uses the OpenCode v2 plugin export; CloudCode cannot load it. "
-            "Re-run with --ref v1.12.0 or pin @adlc/opencode to a v1 release.")
-
     for s in ADLC_PLUGIN_DIR.rglob("bin/*"):
         if s.is_file():
             s.chmod(0o755)
@@ -124,6 +135,9 @@ def sync_adlc(repo_root: pathlib.Path, ref: str) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Vendor an ADLC release from voodootikigod/adlc")
     parser.add_argument("--ref", help="Release tag to vendor (default: latest vX.Y.Z tag)")
+    parser.add_argument(
+        "--allow-v2", action="store_true", help="Vendor a tag even if it uses the OpenCode v2 plugin export"
+    )
     parser.add_argument("--dry-run", action="store_true", help="Print the tag that would be vendored and exit")
     args = parser.parse_args()
 
@@ -132,7 +146,12 @@ def main() -> int:
     if args.dry_run:
         log(f"[dry-run] Would vendor {tag} into {ADLC_PLUGIN_DIR}")
         return 0
-    sync_adlc(REPO_ROOT, fetch_tag(REPO_ROOT, tag))
+    ref = fetch_tag(REPO_ROOT, tag)
+    if uses_v2_export(REPO_ROOT, ref) and not args.allow_v2:
+        log(f"ERROR: {tag} uses the OpenCode v2 plugin export, which CloudCode cannot load.")
+        log("plugins/adlc is unchanged. Pass --ref with a v1 release (e.g. v1.12.0), or --allow-v2.")
+        return 1
+    sync_adlc(REPO_ROOT, ref)
     log("Done.")
     return 0
 

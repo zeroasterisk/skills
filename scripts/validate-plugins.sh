@@ -281,17 +281,19 @@ else
   warn "Missing .claude-plugin/marketplace.json"
 fi
 
-info "5. Validating symlinks stay inside the repository"
+info "5. Validating tracked symlinks stay inside the repository"
+# Only tracked symlinks: .gitignore lists machine-local symlinks that point outside on purpose.
 repo_real="$(pwd -P)"
 symlink_count=0
-while IFS= read -r -d '' link; do
+while IFS= read -r link; do
+  [ -n "$link" ] || continue
   symlink_count=$((symlink_count + 1))
   resolved="$(python3 -c 'import os,sys;print(os.path.realpath(sys.argv[1]))' "$link")"
   case "$resolved" in
-    "$repo_real"/*) ;;
+    "$repo_real" | "$repo_real"/*) ;;
     *) err "Symlink '$link' escapes repository root (resolves to $resolved)" ;;
   esac
-done < <(find . -type l -not -path './.git/*' -print0)
+done < <(git ls-files -s | awk '$1 == "120000" { sub(/^[^\t]*\t/, ""); print }')
 ok "Checked $symlink_count symlink(s)"
 
 info "6. Scanning tracked files for internal references"
@@ -299,13 +301,14 @@ info "6. Scanning tracked files for internal references"
 # Each entry is "name|grep flags|regex". Flags: -i for case-insensitive.
 leak_markers=(
   'google3|-i|google3'
-  'corp-domain|-i|\.corp\.google\.com'
+  'corp-domain|-i|\.corp\.(google\.com|goog)\b'
   'googleplex|-i|googleplex'
   'moma_search|-i|moma_search'
   'x20|-i|\bx20\b'
   'cns-path|-i|/cns/'
-  'go-link||(^|[^A-Za-z0-9_./-])go/[a-z0-9_-]+'
-  'bug-or-cl-link||(^|[^A-Za-z0-9_./-])(b|cl)/[0-9]{6,}'
+  'go-link||(^|https?://|[^A-Za-z0-9_./-])go/[a-z0-9_-]+'
+  'bug-or-cl-link||(^|https?://|[^A-Za-z0-9_./-])(b|cl)/[0-9]{6,}'
+  'internal-path||/usr/local/google/|/google/(src|bin|data)/'
   'google-email|-i|@google\.com'
   'service-account-key|-i|-[0-9a-f]{12}\.json'
 )
@@ -335,6 +338,14 @@ for entry in "${leak_markers[@]}"; do
 done
 if [ "$leak_hits" -eq 0 ]; then
   ok "No internal references found in tracked files"
+fi
+
+info "7. Checking the vendored adlc plugin loads in CloudCode"
+# adlc >= 1.13.0 exports the OpenCode v2 shape ({id, setup}); CloudCode needs the v1 export.
+if grep -qE '^export default \{' plugins/adlc/index.mjs; then
+  err "plugins/adlc/index.mjs uses the OpenCode v2 export; vendor a v1 release (scripts/sync-adlc.py --ref v1.12.0)"
+else
+  ok "plugins/adlc uses the v1 plugin export"
 fi
 
 echo

@@ -32,7 +32,7 @@ This preserves the natural reading pause immediately following output generation
 ## ⚠️ Pitfall 3: Leaking Local Machine Paths into Generic Skills
 
 ### The Symptom:
-Skill documentation or scripts contain hardcoded user home directories (e.g. `/usr/local/google/home/<user>/...` or `/home/<user>/.config/...`). When another developer or agent executes the workflow in a container or on a different machine, the commands fail with `FileNotFoundError: [Errno 2]`.
+Skill documentation or scripts contain hardcoded user home directories (e.g. `/Users/<user>/...` or `/home/<user>/.config/...`). When another developer or agent executes the workflow in a container or on a different machine, the commands fail with `FileNotFoundError: [Errno 2]`.
 
 ### The Fix:
 Always use relative paths resolved from the repository root (e.g. `./scripts/resolver.py` or `Path(__file__).resolve().parent`) or standard environment variable expansions (`${XDG_CONFIG_HOME:-$HOME/.config}`).
