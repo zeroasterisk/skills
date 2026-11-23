@@ -5,6 +5,7 @@ on:
     branches: [master, main]
   pull_request:
     branches: [master, main]
+    types: [opened, edited, synchronize, reopened]
   workflow_dispatch:
 
 jobs:
@@ -26,8 +27,12 @@ jobs:
       - name: Test sync.py
         run: python3 -m unittest discover -s tests -v
 
+      - name: Save PR title and body for the leak scan
+        if: github.event_name == 'pull_request'
+        run: jq -r '.pull_request.title, (.pull_request.body // "")' "$GITHUB_EVENT_PATH" > "$RUNNER_TEMP/pr-text.md"
+
       - name: Run validate-plugins.sh
-        run: ./scripts/validate-plugins.sh
+        run: LEAK_SCAN_EXTRA="${{ github.event_name == 'pull_request' && format('{0}/pr-text.md', runner.temp) || '' }}" ./scripts/validate-plugins.sh
 
       - name: Set up Node
         uses: actions/setup-node@v4

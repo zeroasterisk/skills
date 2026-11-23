@@ -736,6 +736,41 @@ class CompileOkfTest(unittest.TestCase):
                 node = next(n for n in ds["nodes"] if n["id"] == "a")
                 self.assertEqual(node["tags"], ["alpha"])
 
+    def test_symlinked_files_outside_the_bundle_are_skipped(self):
+        for name, mod in self.parsers():
+            with (
+                self.subTest(parser=name),
+                tempfile.TemporaryDirectory() as tmp,
+                mock.patch.object(strata, "_pyyaml", mod),
+            ):
+                root = Path(tmp)
+                bundle = root / "bundle"
+                bundle.mkdir()
+                (root / "secret.md").write_text(
+                    "---\ntype: T\ntitle: TOP-SECRET-TITLE\n---\nTOP-SECRET-TEXT\n",
+                    encoding="utf-8",
+                )
+                (root / "secret-index.md").write_text(
+                    "---\ntitle: SECRET-INDEX-TITLE\n---\n", encoding="utf-8"
+                )
+                try:
+                    (bundle / "leak.md").symlink_to(root / "secret.md")
+                    (bundle / "index.md").symlink_to(root / "secret-index.md")
+                except OSError:
+                    self.skipTest("symlinks are not available")
+                (bundle / "ok.md").write_text(
+                    "---\ntype: T\n---\nFine.\n", encoding="utf-8"
+                )
+                ds = strata.compile_okf(bundle)
+                text = json.dumps(ds)
+                self.assertNotIn("TOP-SECRET", text)
+                self.assertNotIn("SECRET-INDEX-TITLE", text)
+                found = [
+                    d for d in ds["diagnostics"] if d["code"] == "PATH_OUTSIDE_BUNDLE"
+                ]
+                self.assertEqual(sorted(d["level"] for d in found), ["warn", "warn"])
+                self.assertIn("ok", {n["id"] for n in ds["nodes"]})
+
     def test_link_outside_the_bundle_is_a_warning(self):
         ds = self._compile_text(
             {"a.md": "---\ntype: T\n---\nSee [readme](../README.md).\n"}
@@ -898,6 +933,20 @@ class CompileKgYamlTest(unittest.TestCase):
             titles = {n["title"] for n in strata.compile_kg(root)["nodes"]}
         self.assertIn("Fine", titles)
         self.assertNotIn("LEAKED", titles)
+
+    def test_scalar_actors_are_one_entity(self):
+        timeline = "events:\n  - date: 2026-01-01\n    title: T\n    actors: acme\n"
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "timeline.yaml").write_text(timeline, encoding="utf-8")
+            (root / "entities").mkdir()
+            (root / "entities" / "acme.yaml").write_text(
+                "name: Acme Corp\n", encoding="utf-8"
+            )
+            ds = strata.compile_kg(root)
+        titles = {n["title"] for n in ds["nodes"] if n["id"].startswith("entity:")}
+        self.assertEqual(titles, {"Acme Corp"})
+        self.assertEqual(len(ds["traces"][0]["steps"]), 1)
 
     def test_graph_with_no_entities_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -1088,6 +1137,24 @@ class MalformedInputTest(unittest.TestCase):
             text = out.read_text(encoding="utf-8")
         self.assertIn("plain-agent", text)
         self.assertIn("cmd=ls -la", text)
+
+    def test_wrong_yaml_shapes_never_traceback(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            kg = Path(tmp) / "kg"
+            kg.mkdir()
+            (kg / "relations.yaml").write_text("relations: 1\n", encoding="utf-8")
+            (kg / "timeline.yaml").write_text("events: true\n", encoding="utf-8")
+            proc = run_cli("compile-kg", kg, "-o", Path(tmp) / "kg.json")
+            self.assertEqual(proc.returncode, 1)
+            self.assertEqual(json.loads(proc.stderr)["status"], "error")
+
+            bundle = Path(tmp) / "b"
+            bundle.mkdir()
+            (bundle / "a.md").write_text(
+                "---\ntype: T\nsources: true\ntags: 3\n---\nBody.\n", encoding="utf-8"
+            )
+            proc = run_cli("compile-okf", bundle, "-o", Path(tmp) / "b.json")
+            self.assertEqual(proc.returncode, 0, proc.stderr)
 
     def test_atif_non_json_arguments_are_kept_as_raw_text(self):
         self.assertEqual(strata._tool_args("not json"), {"raw": "not json"})
@@ -1392,6 +1459,18 @@ class AtifCompareTest(unittest.TestCase):
             "Trajectory Goal Reached", [s["label"] for s in failed["steps"]]
         )
         self.assertIn("R1..R2", ds["subtitle"])
+
+    def test_only_the_last_step_produces_the_outcome(self):
+        steps = [_atif_doc("read_file", 0, "x")["steps"][0] for _ in range(3)]
+        steps.append(_atif_doc("bash", 0, "done")["steps"][0])
+        doc = {"schema_version": "ATIF-v1.4", "steps": steps}
+        ds = self._compile([doc])
+        outcome = [e for e in ds["edges"] if e["relation"] == "produces-outcome"]
+        self.assertEqual(
+            [(e["from"], e["to"]) for e in outcome],
+            [("cap:shell_exec", "state:synthesis")],
+        )
+        self.assertIn("Traversed 1×", outcome[0]["summary"])
 
     def test_failed_run_has_no_edge_to_goal_node(self):
         ds = self._compile([_atif_doc("bash", 1, "bad")])

@@ -427,6 +427,27 @@ def derive_okf_trust(fm: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _as_items(value: Any) -> list[Any]:
+    """A YAML list, or a single string or mapping as a one-item list.
+
+    Other scalars (true, 1) and missing values give an empty list, so a wrong
+    YAML shape never makes iteration fail.
+    """
+    if isinstance(value, list):
+        return value
+    if isinstance(value, (str, dict)) and value:
+        return [value]
+    return []
+
+
+def _outside_bundle_diag(rel_name: str) -> dict[str, str]:
+    return {
+        "level": "warn",
+        "code": "PATH_OUTSIDE_BUNDLE",
+        "message": f"Skipped {rel_name}: it resolves to a path outside the bundle.",
+    }
+
+
 def compile_okf(wiki_dir: Path, graph_id: str | None = None) -> dict[str, Any]:
     wiki_root = wiki_dir.resolve()
     if not wiki_root.is_dir():
@@ -435,10 +456,14 @@ def compile_okf(wiki_dir: Path, graph_id: str | None = None) -> dict[str, Any]:
     index_path = wiki_root / "index.md"
     index_fm: dict[str, Any] = {}
     index_errors: list[str] = []
+    skipped_outside: list[str] = []
     if index_path.is_file():
-        index_fm, _ = split_frontmatter(
-            index_path.read_text(encoding="utf-8"), index_errors
-        )
+        if index_path.resolve().is_relative_to(wiki_root):
+            index_fm, _ = split_frontmatter(
+                index_path.read_text(encoding="utf-8"), index_errors
+            )
+        else:
+            skipped_outside.append("index.md")
 
     title = str(index_fm.get("title") or wiki_root.name)
     subtitle = str(
@@ -449,6 +474,8 @@ def compile_okf(wiki_dir: Path, graph_id: str | None = None) -> dict[str, Any]:
         "okf/root"  # "/" never occurs in concept ids, so containers cannot collide
     )
     diagnostics: list[dict[str, str]] = []
+    for name in skipped_outside:
+        diagnostics.append(_outside_bundle_diag(name))
     for err in index_errors:
         diagnostics.append(
             {
@@ -481,6 +508,9 @@ def compile_okf(wiki_dir: Path, graph_id: str | None = None) -> dict[str, Any]:
     for fpath in md_files:
         rel = fpath.relative_to(wiki_root)
         if fpath.name in ("index.md", "log.md"):
+            continue  # reserved files are never read here, except the root index above
+        if not fpath.resolve().is_relative_to(wiki_root):
+            diagnostics.append(_outside_bundle_diag(rel.as_posix()))
             continue
         parts = rel.parts
         sec_slug = parts[0] if len(parts) > 1 else "general"
@@ -541,7 +571,7 @@ def compile_okf(wiki_dir: Path, graph_id: str | None = None) -> dict[str, Any]:
         )
 
         node_sources: list[dict[str, Any]] = []
-        for s in fm.get("sources") or []:
+        for s in _as_items(fm.get("sources")):
             if not isinstance(s, dict):
                 continue
             sid = str(s.get("id") or s.get("resource") or "")
@@ -1063,7 +1093,7 @@ def compile_kg(kg_path: Path, graph_id: str | None = None) -> dict[str, Any]:
     rel_yaml = yaml_dir / "relations.yaml"
     if rel_yaml.is_file():
         parsed = parse_yaml_safe(rel_yaml.read_text(encoding="utf-8"))
-        for item in parsed.get("relations") or []:
+        for item in _as_items(parsed.get("relations")):
             if not isinstance(item, dict):
                 continue
             subj = str(item.get("subject") or "").strip()
@@ -1096,11 +1126,13 @@ def compile_kg(kg_path: Path, graph_id: str | None = None) -> dict[str, Any]:
         parsed_tl = parse_yaml_safe(tl_yaml.read_text(encoding="utf-8"))
         t_steps = []
         step_idx = 0
-        for ev in parsed_tl.get("events") or []:
+        for ev in _as_items(parsed_tl.get("events")):
             if not isinstance(ev, dict):
                 continue
-            for actor in ev.get("actors") or []:
-                actor_slug = str(actor).strip()
+            for actor in _as_items(ev.get("actors")):
+                if not isinstance(actor, str):
+                    continue
+                actor_slug = actor.strip()
                 eid = resolve_or_add(actor_slug) if actor_slug else None
                 if eid:
                     step_idx += 1
@@ -1949,10 +1981,6 @@ def compile_atif_compare(
                     }
                 )
             else:
-                if final_ok:
-                    add_edge(
-                        cid, "state:synthesis", "produces-outcome", "forward", run_label
-                    )
                 steps_out.append(
                     {
                         "stepIndex": len(steps_out) + 1,
@@ -1965,6 +1993,11 @@ def compile_atif_compare(
                 )
 
         if final_ok:
+            # Only the run's last step produced the outcome.
+            last_id = canonical_tool_bucket(agent_events[-1].get("tool"))[0]
+            add_edge(
+                last_id, "state:synthesis", "produces-outcome", "forward", run_label
+            )
             steps_out.append(
                 {
                     "stepIndex": len(steps_out) + 1,

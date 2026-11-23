@@ -7,7 +7,7 @@
     {
       "name": "adlc",
       "source": "./plugins/adlc",
-      "description": "Agentic Development Lifecycle (ADLC) toolkit integration: phase router, rail-guard hooks, slash commands, and prosecutor agents.",
+      "description": "Agentic Development Lifecycle (ADLC) skills from upstream: phase router, doctrine, prosecutor, and self-orchestration. The prosecutor subagent fan-out needs upstream's adlc-gemini plugin.",
       "skills": [
         "./plugins/adlc/skills/adlc",
         "./plugins/adlc/skills/adlc-doctrine",

@@ -57,6 +57,7 @@ Call `run_workflow` with `Description="Council review (Round <N>)"` and `Args={"
 
 ```python
 import json
+import re
 from pathlib import Path
 
 ctx_path = args["context_path"]
@@ -83,23 +84,27 @@ AGENT_DIRS = [Path.cwd() / ".agents" / "agents", Path.home() / ".gemini" / "conf
 
 
 def read_agent(seat):
-    """`tools` and `model` from the seat's Markdown agent file, or None if it cannot be read."""
+    """`tools`, `model`, and extra capability keys from the seat's agent file, or None if unreadable."""
     name = seat["type_name"]
     for f in [p for d in AGENT_DIRS for p in (d / f"{name}.md", d / name / "agent.md")]:
         if not f.is_file():
             continue
-        parts = f.read_text(encoding="utf-8").split("---", 2)
-        if len(parts) < 3 or parts[0].strip():
+        m = re.match(r"---[ \t]*\n(.*?)\n---[ \t]*(\n|$)", f.read_text(encoding="utf-8"), re.DOTALL)
+        if not m:
             return None
-        tools, model, in_tools = [], None, False
-        for line in parts[1].splitlines():
+        tools, model, extras, in_tools = [], None, [], False
+        for line in m.group(1).splitlines():
+            line = re.sub(r"\s+#.*$", "", line)
             if not line.strip():
                 continue
             if not line.startswith((" ", "\t", "-")):  # a new top-level key ends the tools block
                 key, _, value = line.partition(":")
-                in_tools = key.strip() == "tools"
-                if key.strip() == "model":
-                    model = value.strip().strip("'\"") or None
+                key, value = key.strip(), value.strip()
+                in_tools = key == "tools"
+                if key == "model":
+                    model = value.strip("'\"") or None
+                if key in ("mcpServers", "skills", "plugins") and value not in ("[]", "{}"):
+                    extras.append(key)
                 if in_tools and value.strip().startswith("["):
                     if not value.strip().endswith("]"):
                         return None  # a flow list that wraps lines is not parsed here
@@ -107,7 +112,7 @@ def read_agent(seat):
                     in_tools = False
             elif in_tools and line.strip().startswith("- "):
                 tools.append(line.strip()[2:].strip().strip("'\""))
-        return {"tools": tools, "model": model}
+        return {"tools": tools, "model": model, "extras": extras}
     return None
 
 
@@ -127,8 +132,8 @@ def vet(seat, idx):
         log(f"{seat['type_name']}: no readable Markdown agent file; using research")
         return research
     tools = agent_file["tools"]
-    if not tools or not set(tools) <= READ_ONLY_TOOLS:
-        log(f"{seat['type_name']}: tools {tools} are not read-only; using research")
+    if not tools or not set(tools) <= READ_ONLY_TOOLS or agent_file["extras"]:
+        log(f"{seat['type_name']}: tools {tools}, extras {agent_file['extras']} are not read-only; using research")
         return research
     return {**seat, "tier": agent_file["model"] or "inherit"}
 
@@ -252,9 +257,10 @@ print(json.dumps(output, indent=2))
 
 If `run_workflow` is unavailable:
 
-1. Issue **three `invoke_subagent` calls in the same assistant turn** using the `type_name` values from `~/.config/council/roster.json` (with `Model: "inherit"`, which runs the parent conversation's model unless the harness pins one per agent), or `TypeName: "research"` with `Model: "pro"` if no `roster.json` exists.
-2. **Stop calling tools** at the end of that turn. Jetski wakes your conversation reactively as each subagent sends its completion message; never sleep or poll in a loop.
-3. For Round 2+, always launch three fresh subagents rather than calling `send_message` on Round 1's `conversationId`s, so Round 2 evaluates the updated work from a clean cold start.
+1. Check each roster seat the same way `vet()` does in the template above: its agent file lists only `view_file` and `grep_search` in `tools` and declares no `mcpServers`, `skills`, or `plugins`. Replace any seat that fails, or that you cannot read, with `TypeName: "research"` and `Model: "pro"`, unless the roster sets `allow_unverified` for it.
+2. Issue **three `invoke_subagent` calls in the same assistant turn** with those `type_name` values. Omit `Model` for a roster seat so its agent file's `model` applies; use `Model: "pro"` for `research` seats.
+3. **Stop calling tools** at the end of that turn. Jetski wakes your conversation reactively as each subagent sends its completion message; never sleep or poll in a loop.
+4. For Round 2+, always launch three fresh subagents rather than calling `send_message` on Round 1's `conversationId`s, so Round 2 evaluates the updated work from a clean cold start.
 
 ---
 

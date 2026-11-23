@@ -122,6 +122,7 @@ path = "plain"
             capture_output=True,
             text=True,
             timeout=60,
+            check=False,
         )
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
         return proc.stdout + proc.stderr

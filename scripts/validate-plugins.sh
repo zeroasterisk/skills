@@ -340,7 +340,9 @@ for entry in "${leak_markers[@]}"; do
     [ "$skip" -eq 1 ] && continue
     err "Internal reference ($m_name): $(echo "$hit" | cut -c1-160)"
     leak_hits=$((leak_hits + 1))
-  done < <(git ls-files -z -- . ':(exclude)scripts/validate-plugins.sh' \
+  done < <({ git ls-files -z -- . ':(exclude)scripts/validate-plugins.sh'
+    # CI sets LEAK_SCAN_EXTRA to a file holding the PR title and body.
+    [ -n "${LEAK_SCAN_EXTRA:-}" ] && printf '%s\0' "$LEAK_SCAN_EXTRA"; } \
     | xargs -0 grep -sIHnE ${m_flags:+"$m_flags"} -e "$m_regex" || true)
 done
 if [ "$leak_hits" -eq 0 ]; then

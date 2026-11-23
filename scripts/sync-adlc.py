@@ -122,7 +122,7 @@ def sync_adlc(repo_root: pathlib.Path, ref: str) -> None:
         "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
         "name": "adlc",
         "version": version,
-        "description": "Agentic Development Lifecycle (ADLC) toolkit integration: phase router, rail-guard hooks, slash commands, and prosecutor agents.",
+        "description": "Agentic Development Lifecycle (ADLC) skills from upstream: phase router, doctrine, prosecutor, and self-orchestration. The prosecutor subagent fan-out needs upstream's adlc-gemini plugin.",
         "author": {"name": "Chris Williams", "url": "https://github.com/voodootikigod"},
         "repository": "https://github.com/voodootikigod/adlc",
         "license": "MIT",
