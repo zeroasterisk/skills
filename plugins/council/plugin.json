@@ -2,7 +2,7 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "council",
   "version": "1.1.0",
-  "description": "Convening three independent, cold-start subagent delegates across distinct models with isolated context, findings-first scoring, and multi-round convergence.",
+  "description": "Convening three independent, cold-start subagent delegates (optionally across distinct models) with isolated context, findings-first scoring, and multi-round convergence.",
   "author": {
     "name": "alanblount",
     "url": "https://github.com/zeroasterisk"

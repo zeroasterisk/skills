@@ -1,7 +1,7 @@
 ---
 name: council
 description: >-
-  Convenes three independent, cold-start subagent delegates in parallel (using configured multi-model seats in ~/.config/council/roster.json with automatic fallback, or pro-tier council-delegate subagents) with isolated context, read-only tools, and findings-first adversarial scoring, looping by default until all three delegates score >= 9/10 while fighting scope creep. Trigger on "/council", "c9" (shorthand for "keep working until 9/10 from the council"), "/council <N>", "/council once", "council", "the council", "ask the council", or common misspellings ("counsil", "coucil", "concil", "councel"). Use only when the user asks for the council or a multi-model review loop. Don't use for an ordinary code review (core rules) or a single refute pass of a diff against its spec (use adlc-prosecutor), or for persona onboarding walkthroughs (use developer-friction-reviewer).
+  Convenes three independent, cold-start subagent delegates in parallel (using configured multi-model seats in ~/.config/council/roster.json with automatic fallback, or pro-tier council-delegate subagents) with isolated context, read-only tools, and findings-first adversarial scoring, looping by default until all three delegates score >= 9/10 while fighting scope creep. Trigger on "/council", "c9" (shorthand for "keep working until 9/10 from the council"), "/council <N>", "/council once", "council", "the council", "ask the council", or common misspellings ("counsil", "coucil", "concil", "councel"). Use only when the user asks for the council or a multi-model review loop. Don't use for an ordinary single-reviewer code review or a single refute pass of a diff against its spec (use adlc-prosecutor), or for persona onboarding walkthroughs (use developer-friction-reviewer).
 license: Apache-2.0
 compatibility: Designed for Jetski / Antigravity (run_workflow, define_subagent, invoke_subagent, declarative model-pinned agent.json) with fallback to T3 Code and standard subagent harnesses.
 metadata:
@@ -53,7 +53,7 @@ Every council round must preserve three strict isolation boundaries so delegates
 * **Neutrality by default**:
   * Unless the user explicitly names focus personas, give all three delegates the **exact same neutral prompt** with zero persona roleplay. Diversity comes from distinct models (`roster.json`) and independent cold-start exploration paths.
 * **State & tool isolation**:
-  * **Review / feedback (default)**: Keep delegates strictly **read-only** at the tool boundary (no write, edit, shell, or subagent tools). Each delegate gets its own isolated conversation and `<appDataDir>/brain/<subConvID>/` state directory, and cannot mutate files or run shell commands.
+  * **Review / feedback (default)**: Keep delegates **read-only** (no write, edit, shell, or subagent tools). Roster seats enforce this with their `agent.json` tool list; the bundled delegate only turns off shell and is instructed not to edit. Each delegate gets its own isolated conversation and `<appDataDir>/brain/<subConvID>/` state directory, and cannot mutate files or run shell commands.
   * **Competing prototypes or test execution (only when required)**: If delegates must execute commands or prototype competing approaches, define a separate worker subagent and spawn each with `Workspace: "branch"` (`workspace="branch"` in `run_workflow`) so each delegate gets an isolated workspace clone and independent environment ID.
 
 ## 3. Multi-Model Roster, Pinning & Fallback Rules

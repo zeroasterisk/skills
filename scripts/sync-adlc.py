@@ -8,13 +8,14 @@ install @adlc/opencode from npm, so the vendored skills and the runtime plugin
 stay on one release.
 
 Usage:
-  python3 scripts/sync-adlc.py               # Vendor the latest vX.Y.Z tag
+  python3 scripts/sync-adlc.py               # Vendor the newest release CloudCode can load
   python3 scripts/sync-adlc.py --ref v1.12.0 # Vendor a specific tag
   python3 scripts/sync-adlc.py --dry-run     # Print the tag that would be vendored
 
 adlc >= 1.13.0 exports the OpenCode v2 plugin shape ({id, setup}), which
-CloudCode cannot load. The script refuses such a tag before it touches
-plugins/adlc, unless --allow-v2 is given.
+CloudCode cannot load. Without --ref, the script picks the newest release with
+the v1 export. With --ref, it refuses a v2 tag before it touches plugins/adlc,
+unless --allow-v2 is given.
 """
 
 from __future__ import annotations
@@ -33,7 +34,7 @@ UPSTREAM_URL = "https://github.com/voodootikigod/adlc.git"
 REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
 PLUGINS_DIR = REPO_ROOT / "plugins"
 ADLC_PLUGIN_DIR = PLUGINS_DIR / "adlc"
-V2_EXPORT = re.compile(r"^export default \{", re.M)
+V2_EXPORT = re.compile(r"^export default \{", re.MULTILINE)
 
 
 def log(msg: str) -> None:
@@ -53,7 +54,8 @@ def ensure_remote(repo_root: pathlib.Path) -> None:
         )
 
 
-def latest_release_tag(repo_root: pathlib.Path) -> str:
+def release_tags(repo_root: pathlib.Path) -> list[str]:
+    """Upstream vX.Y.Z tags, newest first."""
     out = subprocess.run(
         ["git", "ls-remote", "--tags", "--refs", UPSTREAM_REMOTE, "v*"],
         cwd=repo_root,
@@ -65,7 +67,7 @@ def latest_release_tag(repo_root: pathlib.Path) -> str:
     releases = [t for t in tags if re.fullmatch(r"v\d+\.\d+\.\d+", t)]
     if not releases:
         raise RuntimeError(f"No vX.Y.Z tags found on {UPSTREAM_REMOTE}")
-    return max(releases, key=lambda t: tuple(int(n) for n in t[1:].split(".")))
+    return sorted(releases, key=lambda t: tuple(int(n) for n in t[1:].split(".")), reverse=True)
 
 
 def fetch_tag(repo_root: pathlib.Path, tag: str) -> str:
@@ -134,7 +136,7 @@ def sync_adlc(repo_root: pathlib.Path, ref: str) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Vendor an ADLC release from voodootikigod/adlc")
-    parser.add_argument("--ref", help="Release tag to vendor (default: latest vX.Y.Z tag)")
+    parser.add_argument("--ref", help="Release tag to vendor (default: newest release with the v1 export)")
     parser.add_argument(
         "--allow-v2", action="store_true", help="Vendor a tag even if it uses the OpenCode v2 plugin export"
     )
@@ -142,15 +144,25 @@ def main() -> int:
     args = parser.parse_args()
 
     ensure_remote(REPO_ROOT)
-    tag = args.ref or latest_release_tag(REPO_ROOT)
+    candidates = [args.ref] if args.ref else release_tags(REPO_ROOT)
+    for tag in candidates:
+        if args.dry_run and (args.ref or args.allow_v2):
+            log(f"[dry-run] Would vendor {tag} into {ADLC_PLUGIN_DIR}")
+            return 0
+        ref = fetch_tag(REPO_ROOT, tag)
+        if args.allow_v2 or not uses_v2_export(REPO_ROOT, ref):
+            break
+        if args.ref:
+            log(f"ERROR: {tag} uses the OpenCode v2 plugin export, which CloudCode cannot load.")
+            log("plugins/adlc is unchanged. Pass --ref with a v1 release (e.g. v1.12.0), or --allow-v2.")
+            return 1
+        log(f"Skipping {tag}: OpenCode v2 plugin export, which CloudCode cannot load.")
+    else:
+        log("ERROR: no upstream release uses the v1 plugin export.")
+        return 1
     if args.dry_run:
         log(f"[dry-run] Would vendor {tag} into {ADLC_PLUGIN_DIR}")
         return 0
-    ref = fetch_tag(REPO_ROOT, tag)
-    if uses_v2_export(REPO_ROOT, ref) and not args.allow_v2:
-        log(f"ERROR: {tag} uses the OpenCode v2 plugin export, which CloudCode cannot load.")
-        log("plugins/adlc is unchanged. Pass --ref with a v1 release (e.g. v1.12.0), or --allow-v2.")
-        return 1
     sync_adlc(REPO_ROOT, ref)
     log("Done.")
     return 0

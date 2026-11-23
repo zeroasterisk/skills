@@ -8,7 +8,7 @@ Concrete execution templates for running isolated 3-delegate council rounds insi
 
 ### A. Default Single-Tier Subagent (`council-delegate`)
 
-When the `council` plugin is enabled before a conversation starts and no `~/.config/council/roster.json` is configured, `council-delegate` (`plugins/council/agents/council-delegate.md`) is pre-registered as a hidden, read-only subagent on the `pro` tier.
+When the `council` plugin is enabled before a conversation starts and no `~/.config/council/roster.json` is configured, `council-delegate` (`plugins/council/agents/council-delegate.md`) is pre-registered as a hidden subagent on the `pro` tier. It runs with shell execution off and is told not to edit files; for read-only enforcement at the tool boundary, use roster seats with the `tools` list in section B.
 
 ### B. Multi-Model Roster Pinning (`~/.config/council/roster.json` + `~/.gemini/config/agents/`)
 
