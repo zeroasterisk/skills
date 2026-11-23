@@ -699,6 +699,19 @@ class CompileOkfTest(unittest.TestCase):
         self.assertEqual([(e["from"], e["to"]) for e in ds["edges"]], [("a", "b")])
         self.assertNotIn("BROKEN_MD_LINK", [d["code"] for d in ds["diagnostics"]])
 
+    def test_concept_ids_never_collide_with_containers(self):
+        plain = "---\ntype: T\n---\nText.\n"
+        with tempfile.TemporaryDirectory() as tmp:
+            for rel in ("auth/overview.md", "sec/auth.md", "sec/sec.md", "okf/root.md"):
+                (Path(tmp) / rel).parent.mkdir(parents=True, exist_ok=True)
+                (Path(tmp) / rel).write_text(plain, encoding="utf-8")
+            ds = strata.compile_okf(Path(tmp))
+        codes = [d["code"] for d in strata.validate_dataset(ds)]
+        self.assertNotIn("DUPLICATE_ID", codes)
+        self.assertNotIn("PARENT_CYCLE", codes)
+        ids = {n["id"] for n in ds["nodes"]}
+        self.assertTrue({"sec:auth", "sec/auth", "okf:root", "okf/root"} <= ids)
+
     def test_scalar_tags_become_one_tag(self):
         for name, mod in self.parsers():
             with self.subTest(parser=name), mock.patch.object(strata, "_pyyaml", mod):

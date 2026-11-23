@@ -445,7 +445,9 @@ def compile_okf(wiki_dir: Path, graph_id: str | None = None) -> dict[str, Any]:
         index_fm.get("description")
         or f"OKF v{index_fm.get('okf_version', '0.2')} knowledge bundle compiled into hierarchical sections, prose-grounded links, and co-citation slices."
     )
-    root_id = "okf:root"
+    root_id = (
+        "okf/root"  # "/" never occurs in concept ids, so containers cannot collide
+    )
     diagnostics: list[dict[str, str]] = []
     for err in index_errors:
         diagnostics.append(
@@ -483,7 +485,7 @@ def compile_okf(wiki_dir: Path, graph_id: str | None = None) -> dict[str, Any]:
         parts = rel.parts
         sec_slug = parts[0] if len(parts) > 1 else "general"
         if sec_slug not in sections_seen:
-            sec_id = f"sec:{sec_slug}"
+            sec_id = f"sec/{sec_slug}"
             sections_seen[sec_slug] = sec_id
             nodes.append(
                 {

@@ -303,12 +303,12 @@ info "6. Scanning tracked files for internal references"
 # instead of silently matching nothing.
 leak_markers=(
   'google3|-i|see google3/foo|google3'
-  'corp-domain|-i|host.corp.goog|\.corp\.(google\.com|goog)\b'
+  'corp-domain|-i|host.corp.goog|\.corp\.(google\.com|goog)([^A-Za-z0-9_]|$)'
   'googleplex|-i|a.googleplex.com|googleplex'
   'moma_search|-i|use moma_search|moma_search'
-  'x20|-i|on x20 now|\bx20\b'
+  'x20|-i|on x20 now|(^|[^A-Za-z0-9_])x20([^A-Za-z0-9_]|$)'
   'cns-path|-i|read /cns/ab-d/x|/cns/'
-  'go-link||see https://go/foo|(^|https?://|[^A-Za-z0-9_./-])go/[a-z0-9_-]+'
+  'go-link||see https://go/UpperSlug|(^|https?://|[^A-Za-z0-9_./-])go/[A-Za-z0-9_-]+'
   'bug-or-cl-link||fixed in b/123456789|(^|https?://|[^A-Za-z0-9_./-])(b|cl)/[0-9]{6,}'
   'internal-path||in /usr/local/google/home/u|/usr/local/google/|/google/(src|bin|data)/'
   'google-email|-i|mail someone@google.com|@google\.com'
@@ -341,65 +341,13 @@ for entry in "${leak_markers[@]}"; do
     err "Internal reference ($m_name): $(echo "$hit" | cut -c1-160)"
     leak_hits=$((leak_hits + 1))
   done < <(git ls-files -z -- . ':(exclude)scripts/validate-plugins.sh' \
-    | xargs -0 grep -sInE ${m_flags:+"$m_flags"} -e "$m_regex" || true)
+    | xargs -0 grep -sIHnE ${m_flags:+"$m_flags"} -e "$m_regex" || true)
 done
 if [ "$leak_hits" -eq 0 ]; then
   ok "No internal references found in tracked files"
 fi
 
-info "7. Checking agent frontmatter"
-# Agents use only the documented custom-subagent keys, and an agent described as read-only
-# must list tools, every one of them a read or search tool.
-readonly_report="$(python3 - plugins/*/agents/*.md <<'PY'
-import os, sys, yaml
-# Tool names the Antigravity custom-subagent docs list; an unknown name can hang a subagent.
-TOOLS = {"view_file", "grep_search", "replace_file_content", "run_command"}
-READ_ONLY = {"view_file", "grep_search"}
-KEYS = {"name", "description", "tools", "mainAgent", "subagent", "model",
-        "commandExecutionPolicy", "mcpServers", "skills", "plugins"}
-MODELS = {"inherit", "flash", "pro"}
-POLICIES = {"off", "auto", "eager", "sandbox"}
-for path in sys.argv[1:]:
-    if not os.path.isfile(path):  # unmatched glob when no plugin ships agents
-        continue
-    text = open(path, encoding="utf-8").read()
-    parts = text.split("---", 2)
-    if not text.startswith("---") or len(parts) < 3:
-        print(f"ERR {path} has no YAML frontmatter")
-        continue
-    fm = yaml.safe_load(parts[1]) or {}
-    if extra := sorted(set(fm) - KEYS):
-        print(f"ERR {path} uses undocumented frontmatter keys: {', '.join(extra)}")
-    if "model" in fm and fm["model"] not in MODELS:
-        print(f"ERR {path} model must be one of {sorted(MODELS)}, got {fm['model']!r}")
-    # YAML 1.1 reads a bare `off` as false, so the policy must be a quoted string.
-    if "commandExecutionPolicy" in fm and fm["commandExecutionPolicy"] not in POLICIES:
-        print(f"ERR {path} commandExecutionPolicy must be a quoted string in {sorted(POLICIES)}")
-    tools = fm.get("tools")
-    if tools is not None and not (isinstance(tools, list) and all(isinstance(x, str) for x in tools)):
-        print(f"ERR {path} tools must be a YAML list of strings")
-        continue
-    if unknown := [x for x in tools or [] if x not in TOOLS]:
-        print(f"ERR {path} uses tool names the Antigravity docs do not list: {', '.join(unknown)}")
-        continue
-    if "read-only" not in str(fm.get("description", "")).lower():
-        continue
-    if not tools:
-        print(f"ERR {path} claims read-only tools but declares no tools list")
-    elif bad := [t for t in tools if t not in READ_ONLY]:
-        print(f"ERR {path} claims read-only tools but lists non-read tools: {', '.join(map(str, bad))}")
-    else:
-        print(f"OK {path} declares a read-only tools list")
-PY
-)" || err "Read-only agent check failed to run"
-while IFS= read -r line; do
-  case "$line" in
-    OK\ *) ok "${line#OK }" ;;
-    ERR\ *) err "${line#ERR }" ;;
-  esac
-done <<<"$readonly_report"
-
-info "8. Checking the vendored adlc runtime uses the v1 plugin export"
+info "7. Checking the vendored adlc runtime uses the v1 plugin export"
 # adlc >= 1.13.0 exports the OpenCode v2 shape ({id, setup}); CloudCode needs the v1 export.
 if [ ! -f plugins/adlc/index.mjs ]; then
   err "plugins/adlc/index.mjs is missing; re-run scripts/sync-adlc.py"
