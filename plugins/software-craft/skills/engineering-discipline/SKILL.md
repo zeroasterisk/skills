@@ -15,7 +15,7 @@ The per-task loop: size it, spec it if needed, build in small verified steps, de
 
 ## 1. Pick the tier
 
-State it in one line before the first edit: `Tier: medium (3 files, sharing rules unclear)`. Pick by blast radius and clarity, not line count.
+State it in one line before the first edit: `Tier: medium (3 files, sharing rules unclear)`. Pick by blast radius and clarity, not line count. Where the `spec-gate` hook is installed, also write the tier word to `.agent/tier` at the repo root; edits stay blocked until you do.
 
 | Tier | Signal | Process |
 |---|---|---|
@@ -27,7 +27,7 @@ When in doubt between two tiers, pick the higher one and keep its artifacts shor
 
 ## 2. Medium: write a short spec first
 
-Write the spec in your reply before the first edit, even when nobody is there to approve it; the assumptions list is how the user corrects you later. Fill it from the codebase and the request; do not interrogate the user. Ask only what the code, docs, or a quick experiment cannot answer, in one message, each question with your recommended answer. Then continue on your assumptions.
+Write the spec to `specs/<slug>/spec.md` (or `.agent/spec.md` if it should not be committed) before the first edit, even when nobody is there to approve it; the `spec-gate` hook checks for a spec with a `Verify:` line. Show it in your reply too; the assumptions list is how the user corrects you later. Fill it from the codebase and the request; do not interrogate the user. Ask only what the code, docs, or a quick experiment cannot answer, in one message, each question with your recommended answer. Then continue on your assumptions.
 
 ```markdown
 ## Goal
@@ -48,7 +48,7 @@ Rules for criteria:
 
 - Each one is observable (no source reading), falsifiable (it can fail), and ends in `Verify:` with a command or a surface check. One per user-visible capability, usually 3-7, with at least one failure path.
 - This format passes `adlc spec-lint`. Run `adlc spec-lint <file>` when the spec lives in a file; exit 0 means every criterion has a verification method.
-- Put the spec in the PR description, or in `specs/<slug>/spec.md` if it should outlive the PR. The same layout grows into a spec-kit spec if the work turns large.
+- Keep `specs/<slug>/spec.md` if the spec should outlive the PR; otherwise copy `.agent/spec.md` into the PR description. The same layout grows into a spec-kit spec if the work turns large.
 - If the user says to skip the spec, say once what the risk is, then do what they ask.
 
 ## 3. Build in small verified steps
