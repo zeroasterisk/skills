@@ -2561,10 +2561,18 @@
     if (st.currentLayout) applyScale(st.currentLayout);
   });
 
+  function setDrawerOpen(open) {
+    dom.drawer.hidden = !open;
+    dom.diagToggle.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
+  function setSearchOpen(open) {
+    dom.searchResults.hidden = !open;
+    dom.searchInput.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
   dom.diagToggle.addEventListener("click", () => {
-    const nowHidden = !dom.drawer.hidden;
-    dom.drawer.hidden = nowHidden;
-    dom.diagToggle.setAttribute("aria-expanded", nowHidden ? "false" : "true");
+    setDrawerOpen(dom.drawer.hidden);
   });
 
   // Viewport background click clears selection
@@ -2616,7 +2624,7 @@
     const q = dom.searchInput.value.trim().toLowerCase();
     dom.searchResults.replaceChildren();
     if (!q) {
-      dom.searchResults.hidden = true;
+      setSearchOpen(false);
       return;
     }
     const ds = curDs();
@@ -2635,7 +2643,7 @@
     if (!hits.length) {
       const li = h("li", "r-item", "No matching blocks or slices.");
       dom.searchResults.appendChild(li);
-      dom.searchResults.hidden = false;
+      setSearchOpen(true);
       return;
     }
     for (const hit of hits) {
@@ -2647,7 +2655,7 @@
       li.appendChild(top);
       if (hit.item.summary) li.appendChild(h("div", "r-sum", hit.item.summary));
       li.addEventListener("click", () => {
-        dom.searchResults.hidden = true;
+        setSearchOpen(false);
         dom.searchInput.value = "";
         if (hit.type === "node") {
           jumpToNode(ds, hit.item.id);
@@ -2659,24 +2667,29 @@
       });
       dom.searchResults.appendChild(li);
     }
-    dom.searchResults.hidden = false;
+    setSearchOpen(true);
+  });
+
+  document.addEventListener("click", (ev) => {
+    if (dom.searchResults.hidden) return;
+    if (ev.target === dom.searchInput || dom.searchResults.contains(ev.target)) return;
+    setSearchOpen(false);
   });
 
   // Keyboard shortcuts
   window.addEventListener("keydown", (ev) => {
-    if (ev.target === dom.searchInput) {
-      if (ev.key === "Escape") {
-        dom.searchResults.hidden = true;
-        dom.searchInput.blur();
-      }
+    if (ev.key === "Escape" && !dom.searchResults.hidden) {
+      setSearchOpen(false);
+      if (ev.target === dom.searchInput) dom.searchInput.blur();
       return;
     }
+    if (ev.target === dom.searchInput) return;
     if (ev.key === "/") {
       ev.preventDefault();
       dom.searchInput.focus();
     } else if (ev.key === "Escape") {
       if (!dom.drawer.hidden) {
-        dom.drawer.hidden = true;
+        setDrawerOpen(false);
       } else if (st.compareTargetId) {
         st.compareTargetId = null;
         renderAll();

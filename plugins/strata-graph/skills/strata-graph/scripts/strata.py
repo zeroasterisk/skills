@@ -72,8 +72,11 @@ def _unquote(text: str) -> str:
 def _strip_comment(text: str) -> str:
     text = text.strip()
     if text[:1] in ("'", '"'):
+        end = text.find(text[0], 1)
+        if end > 0:
+            return text[: end + 1] + re.sub(r"\s+#.*$", "", text[end + 1 :])
         return text
-    return re.sub(r"\s+#.*$", "", text)
+    return re.sub(r"(?:^|\s+)#.*$", "", text)
 
 
 def _split_flow(inner: str) -> list[str]:
@@ -119,56 +122,128 @@ def _parse_flow(text: str) -> list[Any] | dict[str, Any] | None:
     return None
 
 
+_BLOCK_SCALAR_RE = re.compile(r"^[|>][+-]?$")
+_MAP_ITEM_RE = re.compile(r"""^([^\s:#'"\[{][^:]*?):(?:\s+(.*))?$""")
+
+
+def _indent_of(line: str) -> int:
+    return len(line) - len(line.lstrip(" "))
+
+
+def _skip_blank(lines: list[str], i: int) -> int:
+    while i < len(lines) and (
+        not lines[i].strip() or lines[i].lstrip().startswith("#")
+    ):
+        i += 1
+    return i
+
+
+def _parse_block_scalar(
+    lines: list[str], i: int, parent_indent: int, indicator: str
+) -> tuple[str, int]:
+    """Read a `|` literal or `>` folded scalar whose body follows lines[i - 1]."""
+    body: list[str] = []
+    while i < len(lines) and (
+        not lines[i].strip() or _indent_of(lines[i]) > parent_indent
+    ):
+        body.append(lines[i])
+        i += 1
+    while body and not body[-1].strip():
+        body.pop()
+    indents = [_indent_of(line) for line in body if line.strip()]
+    margin = min(indents) if indents else 0
+    content = [line[margin:].rstrip() for line in body]
+    if indicator[0] == "|":
+        text = "\n".join(content)
+    else:
+        paragraphs = "\n".join(content).split("\n\n")
+        text = "\n".join(" ".join(p.split("\n")).strip() for p in paragraphs)
+    return (text if indicator.endswith("-") else text + "\n"), i
+
+
+def _parse_block(lines: list[str], i: int) -> tuple[Any, int]:
+    text = lines[i].strip()
+    if text == "-" or text.startswith("- "):
+        return _parse_block_seq(lines, i, _indent_of(lines[i]))
+    return _parse_block_map(lines, i, _indent_of(lines[i]))
+
+
+def _parse_block_map(lines: list[str], i: int, indent: int) -> tuple[Any, int]:
+    result: dict[str, Any] = {}
+    while True:
+        i = _skip_blank(lines, i)
+        if i >= len(lines) or _indent_of(lines[i]) != indent:
+            break
+        m = _MAP_ITEM_RE.match(lines[i].strip())
+        if not m:
+            break
+        key = _unquote(m.group(1))
+        rest = _strip_comment(m.group(2) or "")
+        i += 1
+        if _BLOCK_SCALAR_RE.match(rest):
+            value, i = _parse_block_scalar(lines, i, indent, rest)
+        elif rest:
+            value = _flow_value(rest)
+        else:
+            j = _skip_blank(lines, i)
+            if j < len(lines) and (
+                _indent_of(lines[j]) > indent
+                or (_indent_of(lines[j]) == indent and lines[j].strip()[:2] == "- ")
+            ):
+                value, i = _parse_block(lines, j)
+            else:
+                value = None
+        result[key] = value
+    return result, i
+
+
+def _parse_block_seq(lines: list[str], i: int, indent: int) -> tuple[Any, int]:
+    items: list[Any] = []
+    while True:
+        i = _skip_blank(lines, i)
+        if i >= len(lines) or _indent_of(lines[i]) != indent:
+            break
+        text = lines[i].strip()
+        if text != "-" and not text.startswith("- "):
+            break
+        rest_raw = text[1:].strip()
+        rest = _strip_comment(rest_raw)
+        i += 1
+        if not rest:
+            j = _skip_blank(lines, i)
+            if j < len(lines) and _indent_of(lines[j]) > indent:
+                value, i = _parse_block(lines, j)
+            else:
+                value = None
+        elif _BLOCK_SCALAR_RE.match(rest):
+            value, i = _parse_block_scalar(lines, i, indent, rest)
+        elif _MAP_ITEM_RE.match(rest_raw):
+            # Treat "- k: v" as a mapping whose keys start after the dash.
+            column = indent + (len(text) - len(text[1:].lstrip()))
+            lines[i - 1] = " " * column + rest_raw
+            value, i = _parse_block_map(lines, i - 1, column)
+        else:
+            value = _flow_value(rest)
+        items.append(value)
+    return items, i
+
+
 def parse_yaml_safe(text: str) -> dict[str, Any]:
-    """Parse frontmatter into JSON-safe values (dates become ISO strings)."""
+    """Parse frontmatter into JSON-safe values (dates become ISO strings).
+
+    Without PyYAML a small indentation-based parser is used. It supports block
+    mappings and sequences, one-line [a, b] and {k: v} collections, and | and >
+    block scalars. Scalars other than quoted or plain text stay strings.
+    """
     if _pyyaml is not None:
         loaded = _pyyaml.safe_load(text)
         return _json_safe(loaded) if isinstance(loaded, dict) else {}
-    result: dict[str, Any] = {}
-    cur_key: str | None = None
-    for raw_line in text.splitlines():
-        if not raw_line.strip() or raw_line.lstrip().startswith("#"):
-            continue
-        indent = len(raw_line) - len(raw_line.lstrip(" "))
-        line = raw_line.strip()
-        if indent == 0 and ":" in line and not line.startswith("-"):
-            k, v = line.split(":", 1)
-            k = k.strip()
-            v = _strip_comment(v)
-            flow = _parse_flow(v)
-            if flow is not None:
-                result[k] = flow
-                cur_key = None
-            elif _unquote(v):
-                result[k] = _unquote(v)
-                cur_key = None
-            else:
-                result[k] = []
-                cur_key = k
-        elif (
-            line.startswith("- ") and cur_key and isinstance(result.get(cur_key), list)
-        ):
-            val = _strip_comment(line[2:])
-            flow = _parse_flow(val)
-            if flow is not None:
-                result[cur_key].append(flow)
-            elif ":" in val:
-                sub_k, sub_v = val.split(":", 1)
-                result[cur_key].append({sub_k.strip(): _unquote(sub_v)})
-            else:
-                result[cur_key].append(_unquote(val))
-        elif indent > 0 and ":" in line and cur_key and not line.startswith("- "):
-            container = result.get(cur_key)
-            if container == []:
-                # `key:` followed by indented `k: v` lines is a block mapping.
-                container = result[cur_key] = {}
-            sub_k, sub_v = line.split(":", 1)
-            value = _flow_value(_strip_comment(sub_v))
-            if isinstance(container, dict):
-                container[sub_k.strip()] = value
-            elif isinstance(container, list) and isinstance(container[-1], dict):
-                container[-1][sub_k.strip()] = value
-    return result
+    lines = text.splitlines()
+    i = _skip_blank(lines, 0)
+    if i >= len(lines) or lines[i].strip()[:2] == "- ":
+        return {}
+    parsed, _ = _parse_block_map(lines, i, _indent_of(lines[i]))
+    return parsed if isinstance(parsed, dict) else {}
 
 
 def split_frontmatter(md_text: str) -> tuple[dict[str, Any], str]:
@@ -233,6 +308,51 @@ OKF_RELATIONS = {
         "category": "epistemic",
     },
 }
+
+
+_FENCE_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})")
+_LIST_ITEM_RE = re.compile(r"^(?:[-*+]|\d+[.)])\s")
+
+
+def _markdown_chunks(body: str) -> list[tuple[str, str]]:
+    """Split a Markdown body into (heading, text) paragraphs and list items.
+
+    Fenced code blocks are dropped, line breaks inside a paragraph are collapsed
+    to spaces, and footnote definitions are skipped.
+    """
+    chunks: list[tuple[str, str]] = []
+    heading = "Overview"
+    lines: list[str] = []
+    fence = ""
+
+    def flush() -> None:
+        text = " ".join(lines).strip()
+        lines.clear()
+        if text and not text.startswith("[^"):
+            chunks.append((heading, text))
+
+    for raw in body.splitlines():
+        stripped = raw.strip()
+        m = _FENCE_RE.match(raw)
+        if fence:
+            if m and m.group(1)[0] == fence[0] and len(m.group(1)) >= len(fence):
+                fence = ""
+            continue
+        if m:
+            flush()
+            fence = m.group(1)
+            continue
+        if stripped.startswith("#"):
+            flush()
+            heading = stripped.lstrip("#").strip()
+        elif not stripped:
+            flush()
+        else:
+            if _LIST_ITEM_RE.match(stripped):
+                flush()
+            lines.append(stripped)
+    flush()
+    return chunks
 
 
 def classify_okf_relation(src_sec: str, dst_sec: str, heading: str) -> str:
@@ -460,15 +580,8 @@ def compile_okf(wiki_dir: Path, graph_id: str | None = None) -> dict[str, Any]:
 
     for fpath, src_id in file_to_node_id.items():
         _, body, src_sec = file_meta[fpath]
-        cur_heading = "Overview"
-        for raw_line in body.splitlines():
-            stripped = raw_line.strip()
-            if stripped.startswith("#"):
-                cur_heading = stripped.lstrip("#").strip()
-                continue
-            if stripped.startswith("[^"):
-                continue
-            for match in link_re.finditer(raw_line):
+        for cur_heading, chunk in _markdown_chunks(body):
+            for match in link_re.finditer(chunk):
                 anchor_text, raw_target = match.group(1), match.group(2)
                 if "://" in raw_target:
                     continue
@@ -512,7 +625,7 @@ def compile_okf(wiki_dir: Path, graph_id: str | None = None) -> dict[str, Any]:
                     continue
                 seen_edges.add(dedup_key)
 
-                clean_snippet = re.sub(r"\[\^[^\]]+\]", "", stripped)
+                clean_snippet = re.sub(r"\[\^[^\]]+\]", "", chunk)
                 clean_snippet = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", clean_snippet)
                 clean_snippet = clean_snippet.lstrip("-* ").strip()
 
@@ -725,7 +838,7 @@ def compile_kg(kg_path: Path, graph_id: str | None = None) -> dict[str, Any]:
 
     # 1. Read SQLite pipeline.db if present (read-only URI)
     if db_file.is_file():
-        conn = sqlite3.connect(f"file:{db_file}?mode=ro", uri=True)
+        conn = sqlite3.connect(f"{db_file.resolve().as_uri()}?mode=ro", uri=True)
         try:
             src_lookup: dict[int, tuple[str, str]] = {}
             for row in conn.execute("SELECT id, uri, title FROM sources"):
@@ -816,6 +929,60 @@ def compile_kg(kg_path: Path, graph_id: str | None = None) -> dict[str, Any]:
         finally:
             conn.close()
 
+    def resolve_or_add(slug_raw: str) -> str:
+        s_low = slug_raw.lower()
+        if s_low in slug_to_eid:
+            return slug_to_eid[s_low]
+        # Check YAML entity file if available
+        for cand in (
+            (yaml_dir / "entities").rglob(f"{slug_raw}.yaml")
+            if (yaml_dir / "entities").is_dir()
+            else []
+        ):
+            efm = parse_yaml_safe(cand.read_text(encoding="utf-8"))
+            etype = str(efm.get("type") or cand.parent.name.rstrip("s"))
+            cid, ctitle = map_kg_container(etype)
+            ensure_container(cid, ctitle)
+            eid_new = f"{etype.lower()}:{slug_raw}"
+            entity_ids.add(eid_new)
+            slug_to_eid[s_low] = eid_new
+            nodes.append(
+                {
+                    "id": eid_new,
+                    "title": str(efm.get("name") or slug_raw.replace("-", " ").title()),
+                    "kind": etype.lower(),
+                    "status": "ready",
+                    "parent": cid,
+                    "summary": str(efm.get("description") or ""),
+                    "url": efm.get("url"),
+                    "sources": [],
+                    "tags": [],
+                    "metrics": {},
+                }
+            )
+            return eid_new
+        cid, ctitle = map_kg_container("project")
+        ensure_container(cid, ctitle)
+        eid_new = f"entity:{slug_raw}"
+        entity_ids.add(eid_new)
+        slug_to_eid[s_low] = eid_new
+        nodes.append(
+            {
+                "id": eid_new,
+                "title": slug_raw.replace("-", " ").upper()
+                if len(slug_raw) <= 4
+                else slug_raw.replace("-", " ").title(),
+                "kind": "entity",
+                "status": "ready",
+                "parent": cid,
+                "summary": "Curated entity from the YAML files.",
+                "sources": [],
+                "tags": [],
+                "metrics": {},
+            }
+        )
+        return eid_new
+
     # 2. Merge explicit curated YAML relations & timeline if present
     rel_yaml = yaml_dir / "relations.yaml"
     if rel_yaml.is_file():
@@ -828,62 +995,6 @@ def compile_kg(kg_path: Path, graph_id: str | None = None) -> dict[str, Any]:
             obj = str(item.get("object") or "").strip()
             if not subj or not obj:
                 continue
-
-            def resolve_or_add(slug_raw: str) -> str:
-                s_low = slug_raw.lower()
-                if s_low in slug_to_eid:
-                    return slug_to_eid[s_low]
-                # Check YAML entity file if available
-                for cand in (
-                    (yaml_dir / "entities").rglob(f"{slug_raw}.yaml")
-                    if (yaml_dir / "entities").is_dir()
-                    else []
-                ):
-                    efm = parse_yaml_safe(cand.read_text(encoding="utf-8"))
-                    etype = str(efm.get("type") or cand.parent.name.rstrip("s"))
-                    cid, ctitle = map_kg_container(etype)
-                    ensure_container(cid, ctitle)
-                    eid_new = f"{etype.lower()}:{slug_raw}"
-                    entity_ids.add(eid_new)
-                    slug_to_eid[s_low] = eid_new
-                    nodes.append(
-                        {
-                            "id": eid_new,
-                            "title": str(
-                                efm.get("name") or slug_raw.replace("-", " ").title()
-                            ),
-                            "kind": etype.lower(),
-                            "status": "ready",
-                            "parent": cid,
-                            "summary": str(efm.get("description") or ""),
-                            "url": efm.get("url"),
-                            "sources": [],
-                            "tags": [],
-                            "metrics": {},
-                        }
-                    )
-                    return eid_new
-                cid, ctitle = map_kg_container("project")
-                ensure_container(cid, ctitle)
-                eid_new = f"entity:{slug_raw}"
-                entity_ids.add(eid_new)
-                slug_to_eid[s_low] = eid_new
-                nodes.append(
-                    {
-                        "id": eid_new,
-                        "title": slug_raw.replace("-", " ").upper()
-                        if len(slug_raw) <= 4
-                        else slug_raw.replace("-", " ").title(),
-                        "kind": "entity",
-                        "status": "ready",
-                        "parent": cid,
-                        "summary": "Curated entity from relations.yaml.",
-                        "sources": [],
-                        "tags": [],
-                        "metrics": {},
-                    }
-                )
-                return eid_new
 
             u_id = resolve_or_add(subj)
             v_id = resolve_or_add(obj)
@@ -913,7 +1024,8 @@ def compile_kg(kg_path: Path, graph_id: str | None = None) -> dict[str, Any]:
             if not isinstance(ev, dict):
                 continue
             for actor in ev.get("actors") or []:
-                eid = slug_to_eid.get(str(actor).lower())
+                actor_slug = str(actor).strip()
+                eid = resolve_or_add(actor_slug) if actor_slug else None
                 if eid:
                     step_idx += 1
                     t_steps.append(
@@ -936,6 +1048,12 @@ def compile_kg(kg_path: Path, graph_id: str | None = None) -> dict[str, Any]:
                     "steps": t_steps,
                 }
             )
+
+    if not entity_ids:
+        raise KGSchemaError(
+            f"{kg_path} contains no entities. Check the database rows, "
+            "relations.yaml subjects and objects, or timeline.yaml actors."
+        )
 
     overlays = [
         ov
@@ -1892,7 +2010,7 @@ def write_output(payload: dict[str, Any], out_path: Path) -> None:
 # ---------------------------------------------------------------------------
 # CLI Entrypoint
 # ---------------------------------------------------------------------------
-def main(argv: list[str] | None = None) -> int:
+def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="strata",
         description="Deterministic multi-layer graph compiler and standalone HTML explorer.",
@@ -1949,8 +2067,18 @@ def main(argv: list[str] | None = None) -> int:
     p_hub.add_argument("-o", "--output", type=Path, required=True)
     p_hub.add_argument("--title", default="Strata Graph Multi-Domain Explorer")
 
-    args = parser.parse_args(argv)
+    return parser
 
+
+def _read_dataset(path: Path) -> dict[str, Any]:
+    text = path.read_text(encoding="utf-8")
+    data = json.loads(text)
+    if not isinstance(data, dict):
+        raise json.JSONDecodeError(f"{path} is not a JSON object", text, 0)
+    return data
+
+
+def _run(args: argparse.Namespace) -> int:
     def finish(ds: dict[str, Any], output: Path, **extra: Any) -> int:
         """Validate, then write and report, or print the errors and return 1."""
         errs = [d for d in validate_dataset(ds) if d.get("level") == "error"]
@@ -1972,11 +2100,7 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     if args.cmd == "compile-kg":
-        try:
-            ds = compile_kg(args.kg_path, graph_id=args.id)
-        except KGSchemaError as exc:
-            print(json.dumps({"status": "error", "error": str(exc)}), file=sys.stderr)
-            return 1
+        ds = compile_kg(args.kg_path, graph_id=args.id)
         return finish(
             ds,
             args.output,
@@ -2004,7 +2128,7 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     if args.cmd == "compile-json":
-        ds = json.loads(args.spec_path.read_text(encoding="utf-8"))
+        ds = _read_dataset(args.spec_path)
         ds.setdefault("schema", "strata-graph/1")
         ds.setdefault("generatedAt", now_iso())
         return finish(
@@ -2015,7 +2139,7 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     if args.cmd == "validate":
-        ds = json.loads(args.graph_json.read_text(encoding="utf-8"))
+        ds = _read_dataset(args.graph_json)
         diags = validate_dataset(ds)
         errs = [d for d in diags if d.get("level") == "error"]
         print(
@@ -2029,7 +2153,7 @@ def main(argv: list[str] | None = None) -> int:
         loaded = []
         errs = []
         for p in args.datasets:
-            ds = json.loads(p.read_text(encoding="utf-8"))
+            ds = _read_dataset(p)
             diags = validate_dataset(ds)
             errs += [
                 {**d, "dataset": str(p)} for d in diags if d.get("level") == "error"
@@ -2053,6 +2177,16 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     return 1
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = _build_parser()
+    args = parser.parse_args(argv)
+    try:
+        return _run(args)
+    except (OSError, ValueError) as exc:
+        print(json.dumps({"status": "error", "error": str(exc)}), file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":

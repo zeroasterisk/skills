@@ -8,6 +8,7 @@ import io
 import json
 import re
 import shutil
+import sqlite3
 import subprocess
 import tempfile
 import unittest
@@ -339,6 +340,52 @@ class BrowserRenderTest(unittest.TestCase):
         self.assertNotIn("→", out["afterPip"])
         self.assertNotIn("→", out["afterStep"])
 
+    def _run_page_script(self, body):
+        script = f"<script>(function () {{ const out = {{}}; {body}\n"
+        script += 'document.body.setAttribute("data-result", JSON.stringify(out)); })();</script>'
+        proc = _dump_dom(_mutual_cycle_dataset(), script)
+        self.assertNotIn("Uncaught", proc.stderr)
+        m = re.search(r'data-result="([^"]*)"', proc.stdout)
+        self.assertIsNotNone(m, "page script did not run")
+        return json.loads(html_module.unescape(m.group(1)))
+
+    def test_escape_closes_diagnostics_drawer_and_resets_aria(self):
+        out = self._run_page_script("""
+          const toggle = document.getElementById("diag-toggle");
+          const drawer = document.getElementById("drawer");
+          toggle.click();
+          out.open = [drawer.hidden, toggle.getAttribute("aria-expanded")];
+          window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+          out.closed = [drawer.hidden, toggle.getAttribute("aria-expanded")];
+        """)
+        self.assertEqual(out["open"], [False, "true"])
+        self.assertEqual(out["closed"], [True, "false"])
+
+    def test_search_results_close_on_escape_and_outside_click(self):
+        out = self._run_page_script("""
+          const input = document.getElementById("search-input");
+          const results = document.getElementById("search-results");
+          const state = () => [results.hidden, input.getAttribute("aria-expanded")];
+          const search = () => {
+            input.value = "alpha";
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+            return state();
+          };
+          out.opened = search();
+          document.body.dispatchEvent(
+            new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+          out.afterEscape = state();
+          search();
+          input.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+          out.afterInputClick = state();
+          document.body.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+          out.afterOutsideClick = state();
+        """)
+        self.assertEqual(out["opened"], [False, "true"])
+        self.assertEqual(out["afterEscape"], [True, "false"])
+        self.assertEqual(out["afterInputClick"], [False, "true"])
+        self.assertEqual(out["afterOutsideClick"], [True, "false"])
+
     def test_html_comment_text_does_not_swallow_the_page(self):
         ds = _mutual_cycle_dataset()
         ds["nodes"][1]["title"] = "<!-- <script></script> Alpha"
@@ -486,6 +533,25 @@ class CompileOkfTest(unittest.TestCase):
                 (Path(tmp) / name).write_text(text, encoding="utf-8")
             return strata.compile_okf(Path(tmp))
 
+    def test_wrapped_anchor_text_still_links(self):
+        for name, mod in self.parsers():
+            with self.subTest(parser=name):
+                ds = self.compile(mod)
+                pairs = {(e["from"], e["to"]) for e in ds["edges"]}
+                self.assertIn(("metrics:revenue", "computations:revenue"), pairs)
+
+    def test_links_inside_fenced_code_are_ignored(self):
+        body = (
+            "---\ntype: T\n---\n"
+            "Real [b](b.md) link.\n\n"
+            "```md\n[fake](missing.md)\n# not a heading\n[c](c.md)\n```\n\n"
+            "~~~\n[tilde](missing2.md)\n~~~\n"
+        )
+        plain = "---\ntype: T\n---\nText.\n"
+        ds = self._compile_text({"a.md": body, "b.md": plain, "c.md": plain})
+        self.assertEqual([(e["from"], e["to"]) for e in ds["edges"]], [("a", "b")])
+        self.assertNotIn("BROKEN_MD_LINK", [d["code"] for d in ds["diagnostics"]])
+
     def test_link_outside_the_bundle_is_a_warning(self):
         ds = self._compile_text(
             {"a.md": "---\ntype: T\n---\nSee [readme](../README.md).\n"}
@@ -511,6 +577,118 @@ class CompileOkfTest(unittest.TestCase):
         self.assertEqual(classify("a", "b", "March plan, Search"), "references")
         self.assertEqual(classify("a", "b", "Architecture"), "composes-pattern")
         self.assertEqual(classify("a", "b", "Design patterns"), "composes-pattern")
+
+
+BLOCK_YAML = """title: Doc
+description: >-
+  folded line one
+  continues here
+notes: |
+  line a
+  line b
+events:
+  - date: 2026-01-01
+    actors:
+      - acme
+      - beta corp
+    title: X
+tags:
+  - a
+  - bc
+"""
+
+
+class FallbackYamlTest(unittest.TestCase):
+    def test_block_scalars_and_nested_sequences_match_pyyaml(self):
+        expected = {
+            "title": "Doc",
+            "description": "folded line one continues here",
+            "notes": "line a\nline b\n",
+            "events": [
+                {"date": "2026-01-01", "actors": ["acme", "beta corp"], "title": "X"}
+            ],
+            "tags": ["a", "bc"],
+        }
+        modules = [None]
+        if importlib.util.find_spec("yaml"):
+            modules.append(importlib.import_module("yaml"))
+        for mod in modules:
+            with (
+                self.subTest(parser="pyyaml" if mod else "fallback"),
+                mock.patch.object(strata, "_pyyaml", mod),
+            ):
+                self.assertEqual(strata.parse_yaml_safe(BLOCK_YAML), expected)
+
+    def test_comments_after_quoted_values_are_dropped(self):
+        with mock.patch.object(strata, "_pyyaml", None):
+            fm = strata.parse_yaml_safe('a: "x # y"  # note\nb: https://h/p#frag\n')
+        self.assertEqual(fm, {"a": "x # y", "b": "https://h/p#frag"})
+
+
+class CompileKgYamlTest(unittest.TestCase):
+    TIMELINE = (
+        "events:\n"
+        "  - date: 2026-01-01\n"
+        "    title: Launch\n"
+        "    description: >-\n"
+        "      Acme ships.\n"
+        "    actors:\n"
+        "      - acme\n"
+        "      - other-co\n"
+    )
+
+    def test_timeline_only_directory_resolves_actors(self):
+        modules = [None]
+        if importlib.util.find_spec("yaml"):
+            modules.append(importlib.import_module("yaml"))
+        for mod in modules:
+            with (
+                self.subTest(parser="pyyaml" if mod else "fallback"),
+                tempfile.TemporaryDirectory() as tmp,
+                mock.patch.object(strata, "_pyyaml", mod),
+            ):
+                root = Path(tmp)
+                (root / "timeline.yaml").write_text(self.TIMELINE, encoding="utf-8")
+                (root / "entities").mkdir()
+                (root / "entities" / "acme.yaml").write_text(
+                    "name: Acme Corp\ntype: company\n", encoding="utf-8"
+                )
+                ds = strata.compile_kg(root)
+                titles = {n["title"] for n in ds["nodes"]}
+                self.assertIn("Acme Corp", titles)
+                self.assertIn("Other Co", titles)
+                steps = ds["traces"][0]["steps"]
+                self.assertEqual(len(steps), 2)
+                self.assertIn("Acme ships.", steps[0]["observation"])
+
+    def test_graph_with_no_entities_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "timeline.yaml").write_text(
+                "events:\n  - date: 2026-01-01\n    title: Nothing\n",
+                encoding="utf-8",
+            )
+            with self.assertRaises(strata.KGSchemaError):
+                strata.compile_kg(Path(tmp))
+
+    def test_database_path_with_uri_characters(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp) / "a#b?c"
+            folder.mkdir()
+            db = folder / "pipeline.db"
+            conn = sqlite3.connect(db)
+            conn.executescript(
+                "CREATE TABLE sources(id INTEGER, uri TEXT, title TEXT);"
+                "CREATE TABLE entities(entity_id TEXT, name TEXT, kind TEXT, type TEXT,"
+                " description TEXT, status TEXT, source_id INTEGER, merged_into TEXT);"
+                "CREATE TABLE edges(source_entity_id TEXT, target_entity_id TEXT,"
+                " edge_type TEXT, confidence REAL);"
+                "INSERT INTO entities VALUES('org:acme','Acme','org','organization',"
+                "'d','approved',NULL,NULL);"
+            )
+            conn.commit()
+            conn.close()
+            ds = strata.compile_kg(db)
+        self.assertIn("org:acme", {n["id"] for n in ds["nodes"]})
 
 
 def run_main(argv):
@@ -560,6 +738,38 @@ class CliTest(unittest.TestCase):
             )
         self.assertEqual(code, 1)
         self.assertIn("DUPLICATE_ID", err)
+
+    def test_every_subcommand_reports_bad_input_as_json_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            missing = str(Path(tmp) / "missing")
+            bad = Path(tmp) / "bad.json"
+            bad.write_text("{not json", encoding="utf-8")
+            out = str(Path(tmp) / "out.json")
+            cases = []
+            for path in (missing, str(bad)):
+                cases += [
+                    ["compile-okf", path, "-o", out],
+                    ["compile-kg", path, "-o", out],
+                    ["compile-atif", path, "-o", out],
+                    ["compile-json", path, "-o", out],
+                    ["validate", path],
+                    ["build-hub", path, "-o", out],
+                ]
+            cases.append(["validate", str(Path(tmp))])
+            for argv in cases:
+                with self.subTest(argv=argv[:2]):
+                    code, stdout, err = self._run(argv)
+                    self.assertEqual(code, 1)
+                    self.assertEqual(json.loads(err)["status"], "error")
+                    self.assertNotIn('"status": "ok"', stdout)
+
+    def test_non_object_json_is_a_json_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            src = Path(tmp) / "list.json"
+            src.write_text("[1, 2]", encoding="utf-8")
+            code, _, err = self._run(["validate", str(src)])
+        self.assertEqual(code, 1)
+        self.assertIn("not a JSON object", json.loads(err)["error"])
 
     def test_compile_atif_reports_the_effective_mode(self):
         with tempfile.TemporaryDirectory() as tmp:
