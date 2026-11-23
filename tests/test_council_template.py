@@ -1,6 +1,7 @@
 """Tests for the run_workflow template embedded in the council skill's harness reference."""
 
 import ast
+import importlib.util
 import os
 import pathlib
 import re
@@ -14,7 +15,9 @@ HARNESS = (
 
 
 def template_source() -> str:
-    blocks = re.findall(r"```python\n(.*?)```", HARNESS.read_text(encoding="utf-8"), re.DOTALL)
+    blocks = re.findall(
+        r"```python\n(.*?)```", HARNESS.read_text(encoding="utf-8"), re.DOTALL
+    )
     assert len(blocks) == 1, "expected one python block in jetski-harness.md"
     return blocks[0]
 
@@ -28,11 +31,19 @@ class CouncilTemplateTest(unittest.TestCase):
         src = template_source()
         helpers = src[src.index("READ_ONLY_TOOLS") : src.index("seats = [vet(")]
         helpers = helpers.replace(
-            'Path.home() / ".gemini" / "config" / "agents"', f"Path({str(self.agents)!r})"
+            'Path.home() / ".gemini" / "config" / "agents"',
+            f"Path({str(self.agents)!r})",
         )
-        self.logs = []
-        self.ns = {"Path": pathlib.Path, "re": re, "log": self.logs.append}
-        exec(helpers, self.ns)
+        module_file = self.workspace / "council_template.py"
+        module_file.write_text(
+            "import re\nfrom pathlib import Path\nlogs = []\nlog = logs.append\n"
+            + helpers,
+            encoding="utf-8",
+        )
+        spec = importlib.util.spec_from_file_location("council_template", module_file)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        self.ns = vars(module)
 
     def tearDown(self):
         os.chdir(self.cwd)
@@ -46,19 +57,30 @@ class CouncilTemplateTest(unittest.TestCase):
         return self.ns["vet"]({"label": "L", **seat}, 0)
 
     def test_template_compiles_with_top_level_await(self):
-        compile(template_source(), "template", "exec", flags=ast.PyCF_ALLOW_TOP_LEVEL_AWAIT)
+        compile(
+            template_source(), "template", "exec", flags=ast.PyCF_ALLOW_TOP_LEVEL_AWAIT
+        )
 
     def test_read_only_seat_is_kept_with_its_tier(self):
-        self.agent("ro", "---\nname: ro\nmodel: pro  # pinned\ntools:\n  - view_file\n  - grep_search\n---\n")
+        self.agent(
+            "ro",
+            "---\nname: ro\nmodel: pro  # pinned\ntools:\n  - view_file\n  - grep_search\n---\n",
+        )
         seat = self.vet(type_name="ro")
         self.assertEqual((seat["type_name"], seat["tier"]), ("ro", "pro"))
 
     def test_workspace_agents_dir_is_checked(self):
-        self.agent("ws", "---\nname: ws\ntools: [view_file]\n---\n", self.workspace / ".agents/agents")
+        self.agent(
+            "ws",
+            "---\nname: ws\ntools: [view_file]\n---\n",
+            self.workspace / ".agents/agents",
+        )
         self.assertEqual(self.vet(type_name="ws")["type_name"], "ws")
 
     def test_dashes_inside_frontmatter_do_not_end_it(self):
-        self.agent("dash", "---\nname: d\ndescription: a --- b\ntools: [view_file]\n---\n")
+        self.agent(
+            "dash", "---\nname: d\ndescription: a --- b\ntools: [view_file]\n---\n"
+        )
         self.assertEqual(self.vet(type_name="dash")["type_name"], "dash")
 
     def test_unsafe_seats_become_research(self):
