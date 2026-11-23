@@ -8,7 +8,7 @@ Concrete execution templates for running isolated 3-delegate council rounds insi
 
 ### A. Default Single-Tier Subagent (`council-delegate`)
 
-When the `council` plugin is enabled before a conversation starts and no `~/.config/council/roster.json` is configured, `council-delegate` (`plugins/council/agents/council-delegate.md`) is pre-registered as a hidden subagent on the `pro` tier with a read-only `tools` list (`view_file`, `grep_search`) and shell execution off.
+When the `council` plugin is enabled before a conversation starts and no `~/.config/council/roster.json` is configured, `council-delegate` (`plugins/council/agents/council-delegate.md`) is registered as a subagent (`subagent: true`, `mainAgent: false`) on the `pro` tier with a read-only `tools` list (`view_file`, `grep_search`) and shell execution off.
 
 ### B. Multi-Model Roster (`~/.config/council/roster.json`)
 
@@ -200,6 +200,6 @@ If `run_workflow` is unavailable:
 
 Only when the user explicitly asks the council to **run commands, execute benchmarks, or prototype three competing implementations**:
 
-1. Define a separate subagent (e.g., `council-sandbox-delegate`) with `EnableWriteTools: true`, `EnableSubagentTools: false`.
+1. Define a separate custom agent (e.g., `council-sandbox-delegate.md`) whose `tools` list adds `write_to_file` and `run_command` to the read tools but no subagent tools, with `commandExecutionPolicy: sandbox`.
 2. Launch each delegate with **`Workspace: "branch"`** (or `workspace="branch"` in `run_workflow`).
-3. Jetski clones an isolated workspace copy and assigns a distinct `environmentID` per delegate, preventing working-tree edits, lockfiles, ports, or test artifacts from colliding across the three delegates.
+3. Each delegate gets its own isolated Git worktree, so working-tree edits, lockfiles, and test artifacts do not collide across the three delegates.

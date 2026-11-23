@@ -3,7 +3,7 @@ name: council
 description: >-
   Convenes three independent, cold-start subagent delegates in parallel (using configured multi-model seats in ~/.config/council/roster.json with automatic fallback, or pro-tier council-delegate subagents) with isolated context, read-only tools, and findings-first adversarial scoring, looping by default until all three delegates score >= 9/10 while fighting scope creep. Trigger on "/council", "c9" (shorthand for "keep working until 9/10 from the council"), "/council <N>", "/council once", "council", "the council", "ask the council", or common misspellings ("counsil", "coucil", "concil", "councel"). Use only when the user asks for the council or a multi-model review loop. Don't use for an ordinary single-reviewer code review or a single refute pass of a diff against its spec (use adlc-prosecutor), or for persona onboarding walkthroughs (use developer-friction-reviewer).
 license: Apache-2.0
-compatibility: Designed for Jetski / Antigravity (run_workflow, define_subagent, invoke_subagent, declarative model-pinned agent.json) with fallback to T3 Code and standard subagent harnesses.
+compatibility: Designed for Jetski / Antigravity (run_workflow, invoke_subagent, Markdown custom subagents) with fallback to T3 Code and standard subagent harnesses.
 metadata:
   author: alanblount
   version: "1.1.0"
@@ -24,7 +24,7 @@ Unless the user overrides a setting in their prompt, run with these defaults:
 | **Delegates** | `3` neutral delegates (`seats[0..2]`) | Identical prompt, zero persona framing unless the user names council members or focus roles. |
 | **Model Roster** | `~/.config/council/roster.json` -> `pro` fallback | When `~/.config/council/roster.json` exists, runs its 3 model-pinned subagents (`seats[0..2]`, substituting `fallback` if any primary seat fails or is unavailable). Otherwise runs `council-delegate` on `model="pro"` (or 3 flagship providers in T3 Code). |
 | **Tools & State** | Read-only | Roster seats and the bundled `agents/council-delegate.md` get a read-only `tools` list (no `write_file`, `edit_file`, `run_command`, or subagent tools). In other harnesses, use a native subagent restricted to read and search tools. `Workspace: "inherit"`, isolated `<appDataDir>/brain/<subConvID>/`. Uses `Workspace: "branch"` only when executing tests or competing prototypes. |
-| **Context** | Cold start every round | `Fork: false`, no `swarm` board, no author rationale, fresh conversations every round. |
+| **Context** | Cold start every round | No inherited conversation context, no `swarm` board, no author rationale, fresh conversations every round. |
 | **Scoring Rubric** | Findings-first adversarial (`10.0` minus deductions) | Delegates generate `findings` (`blocker` = `-2.0`, `major` = `-1.0`, `minor` = `-0.5`) *before* `score` to prevent 1-round `10/10` rubber-stamping. |
 | **Convergence Gate** | All `3` score `>= 9/10` & satisfied | Default for scored reviews (`/council` or `c9`). Override with `/council <N>` (supports half-points such as `/council 9.5`), `c<N>`, or `/council once` for a single pass. Non-scored ideation runs `1` round. |
 | **Max Rounds** | `5` rounds safety cap | Stops early and reports to the user if scores plateau or remaining asks are out-of-scope scope creep. |
@@ -47,14 +47,14 @@ Before convening the council on an implementation or specification:
 Every council round must preserve three strict isolation boundaries so delegates cannot anchor on you or on each other:
 
 * **Context isolation (cold start, no rationale)**:
-  * Never use shared message boards (`swarm`) or conversation forking (`Fork: true`).
+  * Never use shared message boards (`swarm`) or start a delegate from a copy of your own conversation.
   * Every delegate starts in a fresh, single-round conversation and sees **only** the objective brief: the user's request, target file paths / diff snapshot, and verification status.
   * Do **not** include your own defensive rationale, excuses, prior scores, or prior delegates' opinions.
 * **Neutrality by default**:
   * Unless the user explicitly names focus personas, give all three delegates the **exact same neutral prompt** with zero persona roleplay. Diversity comes from distinct models (`roster.json`) and independent cold-start exploration paths.
 * **State & tool isolation**:
   * **Review / feedback (default)**: Keep delegates **read-only** (no write, edit, shell, or subagent tools). Both roster seats and the bundled delegate enforce this with a `tools` list. Each delegate gets its own isolated conversation and `<appDataDir>/brain/<subConvID>/` state directory, and cannot mutate files or run shell commands.
-  * **Competing prototypes or test execution (only when required)**: If delegates must execute commands or prototype competing approaches, define a separate worker subagent and spawn each with `Workspace: "branch"` (`workspace="branch"` in `run_workflow`) so each delegate gets an isolated workspace clone and independent environment ID.
+  * **Competing prototypes or test execution (only when required)**: If delegates must execute commands or prototype competing approaches, define a separate worker subagent and spawn each with `Workspace: "branch"` (`workspace="branch"` in `run_workflow`) so each delegate works in its own isolated Git worktree.
 
 ## 3. Multi-Model Roster, Pinning & Fallback Rules
 

@@ -347,17 +347,26 @@ if [ "$leak_hits" -eq 0 ]; then
   ok "No internal references found in tracked files"
 fi
 
-info "7. Checking agents that claim read-only tools declare them"
-# An agent described as read-only must list tools, and every tool must be a read or search tool.
+info "7. Checking agent frontmatter"
+# Agents use only the documented custom-subagent keys, and an agent described as read-only
+# must list tools, every one of them a read or search tool.
 readonly_report="$(python3 - plugins/*/agents/*.md <<'PY'
 import sys, yaml
 READ_ONLY = {"view_file", "grep_search", "find_by_name", "list_dir", "search_web",
              "read_url_content", "codebase_search", "Read", "Grep", "Glob", "WebFetch", "WebSearch"}
+KEYS = {"name", "description", "tools", "mainAgent", "subagent", "model",
+        "commandExecutionPolicy", "mcpServers", "skills", "plugins"}
+MODELS = {"inherit", "flash", "pro"}
 for path in sys.argv[1:]:
     text = open(path, encoding="utf-8").read()
     if not text.startswith("---"):
+        print(f"ERR {path} has no YAML frontmatter")
         continue
     fm = yaml.safe_load(text.split("---", 2)[1]) or {}
+    if extra := sorted(set(fm) - KEYS):
+        print(f"ERR {path} uses undocumented frontmatter keys: {', '.join(extra)}")
+    if "model" in fm and fm["model"] not in MODELS:
+        print(f"ERR {path} model must be one of {sorted(MODELS)}, got {fm['model']!r}")
     if "read-only" not in str(fm.get("description", "")).lower():
         continue
     tools = fm.get("tools")
@@ -378,9 +387,11 @@ while IFS= read -r line; do
   esac
 done <<<"$readonly_report"
 
-info "8. Checking the vendored adlc plugin loads in CloudCode"
+info "8. Checking the vendored adlc runtime uses the v1 plugin export"
 # adlc >= 1.13.0 exports the OpenCode v2 shape ({id, setup}); CloudCode needs the v1 export.
-if grep -qE '^export default \{' plugins/adlc/index.mjs; then
+if [ ! -f plugins/adlc/index.mjs ]; then
+  err "plugins/adlc/index.mjs is missing; re-run scripts/sync-adlc.py"
+elif grep -qE '^export default \{' plugins/adlc/index.mjs; then
   err "plugins/adlc/index.mjs uses the OpenCode v2 export; vendor a v1 release (scripts/sync-adlc.py --ref v1.12.0)"
 else
   ok "plugins/adlc uses the v1 plugin export"
