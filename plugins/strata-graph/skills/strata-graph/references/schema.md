@@ -103,7 +103,7 @@ Optional fields that change how the viewer draws a dataset:
 | `axisNotes` | dataset | List of `{ "nodeId": "...", "text": "..." }`. Draws a note in the left margin beside that node on the root view. |
 | `quietBypass` | node | `true` dims forward edges that skip more than one row on the root view. |
 
-The validator (`validate`, and every `compile-*` command) reports these errors: `MISSING_ROOT`, `BAD_ID`, `DUPLICATE_ID`, `MISSING_PARENT`, `PARENT_CYCLE`, `MALFORMED_EDGE`, `DANGLING_EDGE`, `MALFORMED_STEP`, and `DANGLING_TRACE_STEP`.
+The validator (`validate`, and every `compile-*` command) reports these errors: `MISSING_ROOT`, `MALFORMED_NODE`, `BAD_ID`, `DUPLICATE_ID`, `MISSING_PARENT`, `PARENT_CYCLE`, `MALFORMED_EDGE`, `DANGLING_EDGE`, `MALFORMED_STEP`, and `DANGLING_TRACE_STEP`.
 
 ## 2. Status & Flow Semantics
 
@@ -119,7 +119,9 @@ The validator (`validate`, and every `compile-*` command) reports these errors: 
 | `edge.flowRole` | Layout & Routing Behavior |
 | :--- | :--- |
 | `"forward"` (default) | Participates in Sugiyama topological layering + PAV channel alignment; residual cycles in cyclic KGs/wikis are automatically promoted to outer return arcs so downward arrows never lie. |
-| `"backtrack"` / `"loop"` | Excluded from downward rank forcing; routed along a dedicated right-margin cubic Bezier return rail with an upward/left arrowhead and clickable `↺` pill badge. |
+| `"backtrack"` / `"loop"` | Excluded from downward rank forcing; routed along a dedicated cubic Bezier return rail at the left or right margin, with an arrowhead and a clickable `↺` pill badge. |
+
+Trace steps use `role` instead of `status`: `normal`, `blind-alley`, `backtrack`, `subagent`, or `goal`.
 
 ## 3. Input conventions for the adapters
 

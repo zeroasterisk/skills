@@ -13,8 +13,8 @@ Subcommands:
   validate     : integrity checks on a strata-graph/1 JSON file
   build-hub    : bundle several strata-graph/1 JSON files into one multi-tab HTML explorer
 
-An output path ending in .html or .htm writes the standalone explorer. Any other
-suffix writes the strata-graph/1 JSON.
+An output path ending in .html or .htm writes the standalone explorer. A .json
+path writes the strata-graph/1 JSON. Any other suffix is an error.
 
 Independent implementation inspired by Adam Gospodarczyk's (@overment) limen picture (MIT).
 """
@@ -67,7 +67,11 @@ def _json_safe(value: Any) -> Any:
 
 
 def _unquote(text: str) -> str:
-    return text.strip().strip("'\"")
+    """Remove one matching pair of outer quotes."""
+    text = text.strip()
+    if len(text) >= 2 and text[0] == text[-1] and text[0] in ("'", '"'):
+        return text[1:-1]
+    return text
 
 
 def _strip_comment(text: str) -> str:
@@ -991,10 +995,20 @@ def compile_kg(kg_path: Path, graph_id: str | None = None) -> dict[str, Any]:
         s_low = slug_raw.lower()
         if s_low in slug_to_eid:
             return slug_to_eid[s_low]
-        # Check YAML entity file if available
+        # Check YAML entity file if available. A slug is only a file name when it
+        # has no path separators, "..", or glob characters, and the match must
+        # stay inside entities/.
+        entities_dir = yaml_dir / "entities"
+        lookup_ok = entities_dir.is_dir() and not (
+            re.search(r"[/\\*?\[\]]", slug_raw) or ".." in slug_raw
+        )
         for cand in (
-            (yaml_dir / "entities").rglob(f"{slug_raw}.yaml")
-            if (yaml_dir / "entities").is_dir()
+            [
+                c
+                for c in entities_dir.rglob(f"{slug_raw}.yaml")
+                if c.resolve().is_relative_to(entities_dir.resolve())
+            ]
+            if lookup_ok
             else []
         ):
             efm = parse_yaml_safe(cand.read_text(encoding="utf-8"))
@@ -1804,7 +1818,6 @@ def compile_atif_compare(
     ]
 
     node_ids = {"state:intake", "state:planner", "state:synthesis"}
-    tool_run_touches: dict[str, set[str]] = {}
     edge_counts: dict[tuple[str, str, str, str], list[str]] = {}
     traces: list[dict[str, Any]] = []
     palette = ["#60a5fa", "#34d399", "#f472b6", "#fbbf24", "#a78bfa", "#22d3ee"]
@@ -1872,7 +1885,6 @@ def compile_atif_compare(
                         "metrics": {},
                     }
                 )
-            tool_run_touches.setdefault(cid, set()).add(run_label)
 
             add_edge(
                 "state:planner",
@@ -2029,7 +2041,7 @@ def error_diagnostics(diags: list[Any]) -> list[dict[str, Any]]:
 def validate_dataset(ds: dict[str, Any]) -> list[dict[str, str]]:
     """Check ids, parents, edges, and trace steps.
 
-    Reports MISSING_ROOT, BAD_ID, DUPLICATE_ID, MISSING_PARENT, PARENT_CYCLE,
+    Reports MISSING_ROOT, MALFORMED_NODE, BAD_ID, DUPLICATE_ID, MISSING_PARENT, PARENT_CYCLE,
     MALFORMED_EDGE, DANGLING_EDGE, MALFORMED_STEP, and DANGLING_TRACE_STEP.
     Findings are appended to ds["diagnostics"]; a finding already present is not
     added again, so repeated runs over the same dataset stay stable.
@@ -2043,10 +2055,11 @@ def validate_dataset(ds: dict[str, Any]) -> list[dict[str, str]]:
 
     by_id: dict[str, dict[str, Any]] = {}
     for n in _as_list(ds.get("nodes")):
-        if not isinstance(n, dict) or "id" not in n:
+        if not isinstance(n, dict):
+            report("MALFORMED_NODE", f"Node {n!r} is not an object.")
             continue
-        if not isinstance(n["id"], str):
-            report("BAD_ID", f"Node id {n['id']!r} must be a string.")
+        if not isinstance(n.get("id"), str) or not n["id"]:
+            report("BAD_ID", f"Node id {n.get('id')!r} must be a non-empty string.")
             continue
         if n["id"] in by_id:
             report("DUPLICATE_ID", f"Node id {n['id']} is defined more than once.")
@@ -2078,9 +2091,10 @@ def validate_dataset(ds: dict[str, Any]) -> list[dict[str, str]]:
         elif not known(e.get("from")) or not known(e.get("to")):
             report("DANGLING_EDGE", f"Edge {e.get('id')} references missing endpoint.")
     for t in _as_list(ds.get("traces")):
-        trace = t if isinstance(t, dict) else {}
-        if not trace:
+        if not isinstance(t, dict):
             report("MALFORMED_STEP", f"Trace {t!r} is not an object.")
+            continue
+        trace = t
         for step in _as_list(trace.get("steps")):
             if not isinstance(step, dict):
                 report(
@@ -2124,7 +2138,16 @@ def render_html(payload: dict[str, Any], title: str | None = None) -> str:
     return re.sub(r"<!-- STRATA:(CSS|DATA|JS) -->", lambda m: blocks[m.group(1)], html)
 
 
+OUTPUT_SUFFIXES = (".html", ".htm", ".json")
+
+
+def check_output_path(out_path: Path) -> None:
+    if out_path.suffix.lower() not in OUTPUT_SUFFIXES:
+        raise ValueError(f"Output path {out_path} must end in .html, .htm, or .json.")
+
+
 def write_output(payload: dict[str, Any], out_path: Path) -> None:
+    check_output_path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     if out_path.suffix.lower() in (".html", ".htm"):
         out_path.write_text(render_html(payload), encoding="utf-8")
@@ -2206,6 +2229,9 @@ def _read_dataset(path: Path) -> dict[str, Any]:
 
 
 def _run(args: argparse.Namespace) -> int:
+    if getattr(args, "output", None) is not None:
+        check_output_path(args.output)
+
     def finish(ds: dict[str, Any], output: Path, **extra: Any) -> int:
         """Validate, then write and report, or print the errors and return 1."""
         errs = error_diagnostics(validate_dataset(ds))

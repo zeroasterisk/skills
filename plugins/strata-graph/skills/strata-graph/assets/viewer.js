@@ -146,10 +146,16 @@
   };
 
   /* --------------------------------------------------- Dataset preparation */
+  // Keep only plain objects from a list that came from untrusted JSON.
+  function objectsOf(list) {
+    return (Array.isArray(list) ? list : []).filter((x) => x && typeof x === "object" && !Array.isArray(x));
+  }
+
   function prepareDataset(raw) {
-    const nodes = Array.isArray(raw.nodes) ? raw.nodes.map((n) => ({ ...n })) : [];
+    const nodes = objectsOf(raw.nodes).map((n) => ({ ...n }));
     const byId = new Map();
     for (const n of nodes) {
+      n.title = String(n.title ?? n.id);
       n.kids = [];
       n.sources = Array.isArray(n.sources) ? n.sources : [];
       n.tags = Array.isArray(n.tags) ? n.tags : [];
@@ -214,7 +220,7 @@
     }
     countDesc(byId.get(rootId));
 
-    const edges = (Array.isArray(raw.edges) ? raw.edges : []).filter(
+    const edges = objectsOf(raw.edges).filter(
       (e) => byId.has(e.from) && byId.has(e.to) && e.from !== e.to
     );
 
@@ -250,16 +256,16 @@
       });
     }
 
-    const overlays = (Array.isArray(raw.overlays) ? raw.overlays : []).map((ov, i) => ({
+    const overlays = objectsOf(raw.overlays).map((ov, i) => ({
       id: ov.id || `slice-${i}`,
-      title: ov.title || ov.id,
+      title: String(ov.title || ov.id || `slice-${i}`),
       kind: ov.kind || "slice",
       summary: ov.summary || "",
       url: ov.url || null,
       touches: (Array.isArray(ov.touches) ? ov.touches : []).filter((tid) => byId.has(tid))
     })).filter((ov) => ov.touches.length > 0);
 
-    const traces = (Array.isArray(raw.traces) ? raw.traces : []).map((tr, idx) => ({
+    const traces = objectsOf(raw.traces).map((tr, idx) => ({
       id: tr.id || `trace-${idx}`,
       title: tr.title || `Trace ${idx + 1}`,
       color: tr.color || TRACE_PALETTE[idx % TRACE_PALETTE.length],
@@ -268,7 +274,7 @@
       totalTokens: tr.totalTokens || 0,
       blindAlleyCount: tr.blindAlleyCount || 0,
       summary: tr.summary || "",
-      steps: (Array.isArray(tr.steps) ? tr.steps : []).filter((s) => byId.has(s.nodeId))
+      steps: objectsOf(tr.steps).filter((s) => byId.has(s.nodeId))
     })).filter((tr) => tr.steps.length > 0);
 
     const diagnostics = Array.isArray(raw.diagnostics) ? raw.diagnostics : [];
@@ -277,7 +283,7 @@
       id: raw.id || "default",
       title: raw.title || "Strata Graph",
       subtitle: raw.subtitle || "",
-      domain: raw.domain || "system",
+      domain: typeof raw.domain === "string" && raw.domain ? raw.domain : "system",
       generatedAt: raw.generatedAt || "",
       sourceLabel: raw.sourceLabel || "",
       levelLabel: typeof raw.levelLabel === "string" ? raw.levelLabel : "",
@@ -2026,12 +2032,7 @@
         const head = h("div", "b-head");
         head.appendChild(h("span", "b-kind", node.kind || "node"));
         if (node.status && node.status !== "ready") {
-          const statusLabel =
-            node.status === "blind-alley"
-              ? "✕ blind alley"
-              : node.status === "open-gap"
-                ? "◆ open gap"
-                : node.status;
+          const statusLabel = node.status === "blind-alley" ? "✕ blind alley" : node.status;
           head.appendChild(h("span", `badge st-${cssToken(node.status)}`, statusLabel));
         } else if (node.trust && node.trust.tier === "human-reviewed") {
           head.appendChild(h("span", "badge st-verified", "verified"));

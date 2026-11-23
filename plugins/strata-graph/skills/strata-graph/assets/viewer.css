@@ -628,10 +628,6 @@ button.crumb:hover { background: var(--surface-2); }
   border-color: var(--st-blind);
   background-image: repeating-linear-gradient(-45deg, transparent 0 7px, var(--hatch-err) 7px 10px);
 }
-.block.st-open-gap {
-  border-style: dashed;
-  border-color: var(--st-blind);
-}
 .block.st-draft,
 .block.st-partial {
   border-color: rgba(250, 204, 21, 0.42);
@@ -787,7 +783,7 @@ button.crumb:hover { background: var(--surface-2); }
 }
 .badge.st-ready, .badge.st-verified { color: var(--st-ready); background: var(--st-ready-bg); }
 .badge.st-draft, .badge.st-partial { color: var(--st-draft); background: var(--st-draft-bg); }
-.badge.st-blind-alley, .badge.st-error, .badge.st-open-gap { color: var(--st-blind); background: var(--st-blind-bg); border: 1px dashed var(--st-blind); }
+.badge.st-blind-alley, .badge.st-error { color: var(--st-blind); background: var(--st-blind-bg); border: 1px dashed var(--st-blind); }
 .badge.st-backtrack { color: var(--st-backtrack); background: var(--st-backtrack-bg); }
 .badge.st-gate { color: var(--st-gate); background: var(--st-gate-bg); }
 .badge.st-subagent { color: var(--st-subagent); background: var(--st-subagent-bg); }

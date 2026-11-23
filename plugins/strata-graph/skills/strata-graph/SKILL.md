@@ -53,7 +53,7 @@ python3 "$STRATA" validate /tmp/process.json
 python3 "$STRATA" build-hub okf.json kg.json atif.json process.json -o /tmp/explorer-hub.html
 ```
 
-An output path that ends in `.json` writes the dataset instead of HTML. That is how you produce the inputs for `build-hub`.
+An output path that ends in `.html` or `.htm` writes the explorer. A path that ends in `.json` writes the dataset instead, which is how you produce the inputs for `build-hub`. Any other suffix is an error.
 
 Set `SOURCE_DATE_EPOCH` to a Unix timestamp to fix `generatedAt`, so the same input gives byte-identical output.
 
@@ -62,7 +62,7 @@ Set `SOURCE_DATE_EPOCH` to a Unix timestamp to fix `generatedAt`, so the same in
 To model a process, workflow, or architecture from prose or code, write a JSON file that follows [references/schema.md](references/schema.md). Then compile it with `compile-json`.
 
 - **Hierarchy (`parent`).** Group related components or stages in drillable containers (`"parent": "stage:execution"`). Keep 4 to 9 siblings per container so each level is easy to scan.
-- **Loops and backtracks (`"flowRole": "backtrack"`).** Include retry loops, rejection rollbacks, and escalation branches. Mark return edges `"flowRole": "backtrack"` so the viewer draws them on a right-hand `↺` return channel and keeps the forward order intact.
+- **Loops and backtracks (`"flowRole": "backtrack"`).** Include retry loops, rejection rollbacks, and escalation branches. Mark return edges `"flowRole": "backtrack"` so the viewer draws them on a `↺` return rail at the side (left or right) and keeps the forward order intact.
 - **Status.** Use `"status": "gate"` for acceptance gates and human-approval gates. Use `"status": "blind-alley"` for dead-end hypotheses and error branches. Use `"status": "subagent"` for delegated workers.
 - **Cross-cutting slices (`overlays[]`).** Put shared policies, data stores, actors, and citations in `overlays[]` with `touches: [nodeId...]`. This avoids a hub-and-spoke tangle of edges across the spine.
 

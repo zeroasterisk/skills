@@ -170,6 +170,18 @@ class ValidateDatasetTest(unittest.TestCase):
     def codes(self, ds):
         return [d["code"] for d in strata.validate_dataset(ds)]
 
+    def test_non_object_and_idless_nodes_are_reported(self):
+        ds = _mutual_cycle_dataset()
+        ds["nodes"] += ["junk", {"title": "no id"}, {"id": "", "title": "empty"}]
+        codes = self.codes(ds)
+        self.assertIn("MALFORMED_NODE", codes)
+        self.assertEqual(codes.count("BAD_ID"), 2)
+
+    def test_empty_trace_object_is_not_malformed(self):
+        ds = _mutual_cycle_dataset()
+        ds["traces"] = [{}]
+        self.assertEqual(self.codes(ds), [])
+
     def test_valid_dataset_has_no_errors(self):
         self.assertEqual(self.codes(_mutual_cycle_dataset()), [])
 
@@ -467,6 +479,18 @@ class BrowserRenderTest(unittest.TestCase):
         self.assertEqual(out["afterInputClick"], [False, "true"])
         self.assertEqual(out["afterOutsideClick"], [True, "false"])
 
+    def test_untitled_nodes_and_junk_entries_render(self):
+        ds = _mutual_cycle_dataset()
+        for node in ds["nodes"][1:]:
+            del node["title"]
+        ds["nodes"].append("junk")
+        ds["edges"].append(None)
+        ds["domain"] = 5
+        proc = _dump_dom(ds)
+        self.assertNotIn("Uncaught", proc.stderr)
+        for node_id in ("a", "b"):
+            self.assertRegex(proc.stdout, rf'class="b-title"[^>]*>{node_id}<')
+
     def test_html_comment_text_does_not_swallow_the_page(self):
         ds = _mutual_cycle_dataset()
         ds["nodes"][1]["title"] = "<!-- <script></script> Alpha"
@@ -732,6 +756,26 @@ class FallbackYamlTest(unittest.TestCase):
             ):
                 self.assertEqual(strata.parse_yaml_safe(BLOCK_YAML), expected)
 
+    def test_quotes_match_pyyaml(self):
+        text = (
+            "a: \"say 'hi'\"\n"
+            "b: 'say \"hi\"'\n"
+            "c: \"'quoted'\"\n"
+            "d: it's fine\n"
+            'e: say "hi"\n'
+            "f: don't\n"
+            "g: '\"mixed\"'\n"
+            "h: 'x'\n"
+        )
+        with mock.patch.object(strata, "_pyyaml", None):
+            fallback = strata.parse_yaml_safe(text)
+        self.assertEqual(fallback["a"], "say 'hi'")
+        self.assertEqual(fallback["c"], "'quoted'")
+        self.assertEqual(fallback["g"], '"mixed"')
+        if importlib.util.find_spec("yaml"):
+            with mock.patch.object(strata, "_pyyaml", importlib.import_module("yaml")):
+                self.assertEqual(strata.parse_yaml_safe(text), fallback)
+
     def test_comments_after_quoted_values_are_dropped(self):
         with mock.patch.object(strata, "_pyyaml", None):
             fm = strata.parse_yaml_safe('a: "x # y"  # note\nb: https://h/p#frag\n')
@@ -793,6 +837,21 @@ class CompileKgYamlTest(unittest.TestCase):
         self.assertIn("company:firm", ids)
         self.assertNotIn("entitie:plain", ids)
 
+    def test_actor_slugs_cannot_read_files_outside_entities(self):
+        timeline = (
+            "events:\n  - date: 2026-01-01\n    title: T\n"
+            '    actors: ["../secret", "..\\\\secret", "ok"]\n'
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "timeline.yaml").write_text(timeline, encoding="utf-8")
+            (root / "secret.yaml").write_text("name: LEAKED\n", encoding="utf-8")
+            (root / "entities").mkdir()
+            (root / "entities" / "ok.yaml").write_text("name: Fine\n", encoding="utf-8")
+            titles = {n["title"] for n in strata.compile_kg(root)["nodes"]}
+        self.assertIn("Fine", titles)
+        self.assertNotIn("LEAKED", titles)
+
     def test_graph_with_no_entities_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             (Path(tmp) / "timeline.yaml").write_text(
@@ -821,6 +880,23 @@ class CompileKgYamlTest(unittest.TestCase):
             conn.close()
             ds = strata.compile_kg(db)
         self.assertIn("org:acme", {n["id"] for n in ds["nodes"]})
+
+
+class StatusDocTest(unittest.TestCase):
+    def test_every_styled_status_class_is_documented(self):
+        css = (SKILL_DIR / "assets" / "viewer.css").read_text(encoding="utf-8")
+        schema = (SKILL_DIR / "references" / "schema.md").read_text(encoding="utf-8")
+        section = schema.split("## 2.", 1)[1].split("## 3.", 1)[0]
+        documented = set(re.findall(r'"([a-z-]+)"', section))
+        styled = set(re.findall(r"\.st-([a-z][a-z-]*)", css))
+        self.assertIn("blind-alley", styled)
+        self.assertEqual(sorted(styled - documented), [])
+
+    def test_docs_do_not_claim_a_right_only_return_rail(self):
+        for name in ("SKILL.md", "references/schema.md"):
+            text = (SKILL_DIR / name).read_text(encoding="utf-8")
+            self.assertNotIn("right-hand", text, name)
+            self.assertNotIn("right-margin", text, name)
 
 
 class ShortcutDocTest(unittest.TestCase):
@@ -1063,6 +1139,24 @@ class CliTest(unittest.TestCase):
             code, _, err = self._run(["validate", str(src)])
         self.assertEqual(code, 1)
         self.assertIn("not a JSON object", json.loads(err)["error"])
+
+    def test_unknown_output_suffix_is_an_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            src = Path(tmp) / "ds.json"
+            src.write_text(json.dumps(_mutual_cycle_dataset()), encoding="utf-8")
+            for suffix, expected in (
+                (".hmtl", 1),
+                (".txt", 1),
+                (".htm", 0),
+                (".json", 0),
+            ):
+                with self.subTest(suffix=suffix):
+                    out = Path(tmp) / f"map{suffix}"
+                    code, _, err = self._run(["compile-json", str(src), "-o", str(out)])
+                    self.assertEqual(code, expected, err)
+                    self.assertEqual(out.exists(), expected == 0)
+                    if expected:
+                        self.assertIn(".html", json.loads(err)["error"])
 
     def test_compile_atif_reports_the_effective_mode(self):
         with tempfile.TemporaryDirectory() as tmp:
