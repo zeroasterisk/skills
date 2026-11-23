@@ -95,6 +95,8 @@ include = [
   "developer-intel/**",
   "developer-friction-reviewer/**",
   "agent-evals/**",
+  "council/**",
+  "strata-graph/**",
 ]
 
 # Upstream plugins — github.com/ghchinoy/agent-skills
@@ -238,3 +240,9 @@ tags = ["writing", "x-article", "google-cloud", "devrel", "plushcap", "trends", 
 
 [skill.alan-writing-style]
 tags = ["writing", "voice", "style", "humanizer", "devrel", "alanblount"]
+
+[skill.council]
+tags = ["council", "code-review", "subagents", "isolation", "multi-agent", "feedback", "jetski"]
+
+[skill.strata-graph]
+tags = ["graph", "visualization", "okf", "knowledge-graph", "atif", "trajectory", "html"]

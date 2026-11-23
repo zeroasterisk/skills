@@ -51,6 +51,29 @@
       "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/cloud-and-workplace/skills/chief-of-staff-triage"
     },
     {
+      "identifier": "urn:air:github.com:zeroasterisk:council",
+      "displayName": "council",
+      "type": "application/ai-skill+md",
+      "description": "Convenes three independent, cold-start subagent delegates in parallel (using configured multi-model seats in ~/.config/council/roster.json with automatic fallback, or pro-tier council-delegate subagents) with isolated context, read-only tools, and findings-first adversarial scoring, looping by default until all three delegates score >= 9/10 while fighting scope creep. Trigger on \"/council\", \"c9\" (shorthand for \"keep working until 9/10 from the council\"), \"/council <N>\", \"/council once\", \"council\", \"the council\", \"ask the council\", or common misspellings (\"counsil\", \"coucil\", \"concil\", \"councel\"). Use only when the user asks for the council or a multi-model review loop. Don't use for an ordinary code review (core rules) or a single refute pass of a diff against its spec (use adlc-prosecutor), or for persona onboarding walkthroughs (use developer-friction-reviewer).",
+      "tags": [
+        "council",
+        "code-review",
+        "subagents",
+        "isolation",
+        "multi-agent",
+        "feedback",
+        "jetski"
+      ],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "tier": "zeroasterisk",
+        "audience": "personal",
+        "agents": "tier:zeroasterisk",
+        "relativePath": "council/skills/council"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/council/skills/council"
+    },
+    {
       "identifier": "urn:air:github.com:zeroasterisk:developer-friction-reviewer",
       "displayName": "developer-friction-reviewer",
       "type": "application/ai-skill+md",
@@ -257,6 +280,29 @@
       "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/software-craft/skills/spec-kit-adlc"
     },
     {
+      "identifier": "urn:air:github.com:zeroasterisk:strata-graph",
+      "displayName": "strata-graph",
+      "type": "application/ai-skill+md",
+      "description": "Compile, validate, and explore multi-layer structural and cross-cutting interactive graphs for stateful processes, OKF v0.2 LLM wikis, knowledge/entity graphs (KGs), and ATIF/OATR agent trajectories (with explicit blind alleys, backtrack return arcs, subagent drill-down, and cross-trajectory comparison). Use when visualizing complex systems, workflows, concept wikis, people/project/document networks, or multi-turn agent trajectories beyond ~15 nodes where flat static diagrams saturate and force-directed hairballs lose causal hierarchy. Don't use for small static architecture or flow diagrams (use diagram-design).",
+      "tags": [
+        "graph",
+        "visualization",
+        "okf",
+        "knowledge-graph",
+        "atif",
+        "trajectory",
+        "html"
+      ],
+      "metadata": {
+        "source": "zeroasterisk/skills",
+        "tier": "zeroasterisk",
+        "audience": "personal",
+        "agents": "tier:zeroasterisk",
+        "relativePath": "strata-graph/skills/strata-graph"
+      },
+      "url": "https://github.com/zeroasterisk/skills/tree/master/plugins/strata-graph/skills/strata-graph"
+    },
+    {
       "identifier": "urn:air:github.com:zeroasterisk:asciinema-explainer-walkthroughs",
       "displayName": "asciinema-explainer-walkthroughs",
       "type": "application/ai-skill+md",
@@ -322,7 +368,7 @@
       "identifier": "urn:air:github.com:zeroasterisk:alan-writing-style",
       "displayName": "alan-writing-style",
       "type": "application/ai-skill+md",
-      "description": "Write, rewrite, or review technical prose (blog posts, articles, design docs, PR descriptions, system architectures, and social posts) in Alan Blount's authentic voice: the Pragmatic Builder. Combines 20+ years of software engineering experience with DevRel clarity, dry observational wit, subtle \"muppet\" warmth/enthusiasm, crisp analogies, and strict anti-AI discipline (no em-dashes, no buzzword fluff, no chatbot patterns). Use whenever asked to write in Alan's tone, sound like Alan, humanize text to his personal standards, or write developer-facing content for his projects.",
+      "description": "Write, rewrite, or editorially review technical prose (blog posts, whitepapers, curriculum guides, articles, design docs, PR descriptions, system architectures, and social posts) in Alan Blount's authentic voice: the Pragmatic Builder. Combines 20+ years of software engineering experience with DevRel clarity, dry observational wit, subtle \"muppet\" warmth/enthusiasm, crisp analogies, and strict anti-AI discipline (no em-dashes, no clickbait headers, no callout-box spam, no chatbot patterns). Use whenever asked to write in Alan's tone, review a draft through Alan's editorial lens, humanize text to his personal standards, or write developer-facing content for his projects.",
       "tags": [
         "writing",
         "voice",
