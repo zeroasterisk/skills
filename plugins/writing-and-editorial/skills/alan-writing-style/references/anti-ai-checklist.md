@@ -21,7 +21,7 @@ Scan the text mechanically. Any match requires an immediate rewrite.
 - [ ] **Sentence-Case Headings (No Clickbait Scolding):** Use direct sentence case (`## How to version a dataset`), never title case or social-media clickbait (`## The One Metric Everyone Ignores`).
 - [ ] **No Mechanical Section Recap Transitions:** Cut formulaic end-of-section summaries and bridge sentences (*"Now that we've covered X, let's explore Y"*, *"Together, these pieces form a complete picture"*, *"In the end, it all comes down to..."*). End sections cleanly when the point lands.
 - [ ] **No Callout-Box Spam (`Pro tip:` / `Note:`):** Do not pepper long-form docs with boxed tips that restate or fragment the narrative. Weave real-world examples and practical rules into the prose; keep callouts only when genuinely standalone and high-value.
-- [ ] **No Negative-Restatement Table Columns or Redundant Recap Tables:** Cut columns like `"Where it falls short"` or `"What breaks if you skip it"` that merely invert adjacent rows; replace with direct `"Example"` cells, and delete tables that simply repeat the prose above them.
+- [ ] **No Negative-Restatement Table Columns or Redundant Recap Tables:** Cut columns like `"Limitations"` or `"Pitfalls"` that merely invert adjacent rows; replace with direct `"Example"` cells, and delete tables that simply repeat the prose above them.
 - [ ] **De-Anthropomorphize Models & Agents:** Agents *generate*, *call*, *write*, or *return* outputs; do not write *"what the agent said"*, *"its final argument"*, or *"how it felt"*.
 - [ ] **Straight Quotes:** Use standard ASCII quotes (`"` and `'`), not curly quotes (`“`, `”`, `‘`, `’`).
 

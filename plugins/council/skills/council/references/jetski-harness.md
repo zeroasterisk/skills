@@ -94,7 +94,7 @@ def read_agent(seat):
             return None
         tools, model, extras, in_tools = [], None, [], False
         for line in m.group(1).splitlines():
-            line = re.sub(r"\s+#.*$", "", line)
+            line = re.sub(r"(^|\s+)#.*$", "", line)
             if not line.strip():
                 continue
             if not line.startswith((" ", "\t", "-")):  # a new top-level key ends the tools block
@@ -110,15 +110,18 @@ def read_agent(seat):
                         return None  # a flow list that wraps lines is not parsed here
                     tools += [t.strip().strip("'\"") for t in value.strip().strip("[]").split(",") if t.strip()]
                     in_tools = False
-            elif in_tools and line.strip().startswith("- "):
-                tools.append(line.strip()[2:].strip().strip("'\""))
+            elif in_tools:
+                item = line.strip()
+                if not item.startswith("- ") or not item[2:].strip():
+                    return None  # a tools entry this parser does not understand
+                tools.append(item[2:].strip().strip("'\""))
         return {"tools": tools, "model": model, "extras": extras}
     return None
 
 
 def vet(seat, idx):
     """Keep a seat only if its tools are verifiably read-only; otherwise use `research`."""
-    research = {"label": f"Delegate {idx + 1} (pro)", "type_name": "research", "model": "pro"}
+    research = {"label": f"{seat['label']}; substituted research", "type_name": "research", "model": "pro"}
     if seat["type_name"] == "research":
         return seat
     if seat["type_name"] in ("self", "browser"):

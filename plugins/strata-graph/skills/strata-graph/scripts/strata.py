@@ -932,7 +932,10 @@ def compile_kg(kg_path: Path, graph_id: str | None = None) -> dict[str, Any]:
 
     # 1. Read SQLite pipeline.db if present (read-only URI)
     if db_file.is_file():
-        conn = sqlite3.connect(f"{db_file.resolve().as_uri()}?mode=ro", uri=True)
+        try:
+            conn = sqlite3.connect(f"{db_file.resolve().as_uri()}?mode=ro", uri=True)
+        except sqlite3.Error as exc:
+            raise KGSchemaError(f"{db_file} could not be opened ({exc}).") from exc
         try:
             src_lookup: dict[str, tuple[str, str]] = {}
             for row in conn.execute("SELECT id, uri, title FROM sources"):

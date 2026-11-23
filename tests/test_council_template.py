@@ -92,12 +92,16 @@ class CouncilTemplateTest(unittest.TestCase):
             "wrapped": "---\nname: w\ntools: [view_file,\n  run_command]\n---\n",
             "notools": "---\nname: n\n---\n",
             "nofm": "no frontmatter\n",
+            "comment": "---\nname: c\ntools:\n  - view_file\n# note\n  - run_command\n---\n",
+            "split": "---\nname: s\ntools:\n  - view_file\n  -\n    run_command\n---\n",
         }
         for name, text in cases.items():
             self.agent(name, text)
         for name in [*cases, "missing", "self", "browser"]:
             with self.subTest(seat=name):
-                self.assertEqual(self.vet(type_name=name)["type_name"], "research")
+                seat = self.vet(type_name=name)
+                self.assertEqual(seat["type_name"], "research")
+                self.assertEqual(seat["label"], "L; substituted research")
 
     def test_unverified_seat_runs_only_when_allowed(self):
         seat = self.vet(type_name="missing", allow_unverified=True)

@@ -6,6 +6,7 @@ import html as html_module
 import importlib.util
 import io
 import json
+import os
 import re
 import shutil
 import sqlite3
@@ -988,6 +989,21 @@ class CompileKgYamlTest(unittest.TestCase):
             conn.close()
             ds = strata.compile_kg(db)
         self.assertIn("org:acme", {n["id"] for n in ds["nodes"]})
+
+    @unittest.skipIf(
+        hasattr(os, "geteuid") and os.geteuid() == 0, "root can read 0o000 files"
+    )
+    def test_unreadable_database_is_a_json_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "pipeline.db"
+            sqlite3.connect(db).close()
+            db.chmod(0)
+            try:
+                proc = run_cli("compile-kg", db, "-o", Path(tmp) / "out.json")
+            finally:
+                db.chmod(0o600)
+        self.assertEqual(proc.returncode, 1)
+        self.assertEqual(json.loads(proc.stderr)["status"], "error")
 
     def test_text_and_null_source_ids(self):
         with tempfile.TemporaryDirectory() as tmp:

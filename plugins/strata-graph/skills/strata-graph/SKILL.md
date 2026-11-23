@@ -45,11 +45,12 @@ python3 "$STRATA" compile-atif run1.json run2.json run3.jsonl --mode compare -o 
 
 # 5. Validate and compile a custom process or architecture JSON spec
 python3 "$STRATA" compile-json /path/to/process.strata.json -o /tmp/process.html
+python3 "$STRATA" compile-json /path/to/process.strata.json -o /tmp/process.json
 
 # 6. Check a compiled dataset
 python3 "$STRATA" validate /tmp/process.json
 
-# 7. Bundle several compiled .json datasets into one multi-tab hub
+# 7. Bundle several compiled .json datasets (from steps 1-5 with -o <name>.json) into one multi-tab hub
 python3 "$STRATA" build-hub okf.json kg.json atif.json process.json -o /tmp/explorer-hub.html
 ```
 

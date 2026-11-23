@@ -1,19 +1,12 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "strata-graph",
-  "displayName": "Strata Graph",
   "version": "1.0.0",
   "license": "Apache-2.0",
   "description": "Deterministic multi-layer graph compiler and interactive explorer for processes, OKF v0.2 LLM wikis, knowledge graphs, and ATIF agent trajectories with blind-alley and backtrack tracing.",
-  "logo": "assets/logo.svg",
   "author": {
     "name": "alanblount",
     "url": "https://github.com/zeroasterisk"
   },
-  "repository": "https://github.com/zeroasterisk/skills",
-  "suggestedPrompts": [
-    "Compile this OKF v0.2 wiki into an interactive Strata Graph with co-citation overlays",
-    "Visualize this ATIF or Jetski trajectory showing blind alleys, backtracks, and subagents",
-    "Build a multi-layer knowledge graph explorer from entities and typed relations"
-  ]
+  "repository": "https://github.com/zeroasterisk/skills"
 }

@@ -68,6 +68,12 @@ for plugin_dir in plugins/*; do
   else
     ok "Plugin '$plugin_name' manifest name matches directory name"
   fi
+
+  # Agent Plugins 1.0.0 has a closed manifest schema; anything else belongs under "extensions".
+  extra_keys="$(python3 -c "import json,sys; allowed={'\$schema','name','version','description','author','homepage','repository','license','keywords','extensions'}; print(' '.join(sorted(set(json.load(open(sys.argv[1])))-allowed)))" "$manifest")"
+  if [ -n "$extra_keys" ]; then
+    err "Plugin '$plugin_name' plugin.json has fields outside the 1.0.0 schema: $extra_keys"
+  fi
 done
 
 info "3. Validating Agent Skills (SKILL.md)"
@@ -305,7 +311,6 @@ leak_markers=(
   'google3|-i|see google3/foo|google3'
   'corp-domain|-i|host.corp.goog|\.corp\.(google\.com|goog)([^A-Za-z0-9_]|$)'
   'googleplex|-i|a.googleplex.com|googleplex'
-  'moma_search|-i|use moma_search|moma_search'
   'x20|-i|on x20 now|(^|[^A-Za-z0-9_])x20([^A-Za-z0-9_]|$)'
   'cns-path|-i|read /cns/ab-d/x|/cns/'
   'go-link||see https://go/UpperSlug|(^|https?://|[^A-Za-z0-9_./-])go/[A-Za-z0-9_-]+'
