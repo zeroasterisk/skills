@@ -1,7 +1,9 @@
 ---
 name: prosecutor-correctness
 description: P5 correctness lens subagent; invoked by /adlc:adlc-prosecute or prosecutor — do not invoke directly.
-tools: Read, Grep, Glob
+tools:
+  - view_file
+  - grep_search
 ---
 
 # Correctness (ADLC P5 prosecution lens)

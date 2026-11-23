@@ -1,7 +1,10 @@
 ---
 name: prosecutor
 description: ADLC P5 prosecutor. Use before merging a change to prosecute it — prove the tests are load-bearing (not hollow), that behavior changes are visible, and that the review would actually catch a planted defect. Invoke when asked to "prosecute", "is this safe to merge", "are these tests real", or as the pre-merge gate after a change is implemented.
-tools: Read, Grep, Glob, Bash
+tools:
+  - view_file
+  - grep_search
+  - run_command
 ---
 
 # ADLC Prosecutor (P5)

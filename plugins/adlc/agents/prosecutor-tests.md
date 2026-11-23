@@ -1,7 +1,9 @@
 ---
 name: prosecutor-tests
 description: P5 test-audit lens subagent; invoked by /adlc:adlc-prosecute or prosecutor — do not invoke directly.
-tools: Read, Grep, Glob
+tools:
+  - view_file
+  - grep_search
 ---
 
 # Test audit (ADLC P5 prosecution lens)

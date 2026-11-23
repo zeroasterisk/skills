@@ -32,7 +32,7 @@ Example machine-local `~/.config/council/roster.json` (kept outside public git r
 
 Custom agents are discovered when a conversation starts. An agent added mid-conversation is visible only after a new conversation starts.
 
-> **Why omitting write/command tools matters**: Omitting `write_file`, `edit_file`, `replace_file_content`, and `run_command` strips mutation capabilities at tool-schema construction time. Three delegates can inspect `Workspace: "inherit"` in parallel with zero risk of mutating working-tree files, git index locks, or build caches, while each delegate's own trajectory lives under `<appDataDir>/brain/<subConvID>/`.
+> **Why omitting write/command tools matters**: Omitting `replace_file_content` and `run_command` strips mutation capabilities at tool-schema construction time. Three delegates can inspect `Workspace: "inherit"` in parallel with zero risk of mutating working-tree files, git index locks, or build caches, while each delegate's own trajectory lives under `<appDataDir>/brain/<subConvID>/`.
 
 ---
 
@@ -78,6 +78,38 @@ else:
         {"label": "Delegate 2 (pro)", "type_name": "council-delegate", "model": "pro"},
         {"label": "Delegate 3 (pro)", "type_name": "council-delegate", "model": "pro"},
     ]
+
+READ_ONLY_TOOLS = {"view_file", "grep_search"}
+AGENTS_DIR = Path.home() / ".gemini" / "config" / "agents"
+
+
+def seat_tools(seat):
+    """The seat's declared tools, or None when no Markdown agent file is found."""
+    for f in (AGENTS_DIR / f"{seat['type_name']}.md", AGENTS_DIR / seat["type_name"] / "agent.md"):
+        if f.is_file():
+            fm = f.read_text(encoding="utf-8").split("---", 2)[1]
+            return [ln.strip()[2:].strip() for ln in fm.splitlines() if ln.strip().startswith("- ")]
+    return None
+
+
+def vet(seat, idx):
+    if seat["type_name"] == "council-delegate":
+        return seat
+    tools = seat_tools(seat)
+    if tools is None:
+        log(f"{seat['type_name']}: no Markdown agent file found; tools unverified")
+        return {**seat, "label": f"{seat['label']}, tools unverified"}
+    if not tools or not set(tools) <= READ_ONLY_TOOLS:
+        log(f"{seat['type_name']}: tools {tools} are not read-only; using council-delegate")
+        return {"label": f"Delegate {idx + 1} (pro)", "type_name": "council-delegate", "model": "pro"}
+    return seat
+
+
+seats = [vet(s, i) for i, s in enumerate(seats)]
+if fallback_seat and fallback_seat["type_name"] != "council-delegate":
+    tools = seat_tools(fallback_seat)
+    if tools is not None and (not tools or not set(tools) <= READ_ONLY_TOOLS):
+        fallback_seat = None
 
 scoring_block = (
     """Scoring rubric (findings-first):
@@ -201,6 +233,6 @@ If `run_workflow` is unavailable:
 
 Only when the user explicitly asks the council to **run commands, execute benchmarks, or prototype three competing implementations**:
 
-1. Define a separate custom agent (e.g., `council-sandbox-delegate.md`) whose `tools` list adds `write_to_file` and `run_command` to the read tools but no subagent tools, with `commandExecutionPolicy: sandbox`.
+1. Define a separate custom agent (e.g., `council-sandbox-delegate.md`) whose `tools` list adds `replace_file_content` and `run_command` to the read tools but no subagent tools, with `commandExecutionPolicy: sandbox`.
 2. Launch each delegate with **`Workspace: "branch"`** (or `workspace="branch"` in `run_workflow`).
 3. Each delegate gets its own isolated Git worktree, so working-tree edits, lockfiles, and test artifacts do not collide across the three delegates.

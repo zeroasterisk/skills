@@ -1,7 +1,9 @@
 ---
 name: prosecutor-diff
 description: P5 spec-vs-implementation lens subagent; invoked by /adlc:adlc-prosecute or prosecutor — do not invoke directly.
-tools: Read, Grep, Glob
+tools:
+  - view_file
+  - grep_search
 ---
 
 # Spec-vs-implementation diff (ADLC P5 prosecution lens)

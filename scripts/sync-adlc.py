@@ -36,6 +36,9 @@ REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
 PLUGINS_DIR = REPO_ROOT / "plugins"
 ADLC_PLUGIN_DIR = PLUGINS_DIR / "adlc"
 V2_EXPORT = re.compile(r"^export default \{", re.MULTILINE)
+# Upstream's Gemini agents list Claude Code tool names. Antigravity documents its own names and
+# warns that an unknown name can hang a subagent, so map them (Glob is covered by grep_search).
+ANTIGRAVITY_TOOLS = {"Read": "view_file", "Grep": "grep_search", "Glob": None, "Bash": "run_command"}
 
 
 def log(msg: str) -> None:
@@ -104,6 +107,18 @@ def uses_v2_export(repo_root: pathlib.Path, ref: str) -> bool:
     return V2_EXPORT.search(index) is not None
 
 
+def antigravity_tools(text: str) -> str:
+    def repl(m: re.Match[str]) -> str:
+        names = [n.strip() for n in m.group(1).split(",") if n.strip()]
+        unknown = [n for n in names if n not in ANTIGRAVITY_TOOLS]
+        if unknown:
+            raise RuntimeError(f"No Antigravity mapping for tools: {unknown}")
+        mapped = [ANTIGRAVITY_TOOLS[n] for n in names if ANTIGRAVITY_TOOLS[n]]
+        return "tools:\n" + "".join(f"  - {t}\n" for t in mapped)
+
+    return re.sub(r"^tools: *([^\n\[]+)\n", repl, text, count=1, flags=re.MULTILINE)
+
+
 def sync_adlc(repo_root: pathlib.Path, ref: str) -> None:
     # Start from an empty directory so files removed upstream do not linger.
     if ADLC_PLUGIN_DIR.exists():
@@ -116,6 +131,8 @@ def sync_adlc(repo_root: pathlib.Path, ref: str) -> None:
     # adlc-gemini/commands is left out: it calls scripts under plugins/adlc-gemini/ that are not vendored.
     for part in ("skills", "agents"):
         extract(repo_root, f"{ref}:plugins/adlc-gemini/{part}", ADLC_PLUGIN_DIR / part)
+    for agent in sorted((ADLC_PLUGIN_DIR / "agents").glob("*.md")):
+        agent.write_text(antigravity_tools(agent.read_text(encoding="utf-8")), encoding="utf-8")
 
     with open(ADLC_PLUGIN_DIR / "package.json", encoding="utf-8") as f:
         version = json.load(f)["version"]

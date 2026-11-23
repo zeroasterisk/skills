@@ -1,7 +1,9 @@
 ---
 name: prosecutor-security
 description: P5 security lens subagent; invoked by /adlc:adlc-prosecute or prosecutor — do not invoke directly.
-tools: Read, Grep, Glob
+tools:
+  - view_file
+  - grep_search
 ---
 
 # Security (ADLC P5 prosecution lens)

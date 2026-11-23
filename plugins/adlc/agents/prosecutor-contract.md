@@ -1,7 +1,9 @@
 ---
 name: prosecutor-contract
 description: P5 contract lens subagent; invoked by /adlc:adlc-prosecute or prosecutor — do not invoke directly.
-tools: Read, Grep, Glob
+tools:
+  - view_file
+  - grep_search
 ---
 
 # Contract conformance (ADLC P5 prosecution lens)

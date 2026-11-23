@@ -1,7 +1,9 @@
 ---
 name: prosecutor-verifier
 description: P5 verifier subagent; invoked by /adlc:adlc-prosecute or prosecutor — do not invoke directly.
-tools: Read, Grep, Glob
+tools:
+  - view_file
+  - grep_search
 ---
 
 # Verifier / reproducer (ADLC P5)
