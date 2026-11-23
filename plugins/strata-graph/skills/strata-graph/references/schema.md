@@ -1,0 +1,183 @@
+# `strata-graph/1` & `strata-hub/1` Specification
+
+## 1. Single Dataset Schema (`strata-graph/1`)
+
+```json
+{
+  "schema": "strata-graph/1",
+  "id": "bounded-remediation-process",
+  "title": "Bounded Autonomous Remediation Process",
+  "subtitle": "Job-oriented workflow with proposal/execution split, deterministic gates, and human escalation.",
+  "domain": "process",
+  "generatedAt": "2026-11-07T05:30:00Z",
+  "sourceLabel": "example-wiki/architectures",
+  "rootId": "proc:root",
+  "relations": {
+    "transitions-to": {
+      "label": "transitions to",
+      "darkColor": "#60a5fa",
+      "lightColor": "#2563eb",
+      "dash": "none",
+      "category": "flow"
+    },
+    "retries-loop": {
+      "label": "↺ bounded retry",
+      "darkColor": "#fb923c",
+      "lightColor": "#c2410c",
+      "dash": "7 4",
+      "category": "backtrack"
+    }
+  },
+  "nodes": [
+    {
+      "id": "proc:root",
+      "title": "Bounded Autonomous Remediation",
+      "kind": "process",
+      "status": "ready",
+      "parent": null,
+      "summary": "Top-level container."
+    },
+    {
+      "id": "stage:propose",
+      "title": "Agent Proposal Generator",
+      "kind": "stage",
+      "status": "ready",
+      "parent": "proc:root",
+      "summary": "Generates candidate patch within declared scope and budget.",
+      "url": "https://example.org/spec",
+      "trust": { "tier": "human-reviewed" },
+      "sources": [{ "id": "src-1", "title": "Spec PR #27", "url": "https://example.org/pr/27" }],
+      "tags": ["proposal"],
+      "metrics": { "budget": "max 3 attempts" }
+    },
+    {
+      "id": "stage:gate",
+      "title": "Scope and Policy Gate",
+      "kind": "stage",
+      "status": "gate",
+      "parent": "proc:root",
+      "summary": "Deterministic check that the proposal stays inside the declared scope."
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "stage:gate",
+      "to": "stage:propose",
+      "relation": "retries-loop",
+      "flowRole": "backtrack",
+      "summary": "↺ Gate rejection returns structured diagnostics while budget remains",
+      "contextSnippet": "Bounded Convergence Loop: retry only while scope and token/attempt budget remain."
+    }
+  ],
+  "overlays": [
+    {
+      "id": "ov:audit",
+      "title": "Immutable Audit Trail",
+      "kind": "guardrail",
+      "summary": "Cross-cutting telemetry & authorization ledger.",
+      "touches": ["stage:propose", "stage:gate"]
+    }
+  ],
+  "traces": [
+    {
+      "id": "trace:retry-then-pass",
+      "title": "Scenario A: Gate Fail -> Retry -> Pass",
+      "color": "#60a5fa",
+      "steps": [
+        { "stepIndex": 1, "nodeId": "stage:propose", "label": "Attempt 1: Draft remediation diff", "role": "normal" },
+        { "stepIndex": 2, "nodeId": "stage:gate", "label": "✕ Gate rejects out-of-scope edit", "role": "blind-alley", "isError": true },
+        { "stepIndex": 3, "nodeId": "stage:propose", "label": "↺ Retry Attempt 2 within fenced scope", "role": "backtrack" }
+      ]
+    }
+  ],
+  "diagnostics": []
+}
+```
+
+Optional fields that change how the viewer draws a dataset:
+
+| Field | Where | Effect |
+| :--- | :--- | :--- |
+| `levelLabel` | dataset | Unit word in overlay count badges, such as `"section"`. Default: `section` for `okf-wiki`, `phase` for `process`, `layer` otherwise. |
+| `axisNotes` | dataset | List of `{ "nodeId": "...", "text": "..." }`. Draws a note in the left margin beside that node on the root view. |
+| `quietBypass` | node | `true` dims forward edges that skip more than one row on the root view. |
+
+The validator (`validate`, and every `compile-*` command) reports these errors: `MISSING_ROOT`, `MALFORMED_NODE`, `BAD_ID`, `DUPLICATE_ID`, `MISSING_PARENT`, `PARENT_CYCLE`, `MALFORMED_EDGE`, `DANGLING_EDGE`, `MALFORMED_STEP`, and `DANGLING_TRACE_STEP`.
+
+## 2. Status & Flow Semantics
+
+| `node.status` | Visual Encoding | Intended Domain Use |
+| :--- | :--- | :--- |
+| `"ready"` / `"verified"` | Solid card + green verified pill (when `trust.tier == "human-reviewed"`) | Canonical concepts, approved KG entities, winning trajectory turns |
+| `"draft"` / `"partial"` | Subtle amber border + draft pill | Unverified OKF drafts, WIP modules |
+| `"blind-alley"` / `"error"` | Dashed coral border + `-45deg` crimson hatch + `✕ BLIND ALLEY` pill | Failed tool calls, dead-end search branches, rejected proposals |
+| `"gate"` | `3px` teal top accent bar + gate pill | Deterministic acceptance gates, human-approval checkpoints, planner routers |
+| `"subagent"` | `3px` violet top accent bar + subagent pill | Delegated ATIF child agents (drillable when child steps exist) |
+| `"deprecated"` | Dashed muted border | Retired specs or superseded concepts |
+
+| `edge.flowRole` | Layout & Routing Behavior |
+| :--- | :--- |
+| `"forward"` (default) | Participates in Sugiyama topological layering + PAV channel alignment; residual cycles in cyclic KGs/wikis are promoted to return arcs so forward edges always point down. |
+| `"backtrack"` / `"loop"` | Excluded from downward rank forcing; routed along a dedicated cubic Bezier return rail at the left or right margin, with an arrowhead and a clickable `↺` pill badge. |
+
+Trace steps use `role` instead of `status`: `normal`, `blind-alley`, `backtrack`, `subagent`, or `goal`.
+
+## 3. Input conventions for the adapters
+
+**`compile-kg` with SQLite.** The file is opened read-only and must contain these tables and columns. Any other layout stops the command with a schema error and a non-zero exit code.
+
+| Table | Columns read |
+| :--- | :--- |
+| `sources` | `id`, `uri`, `title` |
+| `entities` | `entity_id`, `name`, `kind`, `type`, `description`, `status`, `source_id`, `merged_into` (rows with `merged_into` set are skipped) |
+| `edges` | `source_entity_id`, `target_entity_id`, `edge_type`, `confidence` |
+
+With a directory instead, `compile-kg` reads `relations.yaml` and `timeline.yaml` (in the directory or its `kg/` subdirectory), plus `entities/<slug>.yaml` for entities named in the relations, when they exist.
+
+**`compile-okf` reserved files, trust, and status.** Files named `index.md` or `log.md` are reserved at every level and never become concept nodes. The trust tier comes only from `verified` (OKF v0.2 section 5.3). A bare mapping counts as a one-item list. The tier is `human-reviewed` when any verifier starts with `human:`, `machine-confirmed` when there are other verifiers, and `unverified` otherwise. Node status follows `status`: `draft` and `deprecated` are kept, and anything else, including no `status`, is `ready` (OKF treats a missing `status` as `stable`). Dates in frontmatter are written to the dataset as ISO strings.
+
+**`compile-okf` section names.** Relation types between wiki sections are chosen from the section folder names. This is an optional naming convention. A link into `patterns` is `composes-pattern`, into `architectures` is `defines-architecture`, to or from `taxonomy` is `defines-term`, to or from `governance` is `governs`, and to or from `projects` is `implements`. A link whose heading mentions `arch` or `pattern` is also `composes-pattern`. All other links are `references`. A wiki with different section names still compiles and gets the generic `references` relation.
+
+### ATIF input
+
+`compile-atif` reads an ATIF v1.x JSON document: an object with a `steps` array.
+
+- Document: `trajectory_id` or `session_id` (id, default is the file name), `agent` (an object with `name` and `model_name`, or just a name string), `notes`, `subagent_trajectories`, and `final_metrics` (`total_prompt_tokens`, `total_completion_tokens`).
+- Step: `source`, `message` (text or a list of `{text}` parts), `reasoning_content`, `tool_calls`, `observation.results`, and `metrics` (`prompt_tokens`, `completion_tokens`).
+- Tool call: `tool_call_id`, `function_name`, `arguments` (an object or a JSON-encoded string), and `extra.exit_code`. A call is paired with the result whose `source_call_id` matches.
+- Result: `content`, `extra.is_error`, `extra.status`, and `subagent_trajectory_ref` (links to an entry of `subagent_trajectories`).
+- A call fails when `extra.is_error` is set, `exit_code` is not 0, or `extra.status` contains "error". The result text is never searched.
+- Step tokens are counted once, on the step's first tool call. Without `final_metrics` the total is the sum over all events.
+
+In `--mode decision` (ATIF and Jetski input), a failed call becomes a `blind-alley` turn with an `explores-spur` edge from the last successful turn. The next successful turn adds a `backtrack` edge from each pending failed turn back to the last successful turn. The data does not say that the agent changed its approach, so these arcs only record the order of events.
+
+The turns are split into `phase:1`, `phase:2`, and `phase:3` at fixed cut points of the turn count (28% and 68%). The phases carry no meaning beyond position in the run.
+
+### Jetski JSONL input
+
+`compile-atif` reads a Jetski `transcript.jsonl` file (one JSON object per line) when the path ends in `.jsonl`. Lines that are not objects are skipped.
+
+| Step `type` | Fields read | Use |
+| :--- | :--- | :--- |
+| `USER_INPUT` | `content` | A user-goal turn. `<USER_REQUEST>` tags are removed, and a `<CONTEXT_SUMMARY>` message is skipped. |
+| `PLANNER_RESPONSE` | `content`, `thinking`, `tool_calls`, `model` | An agent turn. Each tool call has `name` (or `tool_name`) and `arguments` (or `args`, an object or a JSON string). Without tool calls, `content` becomes an agent-update turn. |
+| `GENERIC` | `content`, `status`, `error`, `exit_code` (or `exitCode`) | The output of a tool call. |
+
+All other step types are ignored. The first non-empty `model` in the file is the run's model.
+
+- **Pairing.** The `GENERIC` steps that directly follow a `PLANNER_RESPONSE` are its tool outputs, matched to the calls by position.
+- **Failure.** An output fails only when `status` is `ERROR` or `FAILED`, `error` is set, or the exit code is not 0. The output text is never searched.
+- **Grouping.** Calls to the same tool in one turn become one event. Failed calls stay separate. Consecutive identical successful events merge into one event with a count, labeled `<tool> ×N batch`.
+- **Id and title.** When the path contains `.system_generated`, the id is the first 12 characters of the session directory name, which is the grandparent of the `logs` directory (`<session>/.system_generated/logs/transcript.jsonl`). Otherwise the id is the file name without its suffix. The title is `Jetski transcript <id>`.
+
+## 4. Multi-Dataset Hub Envelope (`strata-hub/1`)
+
+```json
+{
+  "schema": "strata-hub/1",
+  "title": "Strata Graph Multi-Domain Explorer",
+  "generatedAt": "2026-11-07T05:30:00Z",
+  "datasets": [ /* array of strata-graph/1 objects */ ]
+}
+```

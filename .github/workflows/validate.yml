@@ -5,6 +5,7 @@ on:
     branches: [master, main]
   pull_request:
     branches: [master, main]
+    types: [opened, edited, synchronize, reopened]
   workflow_dispatch:
 
 jobs:
@@ -23,13 +24,29 @@ jobs:
       - name: Install dependencies
         run: pip install pyyaml
 
+      - name: Run repo unit tests
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Save PR title and body for the leak scan
+        if: github.event_name == 'pull_request'
+        run: jq -r '.pull_request.title, (.pull_request.body // "")' "$GITHUB_EVENT_PATH" > "$RUNNER_TEMP/pr-text.md"
+
       - name: Run validate-plugins.sh
-        run: ./scripts/validate-plugins.sh
+        run: LEAK_SCAN_EXTRA="${{ github.event_name == 'pull_request' && format('{0}/pr-text.md', runner.temp) || '' }}" ./scripts/validate-plugins.sh
 
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+
+      - name: Test strata-graph
+        run: python3 -m unittest discover -s plugins/strata-graph/skills/strata-graph/tests -v
+
+      - name: Lint strata-graph viewer (no-undef)
+        run: >-
+          npx --yes eslint@8.57.0 --no-eslintrc --env browser,es2022
+          --parser-options ecmaVersion:2022 --rule '{"no-undef":"error"}'
+          plugins/strata-graph/skills/strata-graph/assets/viewer.js
 
       - name: Test spec-gate hooks
         run: node --test plugins/spec-gate/test/*.test.mjs

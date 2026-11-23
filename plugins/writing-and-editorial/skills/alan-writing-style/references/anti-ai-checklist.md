@@ -18,7 +18,11 @@ Scan the text mechanically. Any match requires an immediate rewrite.
 - [ ] **No Forced Groups of Three:** Check lists and sentences; do not force items into neat triads.
 - [ ] **No Decorative Emojis:** No 🚀, 💡, ✅, 🔥 in titles, headings, or bullet points.
 - [ ] **No Bold Mini-Headings on Every Bullet:** Avoid vertical lists where every single bullet point starts with `**Topic Name:**`. Write fluent paragraphs or natural lists.
-- [ ] **Sentence-Case Headings:** Use sentence case (`## Building resilient agent loops`), not title case (`## Building Resilient Agent Loops`).
+- [ ] **Sentence-Case Headings (No Clickbait Scolding):** Use direct sentence case (`## How to version a dataset`), never title case or social-media clickbait (`## The One Metric Everyone Ignores`).
+- [ ] **No Mechanical Section Recap Transitions:** Cut formulaic end-of-section summaries and bridge sentences (*"Now that we've covered X, let's explore Y"*, *"Together, these pieces form a complete picture"*, *"In the end, it all comes down to..."*). End sections cleanly when the point lands.
+- [ ] **No Callout-Box Spam (`Pro tip:` / `Note:`):** Do not pepper long-form docs with boxed tips that restate or fragment the narrative. Weave real-world examples and practical rules into the prose; keep callouts only when genuinely standalone and high-value.
+- [ ] **No Negative-Restatement Table Columns or Redundant Recap Tables:** Cut columns like `"Limitations"` or `"Pitfalls"` that merely invert adjacent rows; replace with direct `"Example"` cells, and delete tables that simply repeat the prose above them.
+- [ ] **De-Anthropomorphize Models & Agents:** Agents *generate*, *call*, *write*, or *return* outputs; do not write *"what the agent said"*, *"its final argument"*, or *"how it felt"*.
 - [ ] **Straight Quotes:** Use standard ASCII quotes (`"` and `'`), not curly quotes (`“`, `”`, `‘`, `’`).
 
 ---
@@ -29,7 +33,7 @@ Evaluate the text through Alan's specific perspective as a 20-year engineer turn
 
 - [ ] **Sub-Surface "Muppet" Warmth:** Does the piece have earnest, nerdy warmth rather than sterile corporate distance? Is there a subtle winking parenthetical `(...)`, an observational smile, or a self-deprecating aside?
 - [ ] **Is the Humor Muted?** Ensure the humor stays strictly below the surface. If it sounds like a standup routine, wacky marketing, or forced slang, dial it back. The baseline must remain an authoritative DevRel / technical architect voice.
-- [ ] **"What with Why":** Does every technical description clearly articulate *why* it matters to the developer?
+- [ ] **"Meaning + Mechanism + Practice":** Does every technical description say *why* it matters, *how* it works, and *what to do* with it?
 - [ ] **Altitudes Check:** Does the piece bridge the gap between high-level architectural intent (Altitude 3/2) and low-level protocol reality (Altitude 1/0: network timeouts, schema changes, event logs)?
 - [ ] **No Demoware or Unearned Hype:** Are all performance claims, latency numbers, and architecture trade-offs honest? Are edge cases and messy failure modes acknowledged?
 - [ ] **Concrete Proof of Depth:** Are named errors, actual protocol fields, and real system constraints cited?

@@ -45,7 +45,7 @@ skills/
 
 | Plugin | Version | Description | Included Skills |
 | :--- | :--- | :--- | :--- |
-| **`writing-and-editorial`** | `1.0.0` | Authoring, voice matching, style refinement, and anti-AI humanization tools for technical writing and social content. | `alan-writing-style`<br>`googlecloudtech-x-article`<br>`humanizer` |
+| **`writing-and-editorial`** | `1.1.0` | Authoring, voice matching, style refinement, and anti-AI humanization tools for technical writing and social content. | `alan-writing-style`<br>`googlecloudtech-x-article`<br>`humanizer` |
 | **`visual-explainers`** | `1.1.0` | Tools and quality evaluation rubrics for architecture diagrams, terminal animations, YouTube/social thumbnails, and mathematical explainer videos. | `diagram-design`<br>`asciinema-explainer-walkthroughs`<br>`youtube-thumbnail-designer`<br>`manim-video-quality` |
 | **`frontend-engineering`** | `1.2.0` | Full-stack UI development workflows, React component isolation with Storybook, and CUJ capturing. | `ui-developer`<br>`storybook`<br>`cuj-screenshots` |
 | **`spec-gate`** | `0.1.0` | Pre-edit hook (no skills): the agent writes `.agent/tier`, plus a spec with `Verify:` criteria for medium or large work, before its first file edit. Claude Code, OpenCode/CloudCode, and Antigravity/Jetski (advisory). | *(hooks only)* |
@@ -54,6 +54,8 @@ skills/
 | **`developer-intel`** | `1.0.0` | Developer trend synthesis combining Plushcap MCP engineering blog data with Good AI List repository velocity. | `developer-trends-intel` |
 | **`developer-friction-reviewer`** | `1.0.0` | Persona-based developer friction reviews and automated audit loops across recipes, tools, and onboarding flows. | `developer-friction-reviewer` |
 | **`agent-evals`** | `1.0.0` | Framing agent evals, benchmarks and leaderboards as held-constant ablations across model, harness and task adaptation, with progressive-disclosure reporting and integrity checks. | `eval-ablation-framing` |
+| **`council`** | `1.1.0` | Convening three independent, cold-start subagent delegates with isolated context and state for multi-round review, scoring, and feedback. | `council` |
+| **`strata-graph`** | `1.0.0` | Deterministic multi-layer graph compiler and interactive explorer for processes, OKF v0.2 wikis, knowledge graphs, and ATIF trajectories. | `strata-graph` |
 
 ### Consumed Upstream Plugins (`ghchinoy/agent-skills` & `voodootikigod/adlc`)
 
@@ -61,7 +63,7 @@ Mirrored and synchronized from [Hussain Chinoy's agent-skills](https://github.co
 
 | Plugin | Version | Description | Included Skills |
 | :--- | :--- | :--- | :--- |
-| **`adlc`** | `1.11.0` | Agentic Development Lifecycle (ADLC) toolkit integration: phase router, rail-guard hooks, slash commands, and prosecutor agents. | `adlc`<br>`adlc-doctrine`<br>`adlc-prosecutor`<br>`adlc-self-orchestrate` |
+| **`adlc`** | `1.12.0` | Agentic Development Lifecycle (ADLC) skills plus the OpenCode rails-guard runtime, commands, and prosecutor agents. On Gemini or Claude Code, install upstream's adlc-gemini or adlc-claude-code plugin for the prosecutor fan-out. | `adlc`<br>`adlc-doctrine`<br>`adlc-prosecutor`<br>`adlc-self-orchestrate` |
 | **`agent-aware-cli`** | `1.0.0` | Best practices and architectural guidelines for CLI tools optimized for both human users and AI coding agents. | `agent-aware-cli` |
 | **`agent-plugin-authoring`**| `1.1.0` | Authoring, migration, and linting tools for packaging Agent Skills into Agent Plugins v1.0.0 spec packages. | `skills-to-plugins` |
 | **`ai-pop`** | `1.0.0` | Virtual music artist production suite: lore planning, audio synthesis, visual design, player compilation, and deployment. | `ai-pop-producer`<br>`ai-pop-concept-planner`<br>`ai-pop-audio-synthesizer`<br>`ai-pop-visual-designer`<br>`ai-pop-compiler`<br>`ai-pop-publisher` |

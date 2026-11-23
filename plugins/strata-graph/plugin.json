@@ -1,0 +1,12 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "strata-graph",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "description": "Deterministic multi-layer graph compiler and interactive explorer for processes, OKF v0.2 LLM wikis, knowledge graphs, and ATIF agent trajectories with blind-alley and backtrack tracing.",
+  "author": {
+    "name": "alanblount",
+    "url": "https://github.com/zeroasterisk"
+  },
+  "repository": "https://github.com/zeroasterisk/skills"
+}

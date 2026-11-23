@@ -68,6 +68,12 @@ for plugin_dir in plugins/*; do
   else
     ok "Plugin '$plugin_name' manifest name matches directory name"
   fi
+
+  # Agent Plugins 1.0.0 has a closed manifest schema; anything else belongs under "extensions".
+  extra_keys="$(python3 -c "import json,sys; allowed={'\$schema','name','version','description','author','homepage','repository','license','keywords','extensions'}; print(' '.join(sorted(set(json.load(open(sys.argv[1])))-allowed)))" "$manifest")"
+  if [ -n "$extra_keys" ]; then
+    err "Plugin '$plugin_name' plugin.json has fields outside the 1.0.0 schema: $extra_keys"
+  fi
 done
 
 info "3. Validating Agent Skills (SKILL.md)"
@@ -279,6 +285,105 @@ if [ -f ".claude-plugin/marketplace.json" ]; then
   fi
 else
   warn "Missing .claude-plugin/marketplace.json"
+fi
+
+info "5. Validating tracked symlinks stay inside the repository"
+# Only tracked symlinks: .gitignore lists machine-local symlinks that point outside on purpose.
+repo_real="$(pwd -P)"
+symlink_count=0
+while IFS= read -r link; do
+  [ -n "$link" ] || continue
+  symlink_count=$((symlink_count + 1))
+  resolved="$(python3 -c 'import os,sys;print(os.path.realpath(sys.argv[1]))' "$link")"
+  case "$resolved" in
+    "$repo_real" | "$repo_real"/*) ;;
+    *) err "Symlink '$link' escapes repository root (resolves to $resolved)" ;;
+  esac
+done < <(git ls-files -s | awk '$1 == "120000" { sub(/^[^\t]*\t/, ""); print }')
+ok "Checked $symlink_count symlink(s)"
+
+info "6. Scanning tracked files for internal references"
+# Markers for Google-internal references that must not appear in this public repo.
+# Each entry is "name|grep flags|sample that must match|regex". Flags: -i for case-insensitive.
+# Every regex is first run against its sample, so a broken pattern or grep fails the check
+# instead of silently matching nothing.
+leak_markers=(
+  'google3|-i|see google3/foo|google3'
+  'corp-domain|-i|host.corp.goog|\.corp\.(google\.com|goog)([^A-Za-z0-9_]|$)'
+  'googleplex|-i|a.googleplex.com|googleplex'
+  'x20|-i|on x20 now|(^|[^A-Za-z0-9_])x20([^A-Za-z0-9_]|$)'
+  'cns-path|-i|read /cns/ab-d/x|/cns/'
+  'go-link||see https://go/UpperSlug|(^|https?://|[^A-Za-z0-9_./-])go/[A-Za-z0-9_-]+'
+  'bug-or-cl-link||fixed in b/123456789|(^|https?://|[^A-Za-z0-9_./-])(b|cl)/[0-9]{6,}'
+  'internal-path||in /usr/local/google/home/u|/usr/local/google/|/google/(src|bin|data)/'
+  'google-email|-i|mail someone@google.com|@google\.com'
+  'service-account-key|-i|proj-0123456789ab.json|-[0-9a-f]{12}\.json'
+)
+# Skipped file: this script holds the marker patterns themselves.
+# Allowed pairs ("file:marker"): .gitignore keeps the machine-local google3/ checkout out of git.
+leak_allowed=(
+  '.gitignore:google3'
+)
+leak_hits=0
+for entry in "${leak_markers[@]}"; do
+  IFS='|' read -r m_name m_flags m_sample _ <<<"$entry"
+  m_regex="${entry#*|*|*|}"
+  rc=0
+  printf '%s\n' "$m_sample" | grep -qE ${m_flags:+"$m_flags"} -e "$m_regex" || rc=$?
+  case $rc in
+    0) ;;
+    1) err "Leak marker '$m_name' does not match its own sample"; continue ;;
+    *) err "Leak marker '$m_name' has an invalid regex"; continue ;;
+  esac
+  while IFS= read -r hit; do
+    [ -n "$hit" ] || continue
+    hit_file="${hit%%:*}"
+    skip=0
+    for allowed in "${leak_allowed[@]}"; do
+      [ "$allowed" = "$hit_file:$m_name" ] && skip=1
+    done
+    [ "$skip" -eq 1 ] && continue
+    err "Internal reference ($m_name): $(echo "$hit" | cut -c1-160)"
+    leak_hits=$((leak_hits + 1))
+  done < <({ git ls-files -z -- . ':(exclude)scripts/validate-plugins.sh'
+    # CI sets LEAK_SCAN_EXTRA to a file holding the PR title and body.
+    [ -n "${LEAK_SCAN_EXTRA:-}" ] && printf '%s\0' "$LEAK_SCAN_EXTRA"; } \
+    | xargs -0 grep -sIHnE ${m_flags:+"$m_flags"} -e "$m_regex" || true)
+done
+# Optional machine-local phrases (for example lines from unpublished drafts) that must not be
+# published. The file lives outside the repo, so the phrases themselves are never committed.
+leak_denylist="${LEAK_DENYLIST:-$HOME/.config/skills-sync/leak-denylist.txt}"
+if [ -f "$leak_denylist" ]; then
+  while IFS= read -r phrase; do
+    case "$phrase" in "" | "#"*) continue ;; esac
+    while IFS= read -r hit; do
+      [ -n "$hit" ] || continue
+      err "Denylisted phrase from $leak_denylist: ${hit%%:*}"
+      leak_hits=$((leak_hits + 1))
+    done < <(git ls-files -z -- . ':(exclude)scripts/validate-plugins.sh' | xargs -0 grep -sIHnF -e "$phrase" || true)
+  done <"$leak_denylist"
+fi
+if [ "$leak_hits" -eq 0 ]; then
+  ok "No internal references found in tracked files"
+fi
+
+info "7. Checking the vendored adlc runtime uses the v1 plugin export"
+# adlc >= 1.13.0 exports the OpenCode v2 shape ({id, setup}); CloudCode needs the v1 export.
+if [ ! -f plugins/adlc/index.mjs ]; then
+  err "plugins/adlc/index.mjs is missing; re-run scripts/sync-adlc.py"
+elif grep -qE '^export default \{' plugins/adlc/index.mjs; then
+  err "plugins/adlc/index.mjs uses the OpenCode v2 export; vendor a v1 release (scripts/sync-adlc.py --ref v1.12.0)"
+else
+  ok "plugins/adlc uses the v1 plugin export"
+fi
+
+info "8. Checking for retired terms"
+# Renamed frameworks must not linger in sibling skills: "What with Why" became "Meaning + Mechanism + Practice".
+retired_hits="$(git grep -In 'What with Why' -- plugins || true)"
+if [ -n "$retired_hits" ]; then
+  while IFS= read -r hit; do err "Retired term: $hit"; done <<<"$retired_hits"
+else
+  ok "No retired terms found"
 fi
 
 echo

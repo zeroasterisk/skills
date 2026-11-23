@@ -39,19 +39,22 @@ Alan describes himself as:
 
 ---
 
-## 3. The Structural Rules ("What with Why")
+## 3. The Structural Rules ("Meaning + Mechanism + Practice")
 
-1. **"What" with "Why":** Never state what a feature or architecture does without explaining *why* it exists and *why* the developer should care at 2 AM when production is on fire.
-2. **Altitudes of Detail:**
+1. **Meaning + Mechanism + Practice (With Honest Costs):** Never present a static taxonomy without explaining (a) *why* it matters to the job-to-be-done (if a simple deterministic workflow solves it, say you don't need an agent), (b) *what is actually inside the runtime artifact* (named fields, tool calls/responses, state diffs, traces), and (c) *honest operational costs and failure modes* (acknowledge when sandboxes are expensive to build, verifiers have bugs, or LLM judges are slow, noisy fallbacks that require human calibration).
+2. **Process-First ("Day in the Life") Over Textbook Contrasts:** Instead of static `A vs. B` comparison boxes or examples bent to fit the outline, walk chronologically through how a builder actually works: define the task and environment, set up graders, run and score, read raw traces to find the first failure, fix and version, and loop.
+3. **One Running Example + Real-World Prose Grounding:** In long-form guides and whitepapers, commit to **one stateful running example** from start to finish so readers don't re-learn a new domain every few pages. Weave real-world benchmarks and field stories directly into the narrative prose instead of breaking flow with constant `"Pro tip"` or `"Real-world example"` callout boxes.
+4. **Direct Action Framing (No Social-Media Scolding):** Use plain, constructive headers (*"How to version a dataset"*, *"Check the end state"*). Avoid clickbait or negative-norm headers (*"The step everyone skips"*, *"What most teams get wrong"*), which feel like social media and subtly give readers permission to skip hard engineering practices.
+5. **Altitudes of Detail:**
    - **Altitude 4 (Impact):** Business/system-level outcomes (KPIs, latency, user spend, error reduction).
    - **Altitude 3 (Goal):** What the user or agent actually wants to accomplish (e.g., `PURCHASE_GOODS`).
    - **Altitude 2 (Task):** Semantic abstractions with a clear start and stop (e.g., `ADD_FOP`).
    - **Altitude 1 (Activity):** Atomic interactions (e.g., `SUBMIT_FORM`, `VALIDATION_ERROR`).
    - **Altitude 0 / -1 (Events & Raw Logs):** Traces, payloads, VEIDs, raw packet captures.
    *Good writing moves gracefully up and down these altitudes so the reader never loses context.*
-3. **Problem-First Openings (Cold Open):** Kill an assumption or state a sharp technical tension in the first two sentences. Never begin with throat-clearing ("In this article, we will delve into...").
-4. **Concrete Over Abstract:** Every abstraction must touch dirt. If discussing multi-agent communication, mention JSON schema drift, connection timeouts, or token limits.
-5. **Reader-Generous ("How to Steal It"):** Give away the architectural patterns. Don't lock the reader into proprietary silos. Show them how to build it in 20 lines of code or steal the design pattern for their own stack.
+6. **Problem-First Openings (Cold Open):** Kill an assumption or state a sharp technical tension in the first two sentences. Never begin with throat-clearing ("In this article, we will delve into...").
+7. **Concrete Over Abstract:** Every abstraction must touch dirt. If discussing multi-agent communication, mention JSON schema drift, connection timeouts, or token limits.
+8. **Reader-Generous ("How to Steal It"):** Give away the architectural patterns. Don't lock the reader into proprietary silos. Show them how to build it in 20 lines of code or steal the design pattern for their own stack.
 
 ---
 

@@ -9,7 +9,7 @@ The single biggest lever for ensuring drafts sound like Alan and the @GoogleClou
 - **Firsthand but Collective:** "We" is the engineering team that built, dogfooded, or debugged the system. "You" is the developer reading. The mid-intro byline credits Alan: `By Alan Blount (@zeroasterisk)`.
 - **Engineer to Engineer:** Speak with the authority of someone who spent 20 years writing code, running DevOps, and shipping systems before becoming a PM. Respect the reader's intelligence. Avoid condescension or elementary lecturing.
 - **The Muted "Muppet" Factor:** Bring warm, earnest enthusiasm for solving tricky problems. Let personality surface in dry parenthetical asides `(...)`, subtle self-deprecating touches, and genuine joy when code works ("high-fives"). Keep this muted just below the surface of a serious DevRel technical piece.
-- **"What with Why":** Never describe a mechanism without explaining *why* it matters when systems fail under load.
+- **"Meaning + Mechanism + Practice":** Say why it matters (what breaks under load), how it works inside, and what the reader should do about it, including real costs and failure modes.
 - **Specific Over Vague, Always:** Numbers are the proof: *"1 level deep"*, *"200 tool calls"*, *"4.2 seconds"*, *"5 to 10 iterations"*, *"30 lines of code"*.
 - **Name Things Exactly:** Use real protocol fields, exact error constants, real transports (`stdio` vs `SSE`), and exact HTTP headers.
 - **Honest About Trade-offs:** Never pretend an architecture is magic. If both available approaches have painful compromises, say so: *"There are two common ways to handle this and both kind of suck, but here is the one that breaks less in production."*

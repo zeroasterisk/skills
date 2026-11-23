@@ -17,6 +17,16 @@ Agent routing (configured in [agents.<name>] or overridden via --agents / --tier
   - claude     : opt-in symlink dir (~/.claude/skills), default ("zeroasterisk").
   - codex      : opt-in symlink dir (~/.codex/skills), default ("zeroasterisk").
 
+Per-agent exclusions (set in ~/.config/skills-sync/local.toml under [agents.<name>]):
+  exclude_skills  = ["name", ...]  skip skills whose SKILL.md `name` or directory name
+                                   matches, for that agent only.
+  exclude_plugins = ["name", ...]  skip every skill that lives inside plugins/<name>
+                                   (a dir with plugin.json), for that agent only.
+  Both are honored by every agent kind and by --list-tiers. For jetski, a plugin with
+  some (not all) skills excluded is "materialized": a real dir under plugins_dir holding
+  per-entry symlinks, minus the excluded skills. A plugin whose skills are ALL excluded
+  is skipped entirely (including its agents/ and hooks.json), as if excluded by name.
+
 Catalog isolation:
   - Repo-tracked ai-catalog.json and ai-catalog.<slug>.json include ONLY "zeroasterisk"
     public sources — zero internal URLs or corp/OPM skills ever enter the git repo.
@@ -40,6 +50,7 @@ import fnmatch
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tomllib
@@ -140,7 +151,7 @@ def is_managed_link(link: Path, extra_roots: list[str] | None = None) -> bool:
         candidates.append(str(link.resolve()))
     except OSError:
         pass
-    return any(c.startswith(root) for c in candidates for root in roots)
+    return any(Path(c).is_relative_to(root) for c in candidates for root in roots)
 
 
 # ---------------------------------------------------------------------------
@@ -348,20 +359,68 @@ def skill_matches_agent_restriction(restriction: list[str] | None, agent_name: s
     return agent_name in expanded
 
 
+def is_skill_excluded(skill_dir: Path, exclude_skills: set[str], name: str | None = None) -> bool:
+    """True if the skill dir name or its SKILL.md frontmatter name is in exclude_skills."""
+    if not exclude_skills:
+        return False
+    if skill_dir.name in exclude_skills:
+        return True
+    name = name or parse_frontmatter(skill_dir / "SKILL.md").get("name")
+    return bool(name) and name in exclude_skills
+
+
+def plugin_skill_dirs(plugin_dir: Path) -> list[Path]:
+    """Skill dirs (containing SKILL.md) directly under plugin_dir/skills."""
+    skills_sub = plugin_dir / "skills"
+    if not skills_sub.is_dir():
+        return []
+    return [
+        sd for sd in sorted(skills_sub.iterdir()) if sd.is_dir() and (sd / "SKILL.md").is_file()
+    ]
+
+
+def plugin_name_for_skill(s: dict) -> str | None:
+    """Name of the nearest enclosing plugin dir (has plugin.json) inside the skill's source root.
+
+    Returns None for skills that do not live in a plugin, so category dirs and skill names
+    in plain skill sources never match exclude_plugins.
+    """
+    depth = len(Path(s["rel"]).parts)
+    cur = Path(s["path"])
+    for _ in range(depth):
+        cur = cur.parent
+        if (cur / "plugin.json").is_file():
+            return cur.name
+    return None
+
+
+def skill_excluded_for_agent(s: dict, agent_cfg: dict | None) -> bool:
+    if not agent_cfg:
+        return False
+    if is_skill_excluded(Path(s["path"]), set(agent_cfg.get("exclude_skills", [])), s["name"]):
+        return True
+    ex_plugins = set(agent_cfg.get("exclude_plugins", []))
+    return bool(ex_plugins) and plugin_name_for_skill(s) in ex_plugins
+
+
 def filter_skills_for_agent(
-    skills: list[dict], agent_name: str, allowed_tiers: list[str]
+    skills: list[dict],
+    agent_name: str,
+    allowed_tiers: list[str],
+    agent_cfg: dict | None = None,
 ) -> list[dict]:
     tier_set = set(allowed_tiers)
     return [
         s for s in skills
         if s["tier"] in tier_set
         and skill_matches_agent_restriction(s["agents_restriction"], agent_name)
+        and not skill_excluded_for_agent(s, agent_cfg)
     ]
 
 
 def sync_cloudcode(agent_name: str, agent_cfg: dict, skills: list[dict]) -> None:
     allowed_tiers = agent_cfg.get("tiers", ["zeroasterisk", "opm"])
-    matched = filter_skills_for_agent(skills, agent_name, allowed_tiers)
+    matched = filter_skills_for_agent(skills, agent_name, allowed_tiers, agent_cfg)
     paths = [str(s["path"]) for s in matched]
     cfg_path = find_cloudcode_config(agent_cfg.get("config", ""))
     if cfg_path is None or not cfg_path.is_file():
@@ -400,7 +459,7 @@ def sync_symlink_dir(
             if not is_managed_link(link, extra_managed_roots):
                 verbose(f"{label}: skip unmanaged symlink: {link.name}")
                 continue
-            target_ok = link.exists() and link.is_dir()
+            target_ok = link.exists()
             desired = wanted.get(link.name)
             current_raw = os.readlink(link)
             if desired is None or not target_ok or current_raw != str(desired):
@@ -429,32 +488,129 @@ def sync_symlink_dir(
         log(f"{label}: linked {name} -> {path}")
 
 
+def is_managed_materialized_dir(path: Path, extra_managed_roots: list[str] | None = None) -> bool:
+    """Return True if path is a real dir populated solely by managed symlinks (plus optional skills/)."""
+    if not path.is_dir() or path.is_symlink():
+        return False
+    entries = list(path.iterdir())
+    if not entries:
+        return False
+    for child in entries:
+        if child.is_symlink():
+            if not is_managed_link(child, extra_managed_roots):
+                return False
+        elif child.is_dir() and child.name == "skills":
+            for sub in child.iterdir():
+                if not sub.is_symlink() or not is_managed_link(sub, extra_managed_roots):
+                    return False
+        else:
+            return False
+    return True
+
+
+def sync_materialized_plugin(
+    label: str,
+    target_plugin_dir: Path,
+    source_plugin_dir: Path,
+    exclude_skills: set[str],
+) -> None:
+    """Sync a plugin dir via per-entry symlinks, omitting excluded skills locally."""
+    wanted_top: dict[str, Path] = {}
+    wanted_subskills: dict[str, Path] = {}
+    for entry in sorted(source_plugin_dir.iterdir()):
+        if entry.name == "skills" and entry.is_dir():
+            for sd in plugin_skill_dirs(source_plugin_dir):
+                if is_skill_excluded(sd, exclude_skills):
+                    verbose(f"{label}: exclude skill {source_plugin_dir.name}/{sd.name}")
+                    continue
+                wanted_subskills[sd.name] = sd
+        else:
+            wanted_top[entry.name] = entry
+
+    if target_plugin_dir.is_symlink():
+        if not is_managed_link(target_plugin_dir):
+            verbose(f"{label}: skip unmanaged symlink plugin {target_plugin_dir.name}")
+            return
+        if DRY_RUN:
+            # Never walk through the symlink: it still points into the source repo.
+            dry(f"{label}: would replace symlink {target_plugin_dir} with filtered dir")
+            for name, path in sorted(wanted_top.items()):
+                dry(f"{label}: would symlink {target_plugin_dir / name} -> {path}")
+            for name, path in sorted(wanted_subskills.items()):
+                dry(f"{label}: would symlink {target_plugin_dir / 'skills' / name} -> {path}")
+            return
+        target_plugin_dir.unlink()
+
+    sync_symlink_dir(f"{label} ({source_plugin_dir.name})", target_plugin_dir, wanted_top)
+    sync_symlink_dir(
+        f"{label} ({source_plugin_dir.name}/skills)",
+        target_plugin_dir / "skills",
+        wanted_subskills,
+    )
+
+
 def sync_jetski(agent_name: str, agent_cfg: dict, skills: list[dict]) -> None:
     allowed_tiers = agent_cfg.get("tiers", ["zeroasterisk", "opm", "work"])
     skills_dir = Path(agent_cfg.get("skills_dir", "~/.gemini/config/skills")).expanduser()
     plugins_dir = Path(agent_cfg.get("plugins_dir", "~/.gemini/config/plugins")).expanduser()
     native_piper_raw = agent_cfg.get("native_piper_skills_dir", "")
     native_piper_dir = norm_path(native_piper_raw) if native_piper_raw else None
+    exclude_plugins = set(agent_cfg.get("exclude_plugins", []))
+    exclude_skills = set(agent_cfg.get("exclude_skills", []))
 
     # 1. Sync zeroasterisk plugins into plugins_dir (if subscribed to zeroasterisk)
     wanted_plugins: dict[str, Path] = {}
+    materialized_plugins: dict[str, Path] = {}
     plugin_covered_skill_dirs: set[Path] = set()
     if PUBLIC_TIER in allowed_tiers:
         plugins_root = REGISTRY_DIR / "plugins"
         if plugins_root.is_dir():
             for p in sorted(plugins_root.iterdir()):
-                if p.is_dir() and (p / "plugin.json").is_file():
+                if not (p.is_dir() and (p / "plugin.json").is_file()):
+                    continue
+                if p.name in exclude_plugins:
+                    verbose(f"{agent_name} plugins: skip {p.name} (excluded)")
+                    continue
+                all_skill_dirs = plugin_skill_dirs(p)
+                kept_skill_dirs = [
+                    sd for sd in all_skill_dirs if not is_skill_excluded(sd, exclude_skills)
+                ]
+                if len(kept_skill_dirs) < len(all_skill_dirs):
+                    if not kept_skill_dirs:
+                        verbose(f"{agent_name} plugins: skip {p.name} (all skills excluded)")
+                        continue
+                    materialized_plugins[p.name] = p
+                    for sd in kept_skill_dirs:
+                        plugin_covered_skill_dirs.add(sd.resolve())
+                else:
                     wanted_plugins[p.name] = p
                     for sk_md in p.rglob("SKILL.md"):
                         plugin_covered_skill_dirs.add(sk_md.parent.resolve())
 
+    # If a previously materialized plugin dir no longer excludes skills (or plugin is excluded), clean it.
+    if plugins_dir.is_dir():
+        for entry in sorted(plugins_dir.iterdir()):
+            if entry.name not in materialized_plugins and is_managed_materialized_dir(entry):
+                if DRY_RUN:
+                    dry(f"{agent_name} plugins: would remove materialized dir {entry.name}")
+                else:
+                    shutil.rmtree(entry)
+                    log(f"{agent_name} plugins: removed materialized dir {entry.name}")
+
     sync_symlink_dir(f"{agent_name} plugins", plugins_dir, wanted_plugins)
+    for plug_name, plug_src in sorted(materialized_plugins.items()):
+        sync_materialized_plugin(
+            f"{agent_name} plugins",
+            plugins_dir / plug_name,
+            plug_src,
+            exclude_skills,
+        )
 
     # 2. Build non-duplicating skills_dir map across subscribed tiers:
     #    - Skip skills already mounted via plugins_dir (zero split-brain duplicates)
     #    - Skip "work" skills already live at native_piper_skills_dir (Jetski auto-mounts Piper HEAD)
     #    - Symlink "opm" skills + pre-submit fallback "work" skills not yet at Piper HEAD
-    matched = filter_skills_for_agent(skills, agent_name, allowed_tiers)
+    matched = filter_skills_for_agent(skills, agent_name, allowed_tiers, agent_cfg)
     wanted_skills: dict[str, Path] = {}
     extra_roots = [str(native_piper_dir)] if native_piper_dir else []
 
@@ -494,7 +650,7 @@ def sync_jetski(agent_name: str, agent_cfg: dict, skills: list[dict]) -> None:
 def sync_generic_agent(agent_name: str, agent_cfg: dict, skills: list[dict]) -> None:
     allowed_tiers = agent_cfg.get("tiers", [PUBLIC_TIER])
     skills_dir = Path(agent_cfg["skills_dir"]).expanduser()
-    matched = filter_skills_for_agent(skills, agent_name, allowed_tiers)
+    matched = filter_skills_for_agent(skills, agent_name, allowed_tiers, agent_cfg)
     wanted = {
         s["dir_name"]: s["path"]
         for s in matched
@@ -636,7 +792,7 @@ def print_tier_report(skills: list[dict], agents_cfg: dict[str, dict]) -> None:
     for agent_name, cfg in agents_cfg.items():
         status = "ENABLED " if cfg.get("enabled", False) else "opt-in  "
         tiers = cfg.get("tiers", [])
-        matched = filter_skills_for_agent(skills, agent_name, tiers)
+        matched = filter_skills_for_agent(skills, agent_name, tiers, cfg)
         print(
             f"  - {agent_name:<12} [{status}] tiers={tiers} -> {len(matched)} skill(s)"
         )
