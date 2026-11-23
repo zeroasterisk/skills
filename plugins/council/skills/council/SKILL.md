@@ -59,9 +59,8 @@ Every council round must preserve three strict isolation boundaries so delegates
 ## 3. Multi-Model Roster, Pinning & Fallback Rules
 
 1. **Check `~/.config/council/roster.json` first**:
-   * Read `~/.config/council/roster.json` if present on the local machine. It defines `seats` (3 entries with `label`, `type_name`, and `agent_json`) plus an optional `fallback` seat.
-   * **How model pinning works in Jetski**: Request-time `Model` strings in `invoke_subagent` / `run_workflow` only accept tier names (`pro`, `inherit`, `flash`, `flash_lite`), *not* arbitrary model slugs. To pin distinct models on read-only council delegates, Jetski uses declarative `~/.gemini/config/agents/<type_name>/agent.json` specs setting `"disableModelSelection": true` and `"cascadeConfig": {"plannerConfig": {"planModel": "<MODEL_ENUM>"}}`. When invoked by `type_name` (omitting `model` in `agent()` or passing `Model="inherit"`), the harness keeps each subagent's pinned `planModel`.
-   * **Zero-restart staging**: If a model-pinned `agent.json` was added mid-session after the current conversation started (agents added later are not visible until staged), copy each seat's `agent_json` into `<artifactDir>/.agents/agents/<type_name>/agent.json` (with `_agents -> .agents` symlink) before running `run_workflow`.
+   * Read `~/.config/council/roster.json` if present on the local machine. It defines `seats` (3 entries with `label` and `type_name`) plus an optional `fallback` seat. Each `type_name` is a read-only custom agent defined locally.
+   * **Model pinning**: Request-time `model` values and documented custom-agent frontmatter accept only tiers (`inherit`, `flash`, `pro`). Distinct models per seat need per-agent pinning from the harness; see [`references/jetski-harness.md`](references/jetski-harness.md). Custom agents are discovered at conversation start, so start a new conversation after adding one.
    * **Automatic fallback seat**: If a requested model is unavailable in the harness's model list or errors out at runtime (e.g., quota/capacity exhaustion), substitute the `fallback` seat from `roster.json` and label the delegate row transparently with the actual model that ran.
 2. **Default fallback when no `roster.json` exists**:
    * **Jetski / Antigravity**: Run three isolated `council-delegate` subagents on `model="pro"`.
@@ -70,10 +69,10 @@ Every council round must preserve three strict isolation boundaries so delegates
 
 ## 4. Running a Council Round in Jetski
 
-See [`references/jetski-harness.md`](references/jetski-harness.md) for copy-pasteable `roster.json`, declarative `agent.json`, and `run_workflow` templates.
+See [`references/jetski-harness.md`](references/jetski-harness.md) for copy-pasteable `roster.json` and `run_workflow` templates.
 
 1. **Ensure read-only subagent types exist**:
-   * Load `~/.config/council/roster.json` if present (ensuring each seat's `agent.json` is registered or staged under `<artifactDir>/.agents/agents/`), or fall back to `council-delegate`.
+   * Load `~/.config/council/roster.json` if present (each seat's custom agent must already be discoverable), or fall back to `council-delegate`.
 2. **Prepare an objective, pointer-based brief**:
    * State the user's goal/requirement, list target files (or write a clean diff/document snapshot to your conversation `scratch/` directory, never inside the repository working tree), and state what checks already passed.
    * Explicitly instruct each delegate to follow the **findings-first adversarial rubric**: list concrete findings (`blocker` = `-2.0`, `major` = `-1.0`, `minor` = `-0.5`) *first*, then compute `score` out of 10 (`N/10`, starting from `10.0` minus deductions) and `satisfied` (`true/false`).

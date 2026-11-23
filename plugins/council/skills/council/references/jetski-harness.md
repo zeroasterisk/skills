@@ -1,79 +1,20 @@
 # Jetski Harness Recipes for `council`
 
-Concrete execution templates for running isolated 3-delegate council rounds inside Jetski / Antigravity (`agy`), including cross-model subagent pinning via `~/.config/council/roster.json`.
+Concrete execution templates for running isolated 3-delegate council rounds inside Jetski / Antigravity (`agy`), including an optional multi-model roster in `~/.config/council/roster.json`.
 
 ---
 
-## 1. Subagent Registration, Multi-Model Pinning & Zero-Restart Staging
+## 1. Subagent Registration and Multi-Model Roster
 
 ### A. Default Single-Tier Subagent (`council-delegate`)
 
 When the `council` plugin is enabled before a conversation starts and no `~/.config/council/roster.json` is configured, `council-delegate` (`plugins/council/agents/council-delegate.md`) is pre-registered as a hidden subagent on the `pro` tier with a read-only `tools` list (`view_file`, `grep_search`) and shell execution off.
 
-### B. Multi-Model Roster Pinning (`~/.config/council/roster.json` + `~/.gemini/config/agents/`)
+### B. Multi-Model Roster (`~/.config/council/roster.json`)
 
-Native `invoke_subagent` and `run_workflow` request-time `model` strings only accept tier names (`inherit`, `flash_lite`, `flash`, `pro`). However, Jetski declarative JSON agents (`~/.gemini/config/agents/<type_name>/agent.json`) can pin **any** model available in the harness's model list by setting `"disableModelSelection": true` and `"cascadeConfig": {"plannerConfig": {"planModel": "<MODEL_ENUM>"}}` (with `modelTier` unset). When an agent sets `disableModelSelection: true` and no `modelTier`, the harness keeps the agent's pinned `planModel` for both `run_workflow` and `invoke_subagent`, as long as the call does not pass a tier name.
+Request-time `model` values in `invoke_subagent` and `run_workflow` accept only tiers (`inherit`, `flash`, `pro`), and a documented custom agent's `model` frontmatter takes the same tiers. For three distinct models, define one custom agent per seat with whatever per-agent model pinning your harness supports, and list them in a machine-local roster. If the harness cannot pin a model per agent, use the default three `council-delegate` seats and say in the scorecard that all three ran on one tier.
 
-Example `~/.gemini/config/agents/<type_name>/agent.json`:
-
-```json
-{
-  "name": "council-seat-1",
-  "description": "Independent, cold-start council delegate pinned to a dedicated model with read-only tools.",
-  "mainAgent": false,
-  "subagent": true,
-  "hidden": true,
-  "disableModelSelection": true,
-  "config": {
-    "agentConfig": {
-      "mixinConfig": {
-        "promptSections": [
-          {
-            "custom": {
-              "title": "Council Delegate",
-              "content": "You are an independent council delegate evaluating a request from a clean cold start...\n"
-            }
-          },
-          {"builtinName": "user_information"},
-          {"builtinName": "skills"},
-          {"builtinName": "user_rules"},
-          {"builtinName": "messaging"},
-          {"builtinName": "artifacts"},
-          {"builtinName": "guidelines"},
-          {"builtinName": "communication_style"}
-        ],
-        "tools": [
-          {"name": "view_file", "builtin": true},
-          {"name": "grep_search", "builtin": true},
-          {"name": "search_web", "builtin": true},
-          {"name": "send_message", "builtin": true}
-        ],
-        "postInvocationHooks": [
-          {"name": "message_continue_check", "builtin": true},
-          {"name": "terminal_step_check", "builtin": true},
-          {"name": "max_generator_invocations_check", "builtin": true},
-          {"name": "empty_output_continuation_check", "builtin": true},
-          {"name": "force_invocation", "builtin": true},
-          {"name": "no_tool_call_check", "builtin": true}
-        ]
-      },
-      "customizationDiscovery": {
-        "skills": {"inheritUser": true},
-        "plugins": {"inheritUser": true},
-        "rules": {"inheritUser": true},
-        "agents": {"inheritUser": true},
-        "hooks": {"inheritUser": true},
-        "mcp": {"inheritUser": false}
-      },
-      "cascadeConfig": {
-        "plannerConfig": {
-          "planModel": "<MODEL_ENUM>"
-        }
-      }
-    }
-  }
-}
-```
+Each seat agent is a documented custom agent (`~/.gemini/config/agents/<type_name>.md` or `<type_name>/agent.md`) with the same read-only `tools` list as `council-delegate` (`view_file`, `grep_search`).
 
 Example machine-local `~/.config/council/roster.json` (kept outside public git repos):
 
@@ -81,41 +22,15 @@ Example machine-local `~/.config/council/roster.json` (kept outside public git r
 {
   "version": 1,
   "seats": [
-    {
-      "label": "<Model 1 Display Name>",
-      "type_name": "council-seat-1",
-      "agent_json": "<home>/.gemini/config/agents/council-seat-1/agent.json"
-    },
-    {
-      "label": "<Model 2 Display Name>",
-      "type_name": "council-seat-2",
-      "agent_json": "<home>/.gemini/config/agents/council-seat-2/agent.json"
-    },
-    {
-      "label": "<Model 3 Display Name>",
-      "type_name": "council-seat-3",
-      "agent_json": "<home>/.gemini/config/agents/council-seat-3/agent.json"
-    }
+    {"label": "<Model 1 Display Name>", "type_name": "council-seat-1"},
+    {"label": "<Model 2 Display Name>", "type_name": "council-seat-2"},
+    {"label": "<Model 3 Display Name>", "type_name": "council-seat-3"}
   ],
-  "fallback": {
-    "label": "<Fallback Model Display Name>",
-    "type_name": "council-seat-fallback",
-    "agent_json": "<home>/.gemini/config/agents/council-seat-fallback/agent.json"
-  }
+  "fallback": {"label": "<Fallback Model Display Name>", "type_name": "council-seat-fallback"}
 }
 ```
 
-### C. Mid-Session Zero-Restart Staging
-
-If `council` or any `~/.gemini/config/agents/<type_name>/agent.json` was created *during* an already-running conversation (after the conversation started, so the harness cannot see it yet), stage the agent files under the conversation's `.agents/agents/` directory so they resolve immediately without restarting:
-
-```bash
-ART_DIR="<appDataDir>/brain/<conversation-id>"
-mkdir -p "${ART_DIR}/.agents/agents"
-ln -sfn .agents "${ART_DIR}/_agents"
-cp -r ~/.gemini/config/agents/council-* "${ART_DIR}/.agents/agents/" 2>/dev/null || \
-  cp "<plugin-root>/agents/council-delegate.md" "${ART_DIR}/.agents/agents/"
-```
+Custom agents are discovered when a conversation starts. An agent added mid-conversation is visible only after a new conversation starts.
 
 > **Why omitting write/command tools matters**: Omitting `write_file`, `edit_file`, `replace_file_content`, and `run_command` strips mutation capabilities at tool-schema construction time. Three delegates can inspect `Workspace: "inherit"` in parallel with zero risk of mutating working-tree files, git index locks, or build caches, while each delegate's own trajectory lives under `<appDataDir>/brain/<subConvID>/`.
 
@@ -126,7 +41,7 @@ cp -r ~/.gemini/config/agents/council-* "${ART_DIR}/.agents/agents/" 2>/dev/null
 When `run_workflow` is available in your tool declarations, prefer it over manual subagent calls:
 * Every delegate runs as an isolated, single-use cold-start trajectory (`agent()`).
 * The built-in `parallel(items, fn)` cancels the remaining items when one raises, so `run_seat` catches each seat's error and returns it. One failed delegate then cannot cancel the other two, and the fallback retry can run.
-* If `~/.config/council/roster.json` is present, the script automatically loads the 3 model-pinned seats and retries any failed primary seat once on `fallback`.
+* If `~/.config/council/roster.json` is present, the script loads its 3 seats and retries any failed primary seat once on `fallback`.
 * Ordering `findings` *before* `score` in the `finish` JSON Schema enforces findings-first adversarial grading.
 
 ### Preparing the Context Snapshot
@@ -275,7 +190,7 @@ print(json.dumps(output, indent=2))
 
 If `run_workflow` is unavailable:
 
-1. Issue **three `invoke_subagent` calls in the same assistant turn** using the `type_name` values from `~/.config/council/roster.json` (with `Model: "inherit"`, since `disableModelSelection: true` preserves each agent's baked-in `planModel`), or `TypeName: "council-delegate"` with `Model: "pro"` if no `roster.json` exists.
+1. Issue **three `invoke_subagent` calls in the same assistant turn** using the `type_name` values from `~/.config/council/roster.json` (with `Model: "inherit"`, so each seat keeps its own model), or `TypeName: "council-delegate"` with `Model: "pro"` if no `roster.json` exists.
 2. **Stop calling tools** at the end of that turn. Jetski wakes your conversation reactively as each subagent sends its completion message; never sleep or poll in a loop.
 3. For Round 2+, always launch three fresh subagents rather than calling `send_message` on Round 1's `conversationId`s, so Round 2 evaluates the updated work from a clean cold start.
 
