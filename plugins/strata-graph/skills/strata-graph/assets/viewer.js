@@ -273,6 +273,8 @@
       domain: raw.domain || "system",
       generatedAt: raw.generatedAt || "",
       sourceLabel: raw.sourceLabel || "",
+      levelLabel: typeof raw.levelLabel === "string" ? raw.levelLabel : "",
+      axisNotes: Array.isArray(raw.axisNotes) ? raw.axisNotes.filter((n) => n && typeof n === "object") : [],
       rootId,
       nodes,
       byId,

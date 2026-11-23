@@ -283,7 +283,7 @@
       "identifier": "urn:air:github.com:zeroasterisk:strata-graph",
       "displayName": "strata-graph",
       "type": "application/ai-skill+md",
-      "description": "Compile, validate, and explore multi-layer structural and cross-cutting interactive graphs for stateful processes, OKF v0.2 LLM wikis, knowledge/entity graphs (KGs), and ATIF/OATR agent trajectories (with explicit blind alleys, backtrack return arcs, subagent drill-down, and cross-trajectory comparison). Use when visualizing complex systems, workflows, concept wikis, people/project/document networks, or multi-turn agent trajectories beyond ~15 nodes where flat static diagrams saturate and force-directed hairballs lose causal hierarchy. Don't use for small static architecture or flow diagrams (use diagram-design).",
+      "description": "Compile, validate, and explore multi-layer structural and cross-cutting interactive graphs for stateful processes, OKF v0.2 LLM wikis, knowledge/entity graphs (KGs), and ATIF agent trajectories (with explicit blind alleys, backtrack return arcs, subagent drill-down, and cross-trajectory comparison). Use when visualizing complex systems, workflows, concept wikis, people/project/document networks, or multi-turn agent trajectories beyond ~15 nodes where flat static diagrams saturate and force-directed hairballs lose causal hierarchy. Don't use for small static architecture or flow diagrams (use diagram-design).",
       "tags": [
         "graph",
         "visualization",

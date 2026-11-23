@@ -7,7 +7,7 @@ It handles four kinds of input:
 1. **Processes and stateful workflows.** Ordered stages, acceptance gates, human-approval waits, retry loops, and escalation branches.
 2. **Concept graphs and OKF v0.2 wikis.** Hierarchical sections, internal Markdown links, trust badges derived from OKF frontmatter, and cross-cutting overlays for co-citation and tags.
 3. **Knowledge and entity graphs.** People, organizations, projects, protocols, and documents, with typed edge bundles, `Shift+Click` path finding, and timeline playback.
-4. **ATIF, OATR, and Jetski agent trajectories.** One run as a decision tree with marked dead ends (`✕`), return arcs for backtracks (`↺`), and nested subagents. Several runs can be compared over shared tools.
+4. **ATIF and Jetski agent trajectories.** One run as a decision tree with marked dead ends (`✕`), return arcs for backtracks (`↺`), and nested subagents. Several runs can be compared over shared tools.
 
 ## Attribution
 
@@ -20,7 +20,7 @@ This plugin is an independent implementation inspired by Adam Gospodarczyk's (`@
 
 `strata-graph` adds these on top:
 
-- OKF v0.2, knowledge graph (YAML and SQLite), and trajectory compilers (ATIF, OATR, Jetski JSONL).
+- OKF v0.2, knowledge graph (YAML and SQLite), and trajectory compilers (ATIF, Jetski JSONL).
 - Backtrack and loop edges drawn as `↺` return arcs, instead of silently reversing edges to break cycles.
 - Dead-end styling, step scrubbing, and multi-trajectory comparison.
 - 1-hop and 2-hop highlighting, `Shift+Click` path finding, pan and zoom.

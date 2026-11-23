@@ -49,6 +49,14 @@
       "sources": [{ "id": "src-1", "title": "Spec PR #27", "url": "https://example.org/pr/27" }],
       "tags": ["proposal"],
       "metrics": { "budget": "max 3 attempts" }
+    },
+    {
+      "id": "stage:gate",
+      "title": "Scope and Policy Gate",
+      "kind": "stage",
+      "status": "gate",
+      "parent": "proc:root",
+      "summary": "Deterministic check that the proposal stays inside the declared scope."
     }
   ],
   "edges": [
@@ -105,7 +113,7 @@ The validator (`validate`, and every `compile-*` command) reports these errors: 
 | `"draft"` / `"partial"` | Subtle amber border + draft pill | Unverified OKF drafts, WIP modules |
 | `"blind-alley"` / `"error"` | Dashed coral border + `-45deg` crimson hatch + `✕ BLIND ALLEY` pill | Failed tool calls, dead-end search branches, rejected proposals |
 | `"gate"` | `3px` teal top accent bar + gate pill | Deterministic acceptance gates, human-approval checkpoints, planner routers |
-| `"subagent"` | `3px` violet top accent bar + subagent pill | Delegated ATIF/OATR child agents (drillable when child steps exist) |
+| `"subagent"` | `3px` violet top accent bar + subagent pill | Delegated ATIF child agents (drillable when child steps exist) |
 | `"deprecated"` | Dashed muted border | Retired specs or superseded concepts |
 
 | `edge.flowRole` | Layout & Routing Behavior |
@@ -113,7 +121,21 @@ The validator (`validate`, and every `compile-*` command) reports these errors: 
 | `"forward"` (default) | Participates in Sugiyama topological layering + PAV channel alignment; residual cycles in cyclic KGs/wikis are automatically promoted to outer return arcs so downward arrows never lie. |
 | `"backtrack"` / `"loop"` | Excluded from downward rank forcing; routed along a dedicated right-margin cubic Bezier return rail with an upward/left arrowhead and clickable `↺` pill badge. |
 
-## 3. Multi-Dataset Hub Envelope (`strata-hub/1`)
+## 3. Input conventions for the adapters
+
+**`compile-kg` with SQLite.** The file is opened read-only and must contain these tables and columns. Any other layout stops the command with a schema error and a non-zero exit code.
+
+| Table | Columns read |
+| :--- | :--- |
+| `sources` | `id`, `uri`, `title` |
+| `entities` | `entity_id`, `name`, `kind`, `type`, `description`, `status`, `source_id`, `merged_into` (rows with `merged_into` set are skipped) |
+| `edges` | `source_entity_id`, `target_entity_id`, `edge_type`, `confidence` |
+
+With a directory instead, `compile-kg` reads `relations.yaml` and `timeline.yaml` (in the directory or its `kg/` subdirectory), plus `entities/<slug>.yaml` for entities named in the relations, when they exist.
+
+**`compile-okf` section names.** Relation types between wiki sections are chosen from the section folder names. This is an optional naming convention. A link into `patterns` is `composes-pattern`, into `architectures` is `defines-architecture`, to or from `taxonomy` is `defines-term`, to or from `governance` is `governs`, and to or from `projects` is `implements`. A link whose heading mentions `arch` or `pattern` is also `composes-pattern`. All other links are `references`. A wiki with different section names still compiles and gets the generic `references` relation.
+
+## 4. Multi-Dataset Hub Envelope (`strata-hub/1`)
 
 ```json
 {

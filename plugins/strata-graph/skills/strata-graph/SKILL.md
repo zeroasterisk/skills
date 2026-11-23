@@ -1,6 +1,6 @@
 ---
 name: strata-graph
-description: Compile, validate, and explore multi-layer structural and cross-cutting interactive graphs for stateful processes, OKF v0.2 LLM wikis, knowledge/entity graphs (KGs), and ATIF/OATR agent trajectories (with explicit blind alleys, backtrack return arcs, subagent drill-down, and cross-trajectory comparison). Use when visualizing complex systems, workflows, concept wikis, people/project/document networks, or multi-turn agent trajectories beyond ~15 nodes where flat static diagrams saturate and force-directed hairballs lose causal hierarchy. Don't use for small static architecture or flow diagrams (use diagram-design).
+description: Compile, validate, and explore multi-layer structural and cross-cutting interactive graphs for stateful processes, OKF v0.2 LLM wikis, knowledge/entity graphs (KGs), and ATIF agent trajectories (with explicit blind alleys, backtrack return arcs, subagent drill-down, and cross-trajectory comparison). Use when visualizing complex systems, workflows, concept wikis, people/project/document networks, or multi-turn agent trajectories beyond ~15 nodes where flat static diagrams saturate and force-directed hairballs lose causal hierarchy. Don't use for small static architecture or flow diagrams (use diagram-design).
 license: Apache-2.0
 ---
 
@@ -8,7 +8,7 @@ license: Apache-2.0
 
 A compiler, validator, and interactive HTML explorer for structured graphs of about 15 to 1,500 nodes. These graphs have a hierarchical or causal spine, a dense set of cross-cutting links, and optional traces over time. The output is one HTML file that works from `file://` with no network access.
 
-Independent implementation inspired by Adam Gospodarczyk's (`@overment`) [`overment/limen`](https://github.com/overment/limen) (`limen picture`, MIT License). It keeps limen's main idea: agents curate facts, and a deterministic compiler with no LLM builds the HTML. It also uses hierarchical edge lifting with `OUTSIDE` ghost blocks, cross-cutting bands, and weighted Pool-Adjacent-Violators (PAV) multi-lane routing. It adds OKF v0.2 wikis, knowledge graphs, stateful processes, and ATIF/OATR trajectories with dead-end marks (`✕`) and backtrack return arcs (`↺`).
+Independent implementation inspired by Adam Gospodarczyk's (`@overment`) [`overment/limen`](https://github.com/overment/limen) (`limen picture`, MIT License). It keeps limen's main idea: agents curate facts, and a deterministic compiler with no LLM builds the HTML. It also uses hierarchical edge lifting with `OUTSIDE` ghost blocks, cross-cutting bands, and weighted Pool-Adjacent-Violators (PAV) multi-lane routing. It adds OKF v0.2 wikis, knowledge graphs, stateful processes, and ATIF and Jetski trajectories with dead-end marks (`✕`) and backtrack return arcs (`↺`).
 
 ## When to use it
 
@@ -36,12 +36,12 @@ python3 "$STRATA" compile-okf /path/to/wiki -o /tmp/wiki-map.html
 # 2. Compile a knowledge graph (SQLite pipeline.db, or a directory with YAML files)
 python3 "$STRATA" compile-kg /path/to/kg-dir -o /tmp/kg-map.html
 
-# 3. Compile one ATIF v1.x, OATR v1, or Jetski transcript.jsonl trajectory
+# 3. Compile one ATIF v1.x or Jetski transcript.jsonl trajectory
 #    (marks dead ends with ✕, wires ↺ backtrack arcs, nests subagents)
 python3 "$STRATA" compile-atif /path/to/trajectory.json --mode decision -o /tmp/traj-map.html
 
 # 4. Compare two or more trajectories over shared tools, subagents, and failure states
-python3 "$STRATA" compile-atif run1.json run2.oatr.json run3.jsonl --mode compare -o /tmp/compare.html
+python3 "$STRATA" compile-atif run1.json run2.json run3.jsonl --mode compare -o /tmp/compare.html
 
 # 5. Validate and compile a custom process or architecture JSON spec
 python3 "$STRATA" compile-json /path/to/process.strata.json -o /tmp/process.html

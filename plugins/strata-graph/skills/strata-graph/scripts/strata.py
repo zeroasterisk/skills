@@ -7,7 +7,7 @@ small built-in parser reads OKF and KG frontmatter.
 Subcommands:
   compile-okf  : OKF v0.2 Markdown wiki bundle -> graph
   compile-kg   : knowledge / entity graph from a SQLite pipeline.db or a YAML kg/ directory
-  compile-atif : ATIF v1.x, OATR v1, or Jetski transcript.jsonl trajectories
+  compile-atif : ATIF v1.x or Jetski transcript.jsonl trajectories
                  (--mode decision for one run, --mode compare for several)
   compile-json : validate and compile a hand-written strata-graph/1 JSON spec
   validate     : integrity checks on a strata-graph/1 JSON file
@@ -567,6 +567,17 @@ def map_kg_container(raw_type: str) -> tuple[str, str]:
     return "grp:projects", "Projects, SDKs & Tools"
 
 
+KG_SQLITE_SCHEMA = (
+    "tables sources(id, uri, title), "
+    "entities(entity_id, name, kind, type, description, status, source_id, merged_into), "
+    "edges(source_entity_id, target_entity_id, edge_type, confidence)"
+)
+
+
+class KGSchemaError(ValueError):
+    """The SQLite file does not have the tables and columns compile_kg reads."""
+
+
 def compile_kg(kg_path: Path, graph_id: str | None = None) -> dict[str, Any]:
     target = kg_path.resolve()
     db_file = target if target.suffix == ".db" else (target / "pipeline.db")
@@ -615,81 +626,95 @@ def compile_kg(kg_path: Path, graph_id: str | None = None) -> dict[str, Any]:
     # 1. Read SQLite pipeline.db if present (read-only URI)
     if db_file.is_file():
         conn = sqlite3.connect(f"file:{db_file}?mode=ro", uri=True)
-        src_lookup: dict[int, tuple[str, str]] = {}
-        for row in conn.execute("SELECT id, uri, title FROM sources"):
-            src_lookup[int(row[0])] = (
-                str(row[1] or ""),
-                str(row[2] or f"Source {row[0]}"),
-            )
-
-        for row in conn.execute(
-            "SELECT entity_id, name, kind, type, description, status, source_id FROM entities WHERE merged_into IS NULL"
-        ):
-            eid, name, kind, etype, desc, status, sid = row
-            eid = str(eid)
-            cid, ctitle = map_kg_container(str(etype or kind or "project"))
-            ensure_container(cid, ctitle)
-            entity_ids.add(eid)
-            slug = eid.split(":", 1)[-1].lower()
-            slug_to_eid[slug] = eid
-
-            ent_sources = []
-            if sid is not None and int(sid) in src_lookup:
-                s_uri, s_title = src_lookup[int(sid)]
-                ent_sources.append({"id": f"s-{sid}", "title": s_title, "url": s_uri})
-                ov = source_overlays.setdefault(
-                    f"s-{sid}",
-                    {
-                        "id": f"src:s-{sid}",
-                        "title": s_title[:58],
-                        "kind": "source-doc",
-                        "url": s_uri,
-                        "summary": f"Extracted knowledge-graph source document ({s_uri})",
-                        "touches": [],
-                    },
+        try:
+            src_lookup: dict[int, tuple[str, str]] = {}
+            for row in conn.execute("SELECT id, uri, title FROM sources"):
+                src_lookup[int(row[0])] = (
+                    str(row[1] or ""),
+                    str(row[2] or f"Source {row[0]}"),
                 )
-                if eid not in ov["touches"]:
-                    ov["touches"].append(eid)
 
-            nodes.append(
-                {
-                    "id": eid,
-                    "title": str(name or eid),
-                    "kind": str(etype or kind or "entity").lower(),
-                    "status": "ready" if str(status) == "approved" else "draft",
-                    "parent": cid,
-                    "summary": str(desc or ""),
-                    "sources": ent_sources,
-                    "tags": [str(kind)] if kind else [],
-                    "metrics": {"type": str(etype or kind or "")},
-                }
-            )
+            for row in conn.execute(
+                "SELECT entity_id, name, kind, type, description, status, source_id FROM entities WHERE merged_into IS NULL"
+            ):
+                eid, name, kind, etype, desc, status, sid = row
+                eid = str(eid)
+                cid, ctitle = map_kg_container(str(etype or kind or "project"))
+                ensure_container(cid, ctitle)
+                entity_ids.add(eid)
+                slug = eid.split(":", 1)[-1].lower()
+                slug_to_eid[slug] = eid
 
-        edge_seq = 0
-        seen_pairs: set[tuple[str, str, str]] = set()
-        for row in conn.execute(
-            "SELECT source_entity_id, target_entity_id, edge_type, confidence FROM edges"
-        ):
-            u, v, etype, conf = str(row[0]), str(row[1]), str(row[2] or "USES"), row[3]
-            if u not in entity_ids or v not in entity_ids or u == v:
-                continue
-            rel = map_kg_predicate(etype)
-            if (u, v, rel) in seen_pairs:
-                continue
-            seen_pairs.add((u, v, rel))
-            edge_seq += 1
-            edges.append(
-                {
-                    "id": f"kge-{edge_seq}",
-                    "from": u,
-                    "to": v,
-                    "relation": rel,
-                    "flowRole": "forward",
-                    "summary": f"{etype} (confidence: {conf})",
-                    "contextSnippet": f"Predicate: {etype}",
-                }
-            )
-        conn.close()
+                ent_sources = []
+                if sid is not None and int(sid) in src_lookup:
+                    s_uri, s_title = src_lookup[int(sid)]
+                    ent_sources.append(
+                        {"id": f"s-{sid}", "title": s_title, "url": s_uri}
+                    )
+                    ov = source_overlays.setdefault(
+                        f"s-{sid}",
+                        {
+                            "id": f"src:s-{sid}",
+                            "title": s_title[:58],
+                            "kind": "source-doc",
+                            "url": s_uri,
+                            "summary": f"Extracted knowledge-graph source document ({s_uri})",
+                            "touches": [],
+                        },
+                    )
+                    if eid not in ov["touches"]:
+                        ov["touches"].append(eid)
+
+                nodes.append(
+                    {
+                        "id": eid,
+                        "title": str(name or eid),
+                        "kind": str(etype or kind or "entity").lower(),
+                        "status": "ready" if str(status) == "approved" else "draft",
+                        "parent": cid,
+                        "summary": str(desc or ""),
+                        "sources": ent_sources,
+                        "tags": [str(kind)] if kind else [],
+                        "metrics": {"type": str(etype or kind or "")},
+                    }
+                )
+
+            edge_seq = 0
+            seen_pairs: set[tuple[str, str, str]] = set()
+            for row in conn.execute(
+                "SELECT source_entity_id, target_entity_id, edge_type, confidence FROM edges"
+            ):
+                u, v, etype, conf = (
+                    str(row[0]),
+                    str(row[1]),
+                    str(row[2] or "USES"),
+                    row[3],
+                )
+                if u not in entity_ids or v not in entity_ids or u == v:
+                    continue
+                rel = map_kg_predicate(etype)
+                if (u, v, rel) in seen_pairs:
+                    continue
+                seen_pairs.add((u, v, rel))
+                edge_seq += 1
+                edges.append(
+                    {
+                        "id": f"kge-{edge_seq}",
+                        "from": u,
+                        "to": v,
+                        "relation": rel,
+                        "flowRole": "forward",
+                        "summary": f"{etype} (confidence: {conf})",
+                        "contextSnippet": f"Predicate: {etype}",
+                    }
+                )
+        except sqlite3.Error as exc:
+            raise KGSchemaError(
+                f"{db_file} is not a compatible knowledge-graph database ({exc}). "
+                f"Expected {KG_SQLITE_SCHEMA}. See references/schema.md."
+            ) from exc
+        finally:
+            conn.close()
 
     # 2. Merge explicit curated YAML relations & timeline if present
     rel_yaml = yaml_dir / "relations.yaml"
@@ -738,9 +763,7 @@ def compile_kg(kg_path: Path, graph_id: str | None = None) -> dict[str, Any]:
                         }
                     )
                     return eid_new
-                cid, ctitle = map_kg_container(
-                    "concept" if "badge" in s_low or "passport" in s_low else "project"
-                )
+                cid, ctitle = map_kg_container("project")
                 ensure_container(cid, ctitle)
                 eid_new = f"entity:{slug_raw}"
                 entity_ids.add(eid_new)
@@ -839,7 +862,7 @@ def compile_kg(kg_path: Path, graph_id: str | None = None) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# 3. ATIF / OATR / Jetski Trajectory Adapter (Decision Spine + Multi-Run Compare)
+# 3. ATIF / Jetski Trajectory Adapter (Decision Spine + Multi-Run Compare)
 # ---------------------------------------------------------------------------
 ATIF_RELATIONS = {
     "advances-to": {
@@ -888,7 +911,7 @@ ATIF_RELATIONS = {
 
 
 def normalize_trajectory_file(path: Path) -> dict[str, Any]:
-    """Parse ATIF v1.x JSON, OATR v1 JSON, or Jetski transcript.jsonl into a unified Trajectory dict."""
+    """Parse ATIF v1.x JSON or Jetski transcript.jsonl into a unified Trajectory dict."""
     text = path.read_text(encoding="utf-8")
 
     # Format A: JSONL (Jetski transcript.jsonl)
@@ -898,15 +921,7 @@ def normalize_trajectory_file(path: Path) -> dict[str, Any]:
 
     doc = json.loads(text)
 
-    # Format B: OATR v1 TrajectoryBundle ({"trajectories": {...}, "rootTrajectoryId": ...})
-    if (
-        isinstance(doc, dict)
-        and "trajectories" in doc
-        and isinstance(doc["trajectories"], dict)
-    ):
-        return _normalize_oatr_bundle(path, doc)
-
-    # Format C: ATIF v1.x / v1.7 Document ({"schema_version": "ATIF-...", "steps": [...]})
+    # Format B: ATIF v1.x / v1.7 Document ({"schema_version": "ATIF-...", "steps": [...]})
     if isinstance(doc, dict) and "steps" in doc:
         return _normalize_atif_doc(path, doc)
 
@@ -980,8 +995,7 @@ def _normalize_atif_doc(path: Path, doc: dict[str, Any]) -> dict[str, Any]:
                 tc_extra = tc.get("extra") or {}
                 is_err = bool(
                     extra.get("is_error")
-                    or tc_extra.get("exit_code", 0) not in (0, None)
-                    or "permission denied" in obs_txt.lower()
+                    or tc_extra.get("exit_code", 0) not in (0, None, "0")
                     or "error" in str(extra.get("status", "")).lower()
                 )
                 sub_doc = None
@@ -1015,129 +1029,6 @@ def _normalize_atif_doc(path: Path, doc: dict[str, Any]) -> dict[str, Any]:
         "agent": agent_name,
         "model": model_name,
         "total_tokens": total_tok or sum(e["tokens"] for e in events),
-        "events": events,
-    }
-
-
-def _normalize_oatr_bundle(path: Path, bundle: dict[str, Any]) -> dict[str, Any]:
-    trajs = bundle.get("trajectories") or {}
-    root_tid = str(bundle.get("rootTrajectoryId") or next(iter(trajs.keys())))
-    root_t = trajs[root_tid]
-    producer = (root_t.get("producer") or {}).get("displayName") or "OATR Agent"
-    model = ((root_t.get("agent") or {}).get("model") or {}).get(
-        "displayName"
-    ) or "gemini"
-    title = str(root_t.get("title") or f"{producer} ({root_tid[:8]})")
-
-    def parse_oatr_traj(t_obj: dict[str, Any]) -> list[dict[str, Any]]:
-        evs: list[dict[str, Any]] = []
-        for stp in t_obj.get("steps") or []:
-            src = str(stp.get("source") or "AGENT").lower()
-            if src == "system":
-                continue
-            texts = []
-            thoughts = []
-            for c in stp.get("content") or []:
-                if "text" in c and isinstance(c["text"], dict):
-                    texts.append(str(c["text"].get("text") or ""))
-                if "reasoning" in c and isinstance(c["reasoning"], dict):
-                    thoughts.append(str(c["reasoning"].get("text") or ""))
-            msg = " ".join(texts).strip()
-            thought = " ".join(thoughts).strip()
-            usage_tot = ((stp.get("usage") or {}).get("total")) or {}
-            tok = int(usage_tot.get("inputTokenCount") or 0) + int(
-                usage_tot.get("outputTokenCount") or 0
-            )
-
-            actions = stp.get("actions") or []
-            if not actions:
-                if msg or thought:
-                    evs.append(
-                        {
-                            "source": src,
-                            "tool": None,
-                            "label": f"{src.title()}: {msg[:54]}"
-                            if msg
-                            else f"{src.title()} reasoning",
-                            "thought": thought,
-                            "observation": msg[:240],
-                            "is_error": False,
-                            "tokens": tok,
-                            "subagent": None,
-                        }
-                    )
-            else:
-                for act in actions:
-                    fn = str(act.get("name") or "tool")
-                    args = act.get("arguments") or {}
-                    obs = str(act.get("result") or "")
-                    is_err = bool(
-                        act.get("errored")
-                        or "not found" in obs.lower()
-                        or "permission denied" in obs.lower()
-                    )
-                    sub_norm = None
-                    sub_canon = (act.get("canonical") or {}).get("subagent") or {}
-                    child_id = sub_canon.get("trajectoryId")
-                    if child_id and child_id in trajs:
-                        sub_norm = {
-                            "id": child_id,
-                            "title": str(
-                                (sub_canon.get("agent") or {}).get("displayName")
-                                or child_id[:8]
-                            ),
-                            "events": parse_oatr_traj(trajs[child_id]),
-                        }
-                    elif (act.get("resultData") or {}).get("recentActivity"):
-                        sub_evs = []
-                        for ra in act["resultData"]["recentActivity"]:
-                            sub_evs.append(
-                                {
-                                    "source": "agent",
-                                    "tool": str(ra.get("content") or "tool"),
-                                    "label": f"{ra.get('displayName') or ra.get('content')}: {ra.get('description', '')[:42]}",
-                                    "thought": "",
-                                    "observation": str(ra.get("status") or ""),
-                                    "is_error": False,
-                                    "tokens": 0,
-                                    "subagent": None,
-                                }
-                            )
-                        sub_norm = {
-                            "id": str(child_id or "subagent"),
-                            "title": str(
-                                act["resultData"].get("agentName") or "subagent"
-                            ),
-                            "events": sub_evs,
-                        }
-                    arg_preview = ", ".join(
-                        f"{k}={str(v)[:26]}" for k, v in list(args.items())[:2]
-                    )
-                    evs.append(
-                        {
-                            "source": src,
-                            "tool": fn,
-                            "label": f"{fn}({arg_preview})" if arg_preview else fn,
-                            "thought": thought or msg,
-                            "observation": obs[:240],
-                            "is_error": is_err,
-                            "tokens": tok,
-                            "subagent": sub_norm,
-                        }
-                    )
-        return evs
-
-    events = parse_oatr_traj(root_t)
-    tot_u = ((root_t.get("usage") or {}).get("total")) or {}
-    tot_tok = int(tot_u.get("inputTokenCount") or 0) + int(
-        tot_u.get("outputTokenCount") or 0
-    )
-    return {
-        "id": root_tid,
-        "title": title,
-        "agent": producer,
-        "model": model,
-        "total_tokens": tot_tok or sum(e["tokens"] for e in events),
         "events": events,
     }
 
@@ -1556,7 +1447,7 @@ def compile_atif_compare(
             "kind": "atif-comparison",
             "status": "ready",
             "parent": None,
-            "summary": "Shared capability, tool, subagent, and failure-mode graph comparing multiple real ATIF / OATR / Jetski agent trajectories side-by-side.",
+            "summary": "Shared capability, tool, subagent, and failure-mode graph comparing multiple real ATIF / Jetski agent trajectories side-by-side.",
             "sources": [],
             "tags": [],
             "metrics": {"runs_compared": len(norms)},
@@ -1585,11 +1476,11 @@ def compile_atif_compare(
         },
         {
             "id": "state:synthesis",
-            "title": "Verified Resolution & Synthesis",
+            "title": "Goal reached",
             "kind": "stage",
             "status": "ready",
             "parent": root_id,
-            "summary": "Final grounded output or completed task verification.",
+            "summary": "Reached only by runs whose final step succeeded.",
             "sources": [],
             "tags": [],
             "metrics": {},
@@ -1612,20 +1503,12 @@ def compile_atif_compare(
                 "Subagent Delegation (task / invoke_agent)",
                 "subagent",
             )
-        if "search_web" in tl:
-            return ("cap:web_search", "Web Grounding Search (search_web)", "tool")
-        if "github" in tl or "mcp" in tl:
-            return (
-                "cap:mcp_code_search",
-                "MCP Structural Code Search (github)",
-                "tool",
-            )
-        if tl in ("read_file", "skill_search"):
-            return ("cap:file_inspect", "File & Skill Inspection (read_file)", "tool")
+        if tl == "read_file":
+            return ("cap:file_inspect", "File inspection (read_file)", "tool")
         if tl in ("write_file", "edit_file"):
             return (
                 "cap:artifact_write",
-                "Artifact & Code Authoring (write_file)",
+                "File authoring (write_file / edit_file)",
                 "tool",
             )
         if tl in ("bash", "run_command"):
@@ -1651,6 +1534,8 @@ def compile_atif_compare(
         )
         add_edge("state:intake", "state:planner", "advances-to", "forward", run_label)
         blind_cnt = 0
+        agent_events = [e for e in norm["events"] if e["source"] != "user"]
+        final_ok = bool(agent_events) and not agent_events[-1].get("is_error")
 
         for ev in norm["events"]:
             if ev["source"] == "user":
@@ -1689,11 +1574,11 @@ def compile_atif_compare(
                     nodes.append(
                         {
                             "id": err_id,
-                            "title": "✕ Blind Alley / Tool Error (404, ACL, Miss)",
+                            "title": "✕ Blind alley / tool error",
                             "kind": "failure-state",
                             "status": "blind-alley",
                             "parent": root_id,
-                            "summary": "Dead-end state reached when a tool errors (permission denied, missing file, 404) or returns ungrounded results.",
+                            "summary": "Dead-end state reached when a tool call reports an error.",
                             "sources": [],
                             "tags": [],
                             "metrics": {},
@@ -1732,9 +1617,10 @@ def compile_atif_compare(
                     }
                 )
             else:
-                add_edge(
-                    cid, "state:synthesis", "produces-outcome", "forward", run_label
-                )
+                if final_ok:
+                    add_edge(
+                        cid, "state:synthesis", "produces-outcome", "forward", run_label
+                    )
                 steps_out.append(
                     {
                         "stepIndex": len(steps_out) + 1,
@@ -1746,14 +1632,15 @@ def compile_atif_compare(
                     }
                 )
 
-        steps_out.append(
-            {
-                "stepIndex": len(steps_out) + 1,
-                "nodeId": "state:synthesis",
-                "label": "Trajectory Goal Reached",
-                "role": "goal",
-            }
-        )
+        if final_ok:
+            steps_out.append(
+                {
+                    "stepIndex": len(steps_out) + 1,
+                    "nodeId": "state:synthesis",
+                    "label": "Trajectory Goal Reached",
+                    "role": "goal",
+                }
+            )
 
         traces.append(
             {
@@ -1798,7 +1685,7 @@ def compile_atif_compare(
         "schema": "strata-graph/1",
         "id": graph_id or "atif-multi-compare",
         "title": f"ATIF Multi-Run Comparison ({len(norms)} Trajectories)",
-        "subtitle": "Click '⇄ Compare All' in the ATIF bar to see R1..R4 footprints across shared tools, subagents, and blind-alley recovery loops.",
+        "subtitle": f"Click '⇄ Compare All' in the ATIF bar to see R1..R{len(norms)} footprints across shared tools, subagents, and blind-alley recovery loops.",
         "domain": "atif-compare",
         "generatedAt": now_iso(),
         "sourceLabel": f"{len(norms)} real trajectories",
@@ -1862,21 +1749,27 @@ def render_html(payload: dict[str, Any], title: str | None = None) -> str:
     css = (ASSETS_DIR / "viewer.css").read_text(encoding="utf-8")
     js = (ASSETS_DIR / "viewer.js").read_text(encoding="utf-8")
 
-    # Escape '</' inside JSON to prevent </script> breakout XSS
-    safe_json = json.dumps(payload, ensure_ascii=False).replace("</", "<\\/")
+    # "<" must never appear raw inside a script element: "</script>" ends it and
+    # "<!--" followed by "<script" switches the HTML tokenizer's script state.
+    safe_json = (
+        json.dumps(payload, ensure_ascii=False)
+        .replace("<", "\\u003c")
+        .replace("\u2028", "\\u2028")
+        .replace("\u2029", "\\u2029")
+    )
 
     page_title = title or payload.get("title") or "Strata Graph Explorer"
     html = tpl.replace(
         "<title>Strata Graph Explorer</title>",
         f"<title>{html_escape(str(page_title))}</title>",
     )
-    html = html.replace("<!-- STRATA:CSS -->", f"<style>\n{css}\n</style>")
-    html = html.replace(
-        "<!-- STRATA:DATA -->",
-        f'<script id="strata-data" type="application/json">{safe_json}</script>',
-    )
-    html = html.replace("<!-- STRATA:JS -->", f"<script>\n{js}\n</script>")
-    return html
+    # One pass, so text inside an inserted block is never scanned for markers.
+    blocks = {
+        "CSS": f"<style>\n{css}\n</style>",
+        "DATA": f'<script id="strata-data" type="application/json">{safe_json}</script>',
+        "JS": f"<script>\n{js}\n</script>",
+    }
+    return re.sub(r"<!-- STRATA:(CSS|DATA|JS) -->", lambda m: blocks[m.group(1)], html)
 
 
 def write_output(payload: dict[str, Any], out_path: Path) -> None:
@@ -1915,7 +1808,7 @@ def main(argv: list[str] | None = None) -> int:
     p_kg.add_argument("--id", default=None)
 
     p_atif = sub.add_parser(
-        "compile-atif", help="Compile 1..N ATIF, OATR, or Jetski JSONL trajectories."
+        "compile-atif", help="Compile 1..N ATIF or Jetski JSONL trajectories."
     )
     p_atif.add_argument("inputs", type=Path, nargs="+")
     p_atif.add_argument("--mode", choices=["decision", "compare"], default="decision")
@@ -1963,7 +1856,11 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.cmd == "compile-kg":
-        ds = compile_kg(args.kg_path, graph_id=args.id)
+        try:
+            ds = compile_kg(args.kg_path, graph_id=args.id)
+        except KGSchemaError as exc:
+            print(json.dumps({"status": "error", "error": str(exc)}), file=sys.stderr)
+            return 1
         validate_dataset(ds)
         write_output(ds, args.output)
         print(
@@ -2036,10 +1933,17 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "build-hub":
         loaded = []
+        errs = []
         for p in args.datasets:
             ds = json.loads(p.read_text(encoding="utf-8"))
-            validate_dataset(ds)
+            diags = validate_dataset(ds)
+            errs += [
+                {**d, "dataset": str(p)} for d in diags if d.get("level") == "error"
+            ]
             loaded.append(ds)
+        if errs:
+            print(json.dumps({"status": "error", "errors": errs}), file=sys.stderr)
+            return 1
         hub = {
             "schema": "strata-hub/1",
             "title": args.title,

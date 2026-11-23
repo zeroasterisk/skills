@@ -1,8 +1,11 @@
 """Tests for scripts/strata.py and assets/viewer.js (standard library only)."""
 
+import contextlib
 import copy
 import importlib.util
+import io
 import json
+import re
 import shutil
 import subprocess
 import tempfile
@@ -170,13 +173,11 @@ class ViewerTest(unittest.TestCase):
     def test_viewer_js_parses(self):
         subprocess.run(["node", "--check", str(VIEWER_JS)], check=True)
 
-    @unittest.skipUnless(shutil.which("npx"), "npx is not installed")
+    @unittest.skipUnless(shutil.which("eslint"), "eslint is not installed locally")
     def test_viewer_js_has_no_undefined_names(self):
         proc = subprocess.run(
             [
-                "npx",
-                "--yes",
-                "eslint@8",
+                "eslint",
                 "--no-eslintrc",
                 "--env",
                 "browser,es2022",
@@ -193,36 +194,219 @@ class ViewerTest(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stdout)
 
 
-@unittest.skipUnless(
-    shutil.which("google-chrome") or shutil.which("chromium"), "no headless browser"
-)
-class MutualCycleRenderTest(unittest.TestCase):
+BROWSER = shutil.which("google-chrome") or shutil.which("chromium")
+
+
+def _dump_dom(payload):
+    with tempfile.TemporaryDirectory() as tmp:
+        page = Path(tmp) / "page.html"
+        page.write_text(strata.render_html(payload), encoding="utf-8")
+        return subprocess.run(
+            [
+                BROWSER,
+                "--headless=new",
+                "--no-sandbox",
+                "--disable-gpu",
+                "--enable-logging=stderr",
+                "--v=0",
+                "--dump-dom",
+                str(page),
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=90,
+        )
+
+
+@unittest.skipUnless(BROWSER, "no headless browser")
+class BrowserRenderTest(unittest.TestCase):
     def test_mutual_two_cycle_renders_without_script_errors(self):
-        browser = shutil.which("google-chrome") or shutil.which("chromium")
-        with tempfile.TemporaryDirectory() as tmp:
-            page = Path(tmp) / "cycle.html"
-            page.write_text(
-                strata.render_html(_mutual_cycle_dataset()), encoding="utf-8"
-            )
-            proc = subprocess.run(
-                [
-                    browser,
-                    "--headless=new",
-                    "--no-sandbox",
-                    "--disable-gpu",
-                    "--enable-logging=stderr",
-                    "--v=0",
-                    "--dump-dom",
-                    str(page),
-                ],
-                check=False,
-                capture_output=True,
-                text=True,
-                timeout=90,
-            )
+        proc = _dump_dom(_mutual_cycle_dataset())
         self.assertNotIn("Uncaught", proc.stderr)
         self.assertIn("Alpha", proc.stdout)
         self.assertIn("Beta", proc.stdout)
+
+    def test_level_label_and_axis_notes_reach_the_dom(self):
+        ds = _mutual_cycle_dataset()
+        ds["edges"] = [ds["edges"][0]]
+        ds["nodes"].append(
+            {
+                "id": "c",
+                "title": "Gamma",
+                "kind": "stage",
+                "status": "ready",
+                "parent": "r",
+            }
+        )
+        ds["overlays"] = [
+            {
+                "id": "ov",
+                "title": "Shared",
+                "kind": "policy",
+                "touches": ["a", "b", "c"],
+            }
+        ]
+        ds["levelLabel"] = "zorp"
+        # Notes only draw beside blocks that sit at x >= 220, which is where Gamma lands.
+        ds["axisNotes"] = [{"nodeId": "c", "text": "MARGIN-NOTE-TEXT"}]
+        proc = _dump_dom(ds)
+        self.assertNotIn("Uncaught", proc.stderr)
+        # The raw text is also in the embedded JSON, so match the rendered element.
+        self.assertIsNotNone(
+            re.search(r'class="frame-label"[^>]*>MARGIN-NOTE-TEXT<', proc.stdout),
+            "axis note was not rendered",
+        )
+        self.assertIn("3 zorps", proc.stdout)
+
+    def test_html_comment_text_does_not_swallow_the_page(self):
+        ds = _mutual_cycle_dataset()
+        ds["nodes"][1]["title"] = "<!-- <script></script> Alpha"
+        proc = _dump_dom(ds)
+        self.assertNotIn("Uncaught", proc.stderr)
+        self.assertIn("Beta", proc.stdout)
+
+
+class EmbeddedJsonTest(unittest.TestCase):
+    def _embedded(self, payload):
+        html = strata.render_html(payload)
+        m = re.search(
+            r'<script id="strata-data" type="application/json">(.*?)</script>',
+            html,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(m)
+        return html, m.group(1)
+
+    def test_dangerous_strings_round_trip(self):
+        for text in ("<!-- <script></script>", "<!-- STRATA:JS -->", "a\u2028b\u2029c"):
+            payload = {"title": "t", "note": text}
+            html, raw = self._embedded(payload)
+            self.assertNotIn("<", raw)
+            self.assertEqual(json.loads(raw), payload)
+            self.assertEqual(html.count('id="strata-data"'), 1)
+
+    def test_marker_in_data_does_not_inject_viewer(self):
+        html, raw = self._embedded({"title": "t", "note": "<!-- STRATA:JS -->"})
+        viewer = VIEWER_JS.read_text(encoding="utf-8")
+        self.assertEqual(html.count(viewer), 1)
+        self.assertNotIn("function prepareDataset", raw)
+
+
+class SchemaDocTest(unittest.TestCase):
+    def test_first_json_example_validates(self):
+        text = (SKILL_DIR / "references" / "schema.md").read_text(encoding="utf-8")
+        m = re.search(r"```json\n(.*?)\n```", text, re.DOTALL)
+        self.assertIsNotNone(m)
+        ds = json.loads(m.group(1))
+        errors = [d for d in strata.validate_dataset(ds) if d["level"] == "error"]
+        self.assertEqual(errors, [])
+
+
+class CliTest(unittest.TestCase):
+    def _run(self, argv):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = strata.main(argv)
+        return code, out.getvalue(), err.getvalue()
+
+    def test_compile_kg_rejects_database_with_wrong_schema(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "empty.db"
+            db.write_bytes(b"")
+            code, _, err = self._run(
+                ["compile-kg", str(db), "-o", str(Path(tmp) / "out.json")]
+            )
+        self.assertEqual(code, 1)
+        self.assertIn("not a compatible knowledge-graph database", err)
+        self.assertIn("entities(entity_id", err)
+
+    def test_build_hub_fails_on_error_diagnostics(self):
+        ds = _mutual_cycle_dataset()
+        ds["edges"].append({"id": "e3", "from": "a", "to": "zzz", "relation": "next"})
+        with tempfile.TemporaryDirectory() as tmp:
+            src = Path(tmp) / "ds.json"
+            src.write_text(json.dumps(ds), encoding="utf-8")
+            out = Path(tmp) / "hub.html"
+            code, _, err = self._run(["build-hub", str(src), "-o", str(out)])
+            self.assertEqual(code, 1)
+            self.assertIn("DANGLING_EDGE", err)
+            self.assertFalse(out.exists())
+
+    def test_build_hub_succeeds_on_valid_datasets(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            src = Path(tmp) / "ds.json"
+            src.write_text(json.dumps(_mutual_cycle_dataset()), encoding="utf-8")
+            out = Path(tmp) / "hub.html"
+            code, _, _ = self._run(["build-hub", str(src), "-o", str(out)])
+            self.assertEqual(code, 0)
+            self.assertTrue(out.exists())
+
+
+def _atif_doc(tool, exit_code, output):
+    return {
+        "schema_version": "ATIF-v1.4",
+        "steps": [
+            {
+                "source": "agent",
+                "message": "run",
+                "tool_calls": [
+                    {
+                        "tool_call_id": "c1",
+                        "function_name": tool,
+                        "arguments": {"cmd": "x"},
+                        "extra": {"exit_code": exit_code},
+                    }
+                ],
+                "observation": {
+                    "results": [{"source_call_id": "c1", "content": output}]
+                },
+            }
+        ],
+    }
+
+
+class AtifCompareTest(unittest.TestCase):
+    def _compile(self, docs, mode_compare=True):
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = []
+            for i, doc in enumerate(docs):
+                p = Path(tmp) / f"run{i}.json"
+                p.write_text(json.dumps(doc), encoding="utf-8")
+                paths.append(p)
+            if mode_compare:
+                return strata.compile_atif_compare(paths)
+            return strata.compile_atif_decision(paths)
+
+    def test_output_text_alone_is_not_an_error(self):
+        ds = self._compile(
+            [_atif_doc("bash", 0, "permission denied and not found in text")],
+            mode_compare=False,
+        )
+        self.assertEqual(ds["traces"][0]["blindAlleyCount"], 0)
+
+    def test_nonzero_exit_code_is_an_error(self):
+        ds = self._compile([_atif_doc("bash", 2, "")], mode_compare=False)
+        self.assertEqual(ds["traces"][0]["blindAlleyCount"], 1)
+
+    def test_goal_step_only_when_final_event_succeeds(self):
+        ds = self._compile([_atif_doc("bash", 0, "ok"), _atif_doc("bash", 1, "bad")])
+        ok, failed = ds["traces"]
+        self.assertEqual(ok["steps"][-1]["label"], "Trajectory Goal Reached")
+        self.assertNotIn(
+            "Trajectory Goal Reached", [s["label"] for s in failed["steps"]]
+        )
+        self.assertIn("R1..R2", ds["subtitle"])
+
+    def test_failed_run_has_no_edge_to_goal_node(self):
+        ds = self._compile([_atif_doc("bash", 1, "bad")])
+        self.assertFalse([e for e in ds["edges"] if e["to"] == "state:synthesis"])
+
+    def test_unknown_tools_keep_their_real_name(self):
+        ds = self._compile([_atif_doc("github_search", 0, "ok")])
+        titles = [n["title"] for n in ds["nodes"]]
+        self.assertIn("Tool: github_search", titles)
+        self.assertNotIn("MCP Structural Code Search (github)", titles)
 
 
 if __name__ == "__main__":

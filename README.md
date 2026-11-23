@@ -55,7 +55,7 @@ skills/
 | **`developer-friction-reviewer`** | `1.0.0` | Persona-based developer friction reviews and automated audit loops across recipes, tools, and onboarding flows. | `developer-friction-reviewer` |
 | **`agent-evals`** | `1.0.0` | Framing agent evals, benchmarks and leaderboards as held-constant ablations across model, harness and task adaptation, with progressive-disclosure reporting and integrity checks. | `eval-ablation-framing` |
 | **`council`** | `1.1.0` | Convening three independent, cold-start subagent delegates with isolated context and state for multi-round review, scoring, and feedback. | `council` |
-| **`strata-graph`** | `1.0.0` | Deterministic multi-layer graph compiler and interactive explorer for processes, OKF v0.2 wikis, knowledge graphs, and ATIF/OATR trajectories. | `strata-graph` |
+| **`strata-graph`** | `1.0.0` | Deterministic multi-layer graph compiler and interactive explorer for processes, OKF v0.2 wikis, knowledge graphs, and ATIF trajectories. | `strata-graph` |
 
 ### Consumed Upstream Plugins (`ghchinoy/agent-skills` & `voodootikigod/adlc`)
 

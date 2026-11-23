@@ -181,7 +181,7 @@
     {
       "name": "strata-graph",
       "source": "./plugins/strata-graph",
-      "description": "Deterministic multi-layer graph compiler and interactive explorer for processes, OKF v0.2 LLM wikis, knowledge graphs, and ATIF/OATR agent trajectories with blind-alley and backtrack tracing.",
+      "description": "Deterministic multi-layer graph compiler and interactive explorer for processes, OKF v0.2 LLM wikis, knowledge graphs, and ATIF agent trajectories with blind-alley and backtrack tracing.",
       "skills": [
         "./plugins/strata-graph/skills/strata-graph"
       ]
