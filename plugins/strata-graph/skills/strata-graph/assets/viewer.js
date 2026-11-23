@@ -1,6 +1,6 @@
 /* Strata Graph Interactive Viewer (Zero-Dependency Vanilla JS + SVG/DOM)
    Architectural heritage: Inspired by Adam Gospodarczyk's (@overment) limen picture (MIT).
-   Clean-room multi-domain engine adding:
+   Independent multi-domain implementation adding:
    - Multi-dataset Hub tabs (strata-hub/1 & strata-graph/1)
    - Hierarchy vs Expanded Spine mode + OUTSIDE ghost lifting
    - Sugiyama + weighted PAV isotonic regression + 4.5px multi-lane colored bundles
@@ -620,8 +620,8 @@
       if (!spineIds.has(b.u) || !spineIds.has(b.v)) continue;
       const rev = pairBundleMap.get(`${b.v}->${b.u}`);
       if (!rev || cyclicKeys.has(b.key) || cyclicKeys.has(rev.key)) continue;
-      const nu = itemNode(b.u);
-      const nv = itemNode(b.v);
+      const nu = level.spineMap.get(b.u)?.node;
+      const nv = level.spineMap.get(b.v)?.node;
       const tu = Number.isFinite(nu?.tier) ? nu.tier : null;
       const tv = Number.isFinite(nv?.tier) ? nv.tier : null;
       if (tu !== null && tv !== null && tu !== tv) {
@@ -1114,7 +1114,7 @@
       const isQuietBypass =
         level.focus.id === ds.rootId &&
         !st.expandAll &&
-        bu.ref?.node?.kind === "stewards-layer" &&
+        bu.ref?.node?.quietBypass === true &&
         bv.row - bu.row > 1;
       forwardRoutes.push({
         bundle: b,
@@ -1756,29 +1756,19 @@
       dom.blocks.appendChild(lbl);
     }
 
-    // On-canvas axis legend for Agent Ontology root view (explains 90° rotation vs World Map)
-    if (ds.id === "agent-ontology" && level.focus.id === ds.rootId) {
-      const bx0 = lay.boxes.get("sec:governance-and-actors");
-      const bx7 = lay.boxes.get("sec:observability-and-evals");
-      if (bx0 && bx0.x >= 220) {
-        const noteTop = h("div", "frame-label");
-        noteTop.style.left = "20px";
-        noteTop.style.top = `${bx0.y + 4}px`;
-        noteTop.style.width = `${Math.max(180, bx0.x - 36)}px`;
-        noteTop.style.whiteSpace = "normal";
-        noteTop.style.lineHeight = "1.35";
-        noteTop.textContent = "STRATA vs WORLD MAP AXES: Scope Radius 0→7 runs Top→Bottom; North (1,3,5 Decide/Declare) = Left, South (2,4,6 Execute) = Right.";
-        dom.blocks.appendChild(noteTop);
-      }
-      if (bx7 && bx7.x >= 220) {
-        const noteBot = h("div", "frame-label");
-        noteBot.style.left = "20px";
-        noteBot.style.top = `${bx7.y + 8}px`;
-        noteBot.style.width = `${Math.max(180, bx7.x - 36)}px`;
-        noteBot.style.whiteSpace = "normal";
-        noteBot.style.lineHeight = "1.35";
-        noteBot.textContent = "↺ RAILS: Left routes 7 → 3 Policy; Right routes 7 → 2 Harness.";
-        dom.blocks.appendChild(noteBot);
+    // Optional dataset-supplied notes drawn in the left margin beside a spine block
+    if (level.focus.id === ds.rootId) {
+      for (const note of ds.axisNotes || []) {
+        const bx = lay.boxes.get(note.nodeId);
+        if (!bx || bx.x < 220) continue;
+        const el = h("div", "frame-label");
+        el.style.left = "20px";
+        el.style.top = `${bx.y + 4}px`;
+        el.style.width = `${Math.max(180, bx.x - 36)}px`;
+        el.style.whiteSpace = "normal";
+        el.style.lineHeight = "1.35";
+        el.textContent = String(note.text || "");
+        dom.blocks.appendChild(el);
       }
     }
 
@@ -1999,7 +1989,7 @@
         head.appendChild(h("span", "b-kind", ref.overlay.kind));
         const cnt = ref.touchedSpineIds.length;
         const unit = !st.expandAll && level.focus.id === ds.rootId
-          ? (ds.id === "aaif-wiki" ? "section" : ds.domain === "process" ? "phase" : "layer")
+          ? (ds.levelLabel || (ds.domain === "okf-wiki" ? "section" : ds.domain === "process" ? "phase" : "layer"))
           : (!st.expandAll && level.focus.kids && level.focus.kids.some((k) => k.kids && k.kids.length))
             ? "group"
             : "item";
@@ -2356,7 +2346,7 @@
     dom.drawer.replaceChildren();
     dom.drawer.appendChild(h("h3", null, `Compiler & Integrity Diagnostics (${ds.diagnostics.length})`));
     if (!ds.diagnostics.length) {
-      dom.drawer.appendChild(h("p", "d-snippet", "0 integrity errors or warnings. All IDs, parent hierarchies, and edge endpoints verified."));
+      dom.drawer.appendChild(h("p", "d-snippet", "No integrity errors or warnings. Node ids, parent references, edge endpoints, and trace steps were checked."));
       return;
     }
     for (const d of ds.diagnostics) {

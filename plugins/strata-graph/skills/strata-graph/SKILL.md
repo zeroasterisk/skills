@@ -4,70 +4,76 @@ description: Compile, validate, and explore multi-layer structural and cross-cut
 license: Apache-2.0
 ---
 
-# Strata Graph (`strata-graph`)
+# Strata graph (`strata-graph`)
 
-Deterministic compiler, integrity validator, and zero-CDN interactive HTML explorer for **meso-scale structured graphs (`15–1,500+` nodes)** that combine a **hierarchical/causal spine** with a **dense cross-cutting web** and **temporal/counterfactual traces**.
+A compiler, validator, and interactive HTML explorer for structured graphs of about 15 to 1,500 nodes. These graphs have a hierarchical or causal spine, a dense set of cross-cutting links, and optional traces over time. The output is one HTML file that works from `file://` with no network access.
 
-> **Architectural Heritage**: Inspired by Adam Gospodarczyk's (`@overment`) [`overment/limen`](https://github.com/overment/limen) (`limen picture`, MIT License) — keeping its core principle (*agents curate facts; a deterministic zero-LLM compiler builds the HTML*), hierarchical edge lifting with `OUTSIDE` ghost blocks, cross-cutting bottom bands, and weighted Pool-Adjacent-Violators (`PAV`) multi-lane cable routing, while extending it to OKF v0.2 wikis, Knowledge Graphs, Stateful Processes, and ATIF/OATR trajectories with explicit blind alleys (`✕`) and backtrack return arcs (`↺`).
+Independent implementation inspired by Adam Gospodarczyk's (`@overment`) [`overment/limen`](https://github.com/overment/limen) (`limen picture`, MIT License). It keeps limen's main idea: agents curate facts, and a deterministic compiler with no LLM builds the HTML. It also uses hierarchical edge lifting with `OUTSIDE` ghost blocks, cross-cutting bands, and weighted Pool-Adjacent-Violators (PAV) multi-lane routing. It adds OKF v0.2 wikis, knowledge graphs, stateful processes, and ATIF/OATR trajectories with dead-end marks (`✕`) and backtrack return arcs (`↺`).
 
-## When to Use vs. Neighboring Visualization Tools
+## When to use it
 
-| Scale & Topology | Best Tool | Why |
+| Scale and shape | Tool | Why |
 | :--- | :--- | :--- |
-| **`<= 15` nodes** (single slide or hero diagram) | `diagram-design` | Curated single-frame SVG/PNG layout for docs and decks. |
-| **`15 – 1,500` structured + cross-cutting nodes** | **`strata-graph`** | Hierarchical drill-down, lifted colored wire bundles, `OUTSIDE` ghost blocks, `Shift+Click` path tracing, cross-cutting slices, and ATIF blind-alley/backtrack scrubbing. |
-| **`1,500 – 50,000+` flat vault nodes** | `vault-graph` | WebGL force-directed cluster overview when causal reading order is not needed. |
+| Up to about 15 nodes | `diagram-design` | A hand-laid single-frame SVG or PNG for a doc or slide. |
+| About 15 to 1,500 nodes with a spine and cross-cutting links | `strata-graph` | Drill-down, lifted edge bundles, `OUTSIDE` ghost blocks, path tracing, cross-cutting slices, and trajectory scrubbing. |
+| More than about 1,500 flat nodes | A force-directed graph viewer | `strata-graph` is not built for this scale, and a flat overview does not need a causal reading order. |
 
-## Core Principle: Two-Stage Separation
+## How it works
 
-1. **Fact Extraction / Adapter Stage**: Either run a deterministic adapter (`compile-okf`, `compile-kg`, `compile-atif`) directly over existing structured artifacts, OR author a `strata-graph/1` JSON spec (`compile-json`) for custom processes and architectures.
-2. **Deterministic Build & Audit Stage**: `scripts/strata.py` validates every node ID, parent tree, edge endpoint, source bijection, and trace step **without calling an LLM**, then bundles CSS + JSON + JS into a single zero-network `file://`-safe HTML file.
+1. **Extract facts.** Run an adapter (`compile-okf`, `compile-kg`, `compile-atif`) over existing artifacts, or write a `strata-graph/1` JSON spec and run `compile-json`.
+2. **Validate and build.** `scripts/strata.py` checks the root id, duplicate node ids, parent references, edge endpoints, and trace step node ids. It does not call an LLM. It then bundles CSS, JSON, and JS into one HTML file.
 
-## CLI Quick Reference
+## CLI quick reference
 
-All commands use Python 3.10+ standard library (`scripts/strata.py` relative to this skill directory):
+All commands use the Python 3.10+ standard library. PyYAML is used when installed.
 
 ```bash
 STRATA="<skill-dir>/scripts/strata.py"
 
-# 1. Compile an OKF v0.2 Markdown wiki bundle (sections + prose links + co-citation slices)
+# 1. Compile an OKF v0.2 Markdown wiki bundle (sections, prose links, co-citation slices)
 python3 "$STRATA" compile-okf /path/to/wiki -o /tmp/wiki-map.html
 
-# 2. Compile a Knowledge / Entity Graph (SQLite pipeline.db, YAML kg/ dir, or JSON)
-python3 "$STRATA" compile-kg /path/to/agents-kg -o /tmp/kg-map.html
+# 2. Compile a knowledge graph (SQLite pipeline.db, or a directory with YAML files)
+python3 "$STRATA" compile-kg /path/to/kg-dir -o /tmp/kg-map.html
 
-# 3. Compile a single ATIF v1.x, OATR v1, or Jetski transcript.jsonl trajectory
-#    (detects blind alleys ✕, wires explicit ↺ backtrack arcs, nests subagents)
+# 3. Compile one ATIF v1.x, OATR v1, or Jetski transcript.jsonl trajectory
+#    (marks dead ends with ✕, wires ↺ backtrack arcs, nests subagents)
 python3 "$STRATA" compile-atif /path/to/trajectory.json --mode decision -o /tmp/traj-map.html
 
-# 4. Compare 2..N trajectories over a shared Tool / Subagent / Failure-State matrix
+# 4. Compare two or more trajectories over shared tools, subagents, and failure states
 python3 "$STRATA" compile-atif run1.json run2.oatr.json run3.jsonl --mode compare -o /tmp/compare.html
 
-# 5. Validate and compile a custom stateful Process / Architecture JSON spec
+# 5. Validate and compile a custom process or architecture JSON spec
 python3 "$STRATA" compile-json /path/to/process.strata.json -o /tmp/process.html
 
-# 6. Bundle multiple compiled .json datasets into one multi-tab Explorer Hub
+# 6. Check a compiled dataset
+python3 "$STRATA" validate /tmp/process.json
+
+# 7. Bundle several compiled .json datasets into one multi-tab hub
 python3 "$STRATA" build-hub okf.json kg.json atif.json process.json -o /tmp/explorer-hub.html
 ```
 
-## Authoring Custom Process & System Graphs (`strata-graph/1`)
+An output path that ends in `.json` writes the dataset instead of HTML. That is how you produce the inputs for `build-hub`.
 
-When modeling a stateful process, workflow, or system architecture from prose/code, emit a JSON file conforming to [references/schema.md](references/schema.md) and compile with `compile-json`:
+## Writing a process or system graph (`strata-graph/1`)
 
-- **Hierarchy (`parent`)**: Group related components or stages inside drillable containers (`"parent": "stage:execution"`). Keep `4–9` sibling blocks per container so every focus level scans cleanly.
-- **Explicit Loops & Backtracks (`"flowRole": "backtrack"`)**: Never omit retry loops, rejection rollbacks, or escalation spurs! Mark return edges `"flowRole": "backtrack"` so the viewer routes them along dedicated right-hand `↺` return channels instead of reversing causal order.
-- **Blind Alleys & Gates (`status`)**: Use `"status": "gate"` for deterministic acceptance / human-approval gates, `"status": "blind-alley"` for dead-end hypotheses or error spurs, and `"status": "subagent"` for delegated workers.
-- **Cross-Cutting Slices (`overlays[]`)**: Put cross-cutting policies, shared data stores, actors, or citations in `overlays[]` (`touches: [nodeId...]`) rather than creating hub-and-spoke spaghetti edges across the spine.
+To model a process, workflow, or architecture from prose or code, write a JSON file that follows [references/schema.md](references/schema.md). Then compile it with `compile-json`.
 
-## Interactive Controls in the Rendered Explorer
+- **Hierarchy (`parent`).** Group related components or stages in drillable containers (`"parent": "stage:execution"`). Keep 4 to 9 siblings per container so each level is easy to scan.
+- **Loops and backtracks (`"flowRole": "backtrack"`).** Include retry loops, rejection rollbacks, and escalation branches. Mark return edges `"flowRole": "backtrack"` so the viewer draws them on a right-hand `↺` return channel and keeps the forward order intact.
+- **Status.** Use `"status": "gate"` for acceptance gates and human-approval gates. Use `"status": "blind-alley"` for dead-end hypotheses and error branches. Use `"status": "subagent"` for delegated workers.
+- **Cross-cutting slices (`overlays[]`).** Put shared policies, data stores, actors, and citations in `overlays[]` with `touches: [nodeId...]`. This avoids a hub-and-spoke tangle of edges across the spine.
 
-- **Drill Down / Up**: Double-click any stacked container card (or click `N parts →`) to open its internal graph with `OUTSIDE` ghost callers/targets; press `Esc` or click breadcrumbs to go up.
-- **Hierarchy vs. Expanded Mode**: Toggle `Mode: Hierarchy` / `Mode: Expanded` in the top bar to switch between aggregated container bundles and flattened leaf nodes with dashed group frames.
-- **1-Hop / 2-Hop & Path Finder (`A ↔ B`)**: Click a card to highlight its 1-hop or 2-hop neighborhood; **`Shift+Click` any second card** to isolate all connecting paths (up to 4 hops) and shared cross-cutting slices.
-- **ATIF & Process Scrubber**: Use `[` and `]` (or `▶ Play` / step pips) to step through trajectories, see numbered revisit chips (`#1`, `#4`) when an agent backtracks out of a blind alley, or click **`⇄ Compare All`** to overlay multiple runs (`R1..RN`).
+## Controls in the explorer
 
-## Verification Gate
+- **Drill down and up.** Double-click a container card (or click `N parts →`) to open its inner graph with `OUTSIDE` ghost callers and targets. Press `Esc` or click a breadcrumb to go up.
+- **Hierarchy and expanded modes.** The `Mode` button in the top bar switches between aggregated container bundles and flattened leaf nodes with dashed group frames.
+- **1-hop, 2-hop, and path finder.** Click a card to highlight its 1-hop or 2-hop neighborhood. `Shift+Click` a second card to show the connecting paths (up to 4 hops) and the shared cross-cutting slices.
+- **Trace scrubber.** Use `[` and `]`, `Play`, or the step pips to step through a trajectory. Numbered revisit chips (`#1`, `#4`) show when an agent backtracks out of a dead end. `Compare All` overlays several runs (`R1` to `RN`).
 
-Always run two checks before presenting a generated HTML map:
-1. Run `python3 "$STRATA" validate <dataset.json>` and inspect any `error` or `warn` diagnostics.
-2. Render the HTML in a headless browser (`1440x900`) and verify `0` console errors, legible card titles, non-overlapping count pills, and working tab/drill-down navigation.
+## Verification
+
+Before you present a generated HTML map:
+
+1. Run `python3 "$STRATA" validate <dataset.json>` and read every `error` and `warn` diagnostic.
+2. Open the HTML in a headless browser (1440x900). Check for no console errors, readable card titles, count pills that do not overlap, and working tab and drill-down navigation.

@@ -10,7 +10,7 @@
   "subtitle": "Job-oriented workflow with proposal/execution split, deterministic gates, and human escalation.",
   "domain": "process",
   "generatedAt": "2026-11-07T05:30:00Z",
-  "sourceLabel": "aaif-wiki/architectures",
+  "sourceLabel": "example-wiki/architectures",
   "rootId": "proc:root",
   "relations": {
     "transitions-to": {
@@ -86,6 +86,16 @@
   "diagnostics": []
 }
 ```
+
+Optional fields that change how the viewer draws a dataset:
+
+| Field | Where | Effect |
+| :--- | :--- | :--- |
+| `levelLabel` | dataset | Unit word in overlay count badges, such as `"section"`. Default: `section` for `okf-wiki`, `phase` for `process`, `layer` otherwise. |
+| `axisNotes` | dataset | List of `{ "nodeId": "...", "text": "..." }`. Draws a note in the left margin beside that node on the root view. |
+| `quietBypass` | node | `true` dims forward edges that skip more than one row on the root view. |
+
+The validator (`validate`, and every `compile-*` command) reports these errors: `MISSING_ROOT`, `DUPLICATE_ID`, `MISSING_PARENT`, `DANGLING_EDGE`, and `DANGLING_TRACE_STEP`.
 
 ## 2. Status & Flow Semantics
 

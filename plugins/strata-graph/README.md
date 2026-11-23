@@ -1,14 +1,29 @@
-# Strata Graph (`strata-graph`)
+# Strata graph (`strata-graph`)
 
-Deterministic multi-layer structural and cross-cutting graph compiler, validator, and zero-dependency HTML explorer for:
+A compiler, validator, and standalone HTML explorer for layered graphs. It uses only the Python standard library and a single self-contained HTML file with no network access.
 
-1. **Processes & Stateful Workflows** — ordered execution stages, deterministic acceptance gates, human-approval waits, convergence loops, and escalation spurs.
-2. **Concept Graphs & OKF v0.2 LLM Wikis** — hierarchical domain sections, prose-grounded internal Markdown links, derived OKF v0.2 trust badges, and cross-cutting co-citation / tag overlays.
-3. **Knowledge & Entity Graphs (KGs)** — people, organizations, projects, protocols, documents, typed multi-lane edge bundles, `Shift+Click` multi-hop path finding, and chronological timeline playback.
-4. **ATIF / OATR Agent Trajectories** — single-run decision trees with explicit **blind alleys** (`✕`), **backtrack return arcs** (`↺`), and nested subagent drill-down, plus **cross-trajectory comparison** across shared tools and resources.
+It handles four kinds of input:
 
-## Architectural Heritage & Attribution
+1. **Processes and stateful workflows.** Ordered stages, acceptance gates, human-approval waits, retry loops, and escalation branches.
+2. **Concept graphs and OKF v0.2 wikis.** Hierarchical sections, internal Markdown links, trust badges derived from OKF frontmatter, and cross-cutting overlays for co-citation and tags.
+3. **Knowledge and entity graphs.** People, organizations, projects, protocols, and documents, with typed edge bundles, `Shift+Click` path finding, and timeline playback.
+4. **ATIF, OATR, and Jetski agent trajectories.** One run as a decision tree with marked dead ends (`✕`), return arcs for backtracks (`↺`), and nested subagents. Several runs can be compared over shared tools.
 
-Inspired by Adam Gospodarczyk's (`@overment`) [`overment/limen`](https://github.com/overment/limen) (`limen picture`, MIT License) — specifically its strict separation between agent-curated Markdown facts and a zero-LLM deterministic compiler, hierarchical edge lifting with `OUTSIDE` ghost blocks, cross-cutting side bands, and weighted Pool-Adjacent-Violators (`PAV`) isotonic regression for multi-lane wire bundles.
+## Attribution
 
-`strata-graph` is a clean-room multi-domain generalization (Apache-2.0 / MIT compatible) adding native OKF v0.2, KG (YAML/JSON/SQLite), and ATIF/OATR/JSONL trajectory compilers, non-destructive backtrack/loop routing (`↺` outer return arcs instead of silent DFS cycle reversal), blind-alley spur styling, temporal step scrubbing, multi-trajectory comparison, `1-Hop`/`2-Hop` + `Shift+Click` path finding, smooth pan/zoom, and multi-dataset Explorer Hubs.
+This plugin is an independent implementation inspired by Adam Gospodarczyk's (`@overment`) [`overment/limen`](https://github.com/overment/limen) (`limen picture`, MIT License). It borrows these ideas from limen:
+
+- Agents curate facts in Markdown, and a deterministic compiler with no LLM builds the output.
+- Edges between hierarchy levels are lifted, with `OUTSIDE` ghost blocks for endpoints outside the current view.
+- Cross-cutting side bands.
+- Weighted Pool-Adjacent-Violators (PAV) isotonic regression to align multi-lane wire bundles.
+
+`strata-graph` adds these on top:
+
+- OKF v0.2, knowledge graph (YAML and SQLite), and trajectory compilers (ATIF, OATR, Jetski JSONL).
+- Backtrack and loop edges drawn as `↺` return arcs, instead of silently reversing edges to break cycles.
+- Dead-end styling, step scrubbing, and multi-trajectory comparison.
+- 1-hop and 2-hop highlighting, `Shift+Click` path finding, pan and zoom.
+- Multi-dataset explorer hubs.
+
+See [SKILL.md](skills/strata-graph/SKILL.md) for usage and [references/schema.md](skills/strata-graph/references/schema.md) for the data format.
