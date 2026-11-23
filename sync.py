@@ -17,6 +17,16 @@ Agent routing (configured in [agents.<name>] or overridden via --agents / --tier
   - claude     : opt-in symlink dir (~/.claude/skills), default ("zeroasterisk").
   - codex      : opt-in symlink dir (~/.codex/skills), default ("zeroasterisk").
 
+Per-agent exclusions (set in ~/.config/skills-sync/local.toml under [agents.<name>]):
+  exclude_skills  = ["name", ...]  skip skills whose SKILL.md `name` or directory name
+                                   matches, for that agent only.
+  exclude_plugins = ["name", ...]  skip every skill that lives inside plugins/<name>
+                                   (a dir with plugin.json), for that agent only.
+  Both are honored by every agent kind and by --list-tiers. For jetski, a plugin with
+  some (not all) skills excluded is "materialized": a real dir under plugins_dir holding
+  per-entry symlinks, minus the excluded skills. A plugin whose skills are ALL excluded
+  is skipped entirely (including its agents/ and hooks.json), as if excluded by name.
+
 Catalog isolation:
   - Repo-tracked ai-catalog.json and ai-catalog.<slug>.json include ONLY "zeroasterisk"
     public sources — zero internal URLs or corp/OPM skills ever enter the git repo.
@@ -40,6 +50,7 @@ import fnmatch
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tomllib
@@ -140,7 +151,7 @@ def is_managed_link(link: Path, extra_roots: list[str] | None = None) -> bool:
         candidates.append(str(link.resolve()))
     except OSError:
         pass
-    return any(c.startswith(root) for c in candidates for root in roots)
+    return any(Path(c).is_relative_to(root) for c in candidates for root in roots)
 
 
 # ---------------------------------------------------------------------------
@@ -348,16 +359,48 @@ def skill_matches_agent_restriction(restriction: list[str] | None, agent_name: s
     return agent_name in expanded
 
 
+def is_skill_excluded(skill_dir: Path, exclude_skills: set[str], name: str | None = None) -> bool:
+    """True if the skill dir name or its SKILL.md frontmatter name is in exclude_skills."""
+    if not exclude_skills:
+        return False
+    if skill_dir.name in exclude_skills:
+        return True
+    name = name or parse_frontmatter(skill_dir / "SKILL.md").get("name")
+    return bool(name) and name in exclude_skills
+
+
+def plugin_skill_dirs(plugin_dir: Path) -> list[Path]:
+    """Skill dirs (containing SKILL.md) directly under plugin_dir/skills."""
+    skills_sub = plugin_dir / "skills"
+    if not skills_sub.is_dir():
+        return []
+    return [
+        sd for sd in sorted(skills_sub.iterdir()) if sd.is_dir() and (sd / "SKILL.md").is_file()
+    ]
+
+
+def plugin_name_for_skill(s: dict) -> str | None:
+    """Name of the nearest enclosing plugin dir (has plugin.json) inside the skill's source root.
+
+    Returns None for skills that do not live in a plugin, so category dirs and skill names
+    in plain skill sources never match exclude_plugins.
+    """
+    depth = len(Path(s["rel"]).parts)
+    cur = Path(s["path"])
+    for _ in range(depth):
+        cur = cur.parent
+        if (cur / "plugin.json").is_file():
+            return cur.name
+    return None
+
+
 def skill_excluded_for_agent(s: dict, agent_cfg: dict | None) -> bool:
     if not agent_cfg:
         return False
-    ex_skills = set(agent_cfg.get("exclude_skills", []))
-    if s["name"] in ex_skills or s["dir_name"] in ex_skills:
+    if is_skill_excluded(Path(s["path"]), set(agent_cfg.get("exclude_skills", [])), s["name"]):
         return True
     ex_plugins = set(agent_cfg.get("exclude_plugins", []))
-    if ex_plugins and s["rel"].split("/", 1)[0] in ex_plugins:
-        return True
-    return False
+    return bool(ex_plugins) and plugin_name_for_skill(s) in ex_plugins
 
 
 def filter_skills_for_agent(
@@ -416,7 +459,7 @@ def sync_symlink_dir(
             if not is_managed_link(link, extra_managed_roots):
                 verbose(f"{label}: skip unmanaged symlink: {link.name}")
                 continue
-            target_ok = link.exists() and link.is_dir()
+            target_ok = link.exists()
             desired = wanted.get(link.name)
             current_raw = os.readlink(link)
             if desired is None or not target_ok or current_raw != str(desired):
@@ -472,30 +515,31 @@ def sync_materialized_plugin(
     exclude_skills: set[str],
 ) -> None:
     """Sync a plugin dir via per-entry symlinks, omitting excluded skills locally."""
-    if target_plugin_dir.is_symlink():
-        if not is_managed_link(target_plugin_dir):
-            verbose(f"{label}: skip unmanaged symlink plugin {target_plugin_dir.name}")
-            return
-        if DRY_RUN:
-            dry(f"{label}: would replace symlink {target_plugin_dir} with filtered dir")
-        else:
-            target_plugin_dir.unlink()
-
     wanted_top: dict[str, Path] = {}
     wanted_subskills: dict[str, Path] = {}
     for entry in sorted(source_plugin_dir.iterdir()):
         if entry.name == "skills" and entry.is_dir():
-            for sd in sorted(entry.iterdir()):
-                if not (sd.is_dir() and (sd / "SKILL.md").is_file()):
-                    continue
-                fm = parse_frontmatter(sd / "SKILL.md")
-                sk_name = fm.get("name") or sd.name
-                if sd.name in exclude_skills or sk_name in exclude_skills:
+            for sd in plugin_skill_dirs(source_plugin_dir):
+                if is_skill_excluded(sd, exclude_skills):
                     verbose(f"{label}: exclude skill {source_plugin_dir.name}/{sd.name}")
                     continue
                 wanted_subskills[sd.name] = sd
         else:
             wanted_top[entry.name] = entry
+
+    if target_plugin_dir.is_symlink():
+        if not is_managed_link(target_plugin_dir):
+            verbose(f"{label}: skip unmanaged symlink plugin {target_plugin_dir.name}")
+            return
+        if DRY_RUN:
+            # Never walk through the symlink: it still points into the source repo.
+            dry(f"{label}: would replace symlink {target_plugin_dir} with filtered dir")
+            for name, path in sorted(wanted_top.items()):
+                dry(f"{label}: would symlink {target_plugin_dir / name} -> {path}")
+            for name, path in sorted(wanted_subskills.items()):
+                dry(f"{label}: would symlink {target_plugin_dir / 'skills' / name} -> {path}")
+            return
+        target_plugin_dir.unlink()
 
     sync_symlink_dir(f"{label} ({source_plugin_dir.name})", target_plugin_dir, wanted_top)
     sync_symlink_dir(
@@ -527,20 +571,14 @@ def sync_jetski(agent_name: str, agent_cfg: dict, skills: list[dict]) -> None:
                 if p.name in exclude_plugins:
                     verbose(f"{agent_name} plugins: skip {p.name} (excluded)")
                     continue
-                skills_sub = p / "skills"
-                has_excluded_skill = False
-                kept_skill_dirs: list[Path] = []
-                if skills_sub.is_dir() and exclude_skills:
-                    for sd in sorted(skills_sub.iterdir()):
-                        if not (sd.is_dir() and (sd / "SKILL.md").is_file()):
-                            continue
-                        fm = parse_frontmatter(sd / "SKILL.md")
-                        sk_name = fm.get("name") or sd.name
-                        if sd.name in exclude_skills or sk_name in exclude_skills:
-                            has_excluded_skill = True
-                        else:
-                            kept_skill_dirs.append(sd)
-                if has_excluded_skill:
+                all_skill_dirs = plugin_skill_dirs(p)
+                kept_skill_dirs = [
+                    sd for sd in all_skill_dirs if not is_skill_excluded(sd, exclude_skills)
+                ]
+                if len(kept_skill_dirs) < len(all_skill_dirs):
+                    if not kept_skill_dirs:
+                        verbose(f"{agent_name} plugins: skip {p.name} (all skills excluded)")
+                        continue
                     materialized_plugins[p.name] = p
                     for sd in kept_skill_dirs:
                         plugin_covered_skill_dirs.add(sd.resolve())
@@ -556,7 +594,6 @@ def sync_jetski(agent_name: str, agent_cfg: dict, skills: list[dict]) -> None:
                 if DRY_RUN:
                     dry(f"{agent_name} plugins: would remove materialized dir {entry.name}")
                 else:
-                    import shutil
                     shutil.rmtree(entry)
                     log(f"{agent_name} plugins: removed materialized dir {entry.name}")
 
@@ -755,7 +792,7 @@ def print_tier_report(skills: list[dict], agents_cfg: dict[str, dict]) -> None:
     for agent_name, cfg in agents_cfg.items():
         status = "ENABLED " if cfg.get("enabled", False) else "opt-in  "
         tiers = cfg.get("tiers", [])
-        matched = filter_skills_for_agent(skills, agent_name, tiers)
+        matched = filter_skills_for_agent(skills, agent_name, tiers, cfg)
         print(
             f"  - {agent_name:<12} [{status}] tiers={tiers} -> {len(matched)} skill(s)"
         )

@@ -23,8 +23,14 @@ jobs:
       - name: Install dependencies
         run: pip install pyyaml
 
+      - name: Test sync.py
+        run: python3 -m unittest discover -s tests -v
+
       - name: Run validate-plugins.sh
         run: ./scripts/validate-plugins.sh
+
+      - name: Test strata-graph
+        run: python3 -m unittest discover -s plugins/strata-graph/skills/strata-graph/tests -v
 
       - name: Set up Node
         uses: actions/setup-node@v4
