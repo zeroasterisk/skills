@@ -157,17 +157,17 @@ def parse_yaml_safe(text: str) -> dict[str, Any]:
                 result[cur_key].append({sub_k.strip(): _unquote(sub_v)})
             else:
                 result[cur_key].append(_unquote(val))
-        elif (
-            indent > 0
-            and ":" in line
-            and cur_key
-            and isinstance(result.get(cur_key), list)
-            and result[cur_key]
-        ):
-            last = result[cur_key][-1]
-            if isinstance(last, dict):
-                sub_k, sub_v = line.split(":", 1)
-                last[sub_k.strip()] = _unquote(_strip_comment(sub_v))
+        elif indent > 0 and ":" in line and cur_key and not line.startswith("- "):
+            container = result.get(cur_key)
+            if container == []:
+                # `key:` followed by indented `k: v` lines is a block mapping.
+                container = result[cur_key] = {}
+            sub_k, sub_v = line.split(":", 1)
+            value = _flow_value(_strip_comment(sub_v))
+            if isinstance(container, dict):
+                container[sub_k.strip()] = value
+            elif isinstance(container, list) and isinstance(container[-1], dict):
+                container[-1][sub_k.strip()] = value
     return result
 
 
@@ -246,7 +246,7 @@ def classify_okf_relation(src_sec: str, dst_sec: str, heading: str) -> str:
         return "governs"
     if dst_sec == "projects" or src_sec == "projects":
         return "implements"
-    if "arch" in heading.lower() or "pattern" in heading.lower():
+    if re.search(r"\b(arch\w*|pattern\w*)\b", heading, re.IGNORECASE):
         return "composes-pattern"
     return "references"
 
@@ -484,7 +484,7 @@ def compile_okf(wiki_dir: Path, graph_id: str | None = None) -> dict[str, Any]:
                 except ValueError:
                     diagnostics.append(
                         {
-                            "level": "error",
+                            "level": "warn",
                             "code": "PATH_OUTSIDE_BUNDLE",
                             "message": f"Blocked link escaping OKF root in {fpath.name}: {raw_target}",
                         }
@@ -665,15 +665,25 @@ KG_SQLITE_SCHEMA = (
 
 
 class KGSchemaError(ValueError):
-    """The SQLite file does not have the tables and columns compile_kg reads."""
+    """The input is missing, empty, or not in a layout compile_kg can read."""
 
 
 def compile_kg(kg_path: Path, graph_id: str | None = None) -> dict[str, Any]:
     target = kg_path.resolve()
-    db_file = target if target.suffix == ".db" else (target / "pipeline.db")
+    if not target.exists():
+        raise KGSchemaError(f"{kg_path} does not exist.")
+    db_file = target if target.is_file() else (target / "pipeline.db")
     yaml_dir = target / "kg" if (target / "kg").is_dir() else target
+    if not (
+        db_file.is_file()
+        or (yaml_dir / "relations.yaml").is_file()
+        or (yaml_dir / "timeline.yaml").is_file()
+    ):
+        raise KGSchemaError(
+            f"{kg_path} has no pipeline.db, relations.yaml, or timeline.yaml."
+        )
 
-    kg_name = target.stem if target.suffix == ".db" else target.name
+    kg_name = target.stem if target.is_file() else target.name
     root_id = "kg:root"
     nodes: list[dict[str, Any]] = [
         {
@@ -1237,14 +1247,19 @@ def _normalize_jetski_jsonl(
     # Merge consecutive successful turns that use the same tool and label
     compact: list[dict[str, Any]] = []
     for ev in events:
+        ev.setdefault("count", 1)
+        ev["base_label"] = ev["label"].split(" ×")[0]
+        prev = compact[-1] if compact else None
         if (
-            compact
-            and compact[-1]["tool"] == ev["tool"]
-            and compact[-1]["label"].split(" ×")[0] == ev["label"].split(" ×")[0]
+            prev
+            and prev["tool"] == ev["tool"]
+            and prev["base_label"] == ev["base_label"]
             and not ev["is_error"]
-            and not compact[-1]["is_error"]
+            and not prev["is_error"]
         ):
-            compact[-1]["label"] = f"{ev['tool'] or 'turn'} (merged batch)"
+            prev["count"] += ev["count"]
+            if prev["tool"]:
+                prev["label"] = f"{prev['tool']} ×{prev['count']} batch"
             continue
         compact.append(ev)
 

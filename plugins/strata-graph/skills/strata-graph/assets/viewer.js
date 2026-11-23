@@ -292,6 +292,14 @@
     };
   }
 
+  // Any change of the selected block also drops a picked wire bundle and a path target,
+  // because the inspector and highlighting check selectedBundleKey first.
+  function setSelection(id) {
+    st.selectedId = id;
+    st.selectedBundleKey = null;
+    st.compareTargetId = null;
+  }
+
   function curDs() {
     return datasets[st.dsIdx];
   }
@@ -1465,8 +1473,7 @@
       up.title = "Go up one hierarchy level (Esc)";
       up.addEventListener("click", () => {
         st.focusId = chain[chain.length - 2].id;
-        st.selectedId = null;
-        st.compareTargetId = null;
+        setSelection(null);
         st.zoom = null;
         renderAll();
       });
@@ -1483,8 +1490,7 @@
         b.type = "button";
         b.addEventListener("click", () => {
           st.focusId = node.id;
-          st.selectedId = null;
-          st.compareTargetId = null;
+          setSelection(null);
           st.zoom = null;
           renderAll();
         });
@@ -1678,7 +1684,7 @@
           stopPlayback();
           st.activeStepIdx = sIdx;
           const visId = level.resolveInside(step.nodeId);
-          if (visId) st.selectedId = visId;
+          if (visId) setSelection(visId);
           renderAll();
         });
         track.appendChild(pip);
@@ -2462,9 +2468,7 @@
       st.focusId = ds.rootId;
     }
     st.expandAll = false;
-    st.selectedId = target.id;
-    st.compareTargetId = null;
-    st.selectedBundleKey = null;
+    setSelection(target.id);
     renderAll();
   }
 
@@ -2493,7 +2497,7 @@
     const step = tr.steps[st.activeStepIdx];
     if (step && st.currentLevel) {
       const visId = st.currentLevel.resolveInside(step.nodeId);
-      if (visId) st.selectedId = visId;
+      if (visId) setSelection(visId);
     }
     renderAll();
   }
@@ -2518,8 +2522,7 @@
   /* ------------------------------------------------------- Global Controls */
   dom.modeToggle.addEventListener("click", () => {
     st.expandAll = !st.expandAll;
-    st.selectedId = null;
-    st.compareTargetId = null;
+    setSelection(null);
     st.zoom = null;
     renderAll();
   });
@@ -2650,7 +2653,7 @@
           jumpToNode(ds, hit.item.id);
         } else {
           st.focusId = ds.rootId;
-          st.selectedId = `slice:${hit.item.id}`;
+          setSelection(`slice:${hit.item.id}`);
           renderAll();
         }
       });

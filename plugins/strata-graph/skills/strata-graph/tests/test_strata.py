@@ -2,6 +2,7 @@
 
 import contextlib
 import copy
+import html as html_module
 import importlib.util
 import io
 import json
@@ -122,6 +123,21 @@ class CompileAtifTest(unittest.TestCase):
         self.assertEqual(len(backtracks), 1)
         self.assertIn("1 ↺ backtrack", ds["subtitle"])
 
+    def test_identical_consecutive_steps_merge_into_one_counted_event(self):
+        rows = []
+        for _ in range(3):
+            rows.append(
+                {
+                    "type": "PLANNER_RESPONSE",
+                    "tool_calls": [{"name": "read_file", "args": {"Path": "/x"}}],
+                }
+            )
+            rows.append({"type": "GENERIC", "status": "DONE", "content": "ok"})
+        events = strata._normalize_jetski_jsonl(Path("t.jsonl"), rows)["events"]
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["count"], 3)
+        self.assertIn("×3", events[0]["label"])
+
     def test_no_event_cap(self):
         rows = []
         for i in range(40):
@@ -210,10 +226,11 @@ class ViewerTest(unittest.TestCase):
 BROWSER = shutil.which("google-chrome") or shutil.which("chromium")
 
 
-def _dump_dom(payload):
+def _dump_dom(payload, extra_script=""):
     with tempfile.TemporaryDirectory() as tmp:
         page = Path(tmp) / "page.html"
-        page.write_text(strata.render_html(payload), encoding="utf-8")
+        html = strata.render_html(payload).replace("</body>", f"{extra_script}</body>")
+        page.write_text(html, encoding="utf-8")
         return subprocess.run(
             [
                 BROWSER,
@@ -280,6 +297,47 @@ class BrowserRenderTest(unittest.TestCase):
         self.assertIn("Alpha", proc.stdout)
         self.assertIn("Beta", proc.stdout)
         self.assertIn("st-in-progress", proc.stdout)
+
+    def test_selecting_a_block_clears_a_picked_wire_bundle(self):
+        ds = _mutual_cycle_dataset()
+        ds["edges"] = [ds["edges"][0]]
+        ds["traces"] = [
+            {
+                "id": "t",
+                "title": "T",
+                "steps": [
+                    {"stepIndex": 1, "nodeId": "a", "label": "s1"},
+                    {"stepIndex": 2, "nodeId": "b", "label": "s2"},
+                ],
+            }
+        ]
+        script = """<script>(function () {
+          const title = () => {
+            const t = document.querySelector("#panel-body .d-title");
+            return t ? t.textContent : "";
+          };
+          const pickBundle = () => {
+            document.querySelector("[data-bundle-key] .hit").dispatchEvent(
+              new MouseEvent("click", { bubbles: true }));
+            return title();
+          };
+          const out = { picked: pickBundle() };
+          document.querySelectorAll(".step-pip")[1].click();
+          out.afterPip = title();
+          out.pickedAgain = pickBundle();
+          window.dispatchEvent(new KeyboardEvent("keydown", { key: "]" }));
+          out.afterStep = title();
+          document.body.setAttribute("data-result", JSON.stringify(out));
+        })();</script>"""
+        proc = _dump_dom(ds, script)
+        self.assertNotIn("Uncaught", proc.stderr)
+        m = re.search(r'data-result="([^"]*)"', proc.stdout)
+        self.assertIsNotNone(m, "page script did not run")
+        out = json.loads(html_module.unescape(m.group(1)))
+        self.assertEqual(out["picked"], "Alpha → Beta")
+        self.assertEqual(out["pickedAgain"], "Alpha → Beta")
+        self.assertNotIn("→", out["afterPip"])
+        self.assertNotIn("→", out["afterStep"])
 
     def test_html_comment_text_does_not_swallow_the_page(self):
         ds = _mutual_cycle_dataset()
@@ -403,6 +461,57 @@ class CompileOkfTest(unittest.TestCase):
                 self.assertEqual(fm["tags"], ["a", "bc"])
                 json.dumps(fm)
 
+    def test_block_mapping_trust_fields_match_across_parsers(self):
+        concept = (
+            "---\ntype: Metric\n"
+            "generated:\n  by: producer/1.0\n  at: 2026-01-01T00:00:00Z\n"
+            "verified:\n  by: human:alice\n  at: 2026-01-02\n---\nBody.\n"
+        )
+        for name, mod in self.parsers():
+            with (
+                self.subTest(parser=name),
+                tempfile.TemporaryDirectory() as tmp,
+                mock.patch.object(strata, "_pyyaml", mod),
+            ):
+                (Path(tmp) / "m.md").write_text(concept, encoding="utf-8")
+                node = next(
+                    n for n in strata.compile_okf(Path(tmp))["nodes"] if n["id"] == "m"
+                )
+                self.assertEqual(node["trust"]["tier"], "human-reviewed")
+                self.assertEqual(node["trust"]["generatedBy"], "producer/1.0")
+
+    def _compile_text(self, files):
+        with tempfile.TemporaryDirectory() as tmp:
+            for name, text in files.items():
+                (Path(tmp) / name).write_text(text, encoding="utf-8")
+            return strata.compile_okf(Path(tmp))
+
+    def test_link_outside_the_bundle_is_a_warning(self):
+        ds = self._compile_text(
+            {"a.md": "---\ntype: T\n---\nSee [readme](../README.md).\n"}
+        )
+        found = [d for d in ds["diagnostics"] if d["code"] == "PATH_OUTSIDE_BUNDLE"]
+        self.assertEqual([d["level"] for d in found], ["warn"])
+
+    def test_link_outside_the_bundle_does_not_fail_the_cli(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "b"
+            bundle.mkdir()
+            (bundle / "a.md").write_text(
+                "---\ntype: T\n---\nSee [readme](../README.md).\n", encoding="utf-8"
+            )
+            code, _, err = run_main(
+                ["compile-okf", str(bundle), "-o", str(Path(tmp) / "o.json")]
+            )
+        self.assertEqual(code, 0, err)
+
+    def test_relation_heading_uses_whole_words(self):
+        classify = strata.classify_okf_relation
+        self.assertEqual(classify("a", "b", "Research notes"), "references")
+        self.assertEqual(classify("a", "b", "March plan, Search"), "references")
+        self.assertEqual(classify("a", "b", "Architecture"), "composes-pattern")
+        self.assertEqual(classify("a", "b", "Design patterns"), "composes-pattern")
+
 
 def run_main(argv):
     out, err = io.StringIO(), io.StringIO()
@@ -477,6 +586,23 @@ class CliTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("not a compatible knowledge-graph database", err)
         self.assertIn("entities(entity_id", err)
+
+    def test_compile_kg_rejects_missing_empty_and_non_sqlite_inputs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            empty_dir = Path(tmp) / "empty"
+            empty_dir.mkdir()
+            text_file = Path(tmp) / "notes.txt"
+            text_file.write_text("not a database", encoding="utf-8")
+            for target in (Path(tmp) / "missing", empty_dir, text_file):
+                with self.subTest(target=target.name):
+                    out = Path(tmp) / f"{target.name}.json"
+                    code, stdout, err = self._run(
+                        ["compile-kg", str(target), "-o", str(out)]
+                    )
+                    self.assertEqual(code, 1)
+                    self.assertEqual(stdout, "")
+                    self.assertIn('"status": "error"', err)
+                    self.assertFalse(out.exists())
 
     def test_build_hub_fails_on_error_diagnostics(self):
         ds = _mutual_cycle_dataset()
