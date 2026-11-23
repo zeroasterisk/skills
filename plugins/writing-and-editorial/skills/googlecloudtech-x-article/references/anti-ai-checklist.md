@@ -36,7 +36,7 @@ Evaluate the draft against Alan's Pragmatic Builder perspective.
 - [ ] **Muted "Muppet" Warmth:** Does the draft contain subtle, earnest builder warmth? Are there 1-2 understated parenthetical asides `(...)` or self-deprecating touches that make it unmistakably human?
 - [ ] **Is the Humor Sub-Surface?** The humor must stay strictly below the surface. The baseline tone is that of a serious, highly capable DevRel technical architect.
 - [ ] **Proof-of-Depth Specifics Are Real:** Grounded in real protocol fields, exact error names, concrete token numbers, or firsthand dogfooding data.
-- [ ] **"What with Why":** Every architecture decision explains why it matters to the developer.
+- [ ] **"Meaning + Mechanism + Practice":** Every architecture decision explains why it matters to the developer, how it works, and what to do with it.
 - [ ] **Altitude Transitions:** Smooth movement between high-level developer objectives and low-level protocol reality.
 - [ ] **Every Section Ends with "How to Steal It":** Hands the reader a concrete, sized pattern they can apply in their own stack.
 - [ ] **Synthesis Beat Outranks the List:** The article elevates above a simple listicle to reveal a unifying architectural insight.

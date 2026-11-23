@@ -357,6 +357,15 @@ else
   ok "plugins/adlc uses the v1 plugin export"
 fi
 
+info "8. Checking for retired terms"
+# Renamed frameworks must not linger in sibling skills: "What with Why" became "Meaning + Mechanism + Practice".
+retired_hits="$(git grep -In 'What with Why' -- plugins || true)"
+if [ -n "$retired_hits" ]; then
+  while IFS= read -r hit; do err "Retired term: $hit"; done <<<"$retired_hits"
+else
+  ok "No retired terms found"
+fi
+
 echo
 if [ "$ERRORS" -eq 0 ]; then
   echo -e "${GREEN}✓ All plugin and skill validations passed successfully!${NC}"

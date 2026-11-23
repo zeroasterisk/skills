@@ -14,7 +14,7 @@ Without a roster, the template runs three seats on Antigravity's built-in `resea
 
 Request-time `model` values in `invoke_subagent` and `run_workflow` take a tier name, not a model ID (for example `inherit`, `flash_lite`, `flash`, `pro`), and a documented custom agent's `model` frontmatter takes `inherit`, `flash`, or `pro`. For three distinct models, define one custom agent per seat with whatever per-agent model pinning your harness supports, and list them in a machine-local roster. If the harness cannot pin a model per agent, use the default three `research` seats and say in the scorecard that all three ran on one tier.
 
-Each seat agent is a documented custom agent (`~/.gemini/config/agents/<type_name>.md` or `<type_name>/agent.md`) with a read-only `tools` list (`view_file`, `grep_search`), in `.agents/agents/` or `~/.gemini/config/agents/`. The template checks this before the round and replaces a seat it cannot verify with `research`. A seat defined some other way can opt in with `"allow_unverified": true` in the roster; its row is then labeled tools unverified.
+Each seat is a custom agent file, `<type_name>.md` or `<type_name>/agent.md`, in `.agents/agents/` or `~/.gemini/config/agents/`, whose `tools` list contains only `view_file` and `grep_search`. The template checks this before the round and replaces a seat it cannot verify with `research`. A seat defined some other way can opt in with `"allow_unverified": true` in the roster; its row is then labeled tools unverified.
 
 Example machine-local `~/.config/council/roster.json` (kept outside public git repos):
 
@@ -82,8 +82,8 @@ READ_ONLY_TOOLS = {"view_file", "grep_search"}
 AGENT_DIRS = [Path.cwd() / ".agents" / "agents", Path.home() / ".gemini" / "config" / "agents"]
 
 
-def seat_tools(seat):
-    """The `tools` list from the seat's Markdown agent file, or None if it cannot be read."""
+def read_agent(seat):
+    """`tools` and `model` from the seat's Markdown agent file, or None if it cannot be read."""
     name = seat["type_name"]
     for f in [p for d in AGENT_DIRS for p in (d / f"{name}.md", d / name / "agent.md")]:
         if not f.is_file():
@@ -91,13 +91,15 @@ def seat_tools(seat):
         parts = f.read_text(encoding="utf-8").split("---", 2)
         if len(parts) < 3 or parts[0].strip():
             return None
-        tools, in_tools = [], False
+        tools, model, in_tools = [], None, False
         for line in parts[1].splitlines():
             if not line.strip():
                 continue
             if not line.startswith((" ", "\t", "-")):  # a new top-level key ends the tools block
                 key, _, value = line.partition(":")
                 in_tools = key.strip() == "tools"
+                if key.strip() == "model":
+                    model = value.strip().strip("'\"") or None
                 if in_tools and value.strip().startswith("["):
                     if not value.strip().endswith("]"):
                         return None  # a flow list that wraps lines is not parsed here
@@ -105,7 +107,7 @@ def seat_tools(seat):
                     in_tools = False
             elif in_tools and line.strip().startswith("- "):
                 tools.append(line.strip()[2:].strip().strip("'\""))
-        return tools
+        return {"tools": tools, "model": model}
     return None
 
 
@@ -117,17 +119,18 @@ def vet(seat, idx):
     if seat["type_name"] in ("self", "browser"):
         log(f"{seat['type_name']}: built-in with write or browser tools; using research")
         return research
-    tools = seat_tools(seat)
-    if tools is None:
+    agent_file = read_agent(seat)
+    if agent_file is None:
         if seat.get("allow_unverified"):
             log(f"{seat['type_name']}: tools unverified; running because the roster allows it")
             return {**seat, "label": f"{seat['label']}, tools unverified"}
         log(f"{seat['type_name']}: no readable Markdown agent file; using research")
         return research
+    tools = agent_file["tools"]
     if not tools or not set(tools) <= READ_ONLY_TOOLS:
         log(f"{seat['type_name']}: tools {tools} are not read-only; using research")
         return research
-    return seat
+    return {**seat, "tier": agent_file["model"] or "inherit"}
 
 
 seats = [vet(s, i) for i, s in enumerate(seats)]
@@ -222,12 +225,13 @@ results = await parallel(seats, run_seat)
 output = []
 for idx, (seat, res) in enumerate(zip(seats, results)):
     # A roster label is the intended model; the harness does not report which model ran.
-    used_label = f'{seat["type_name"]} ({seat.get("model", "inherit")}; intended: {seat["label"]})'
+    used_label = f'{seat["type_name"]} ({seat.get("model") or seat.get("tier", "agent default")}; intended: {seat["label"]})'
     if isinstance(res, Exception) and fallback_seat and seat["type_name"] != fallback_seat["type_name"]:
         log(f"{used_label} failed ({res}); retrying on fallback {fallback_seat['label']}")
         try:
             res = await spawn_seat(fallback_seat, role_prefix=f"Council Fallback S{idx+1}")
-            used_label = f"{fallback_seat['type_name']} (fallback for {seat['type_name']}; intended: {fallback_seat['label']})"
+            fb_tier = fallback_seat.get("model") or fallback_seat.get("tier", "agent default")
+            used_label = f"{fallback_seat['type_name']} ({fb_tier}; fallback for {seat['type_name']}; intended: {fallback_seat['label']})"
         except Exception as fb_err:
             res = fb_err
 

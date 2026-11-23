@@ -189,6 +189,21 @@ class ValidateDatasetTest(unittest.TestCase):
     def codes(self, ds):
         return [d["code"] for d in strata.validate_dataset(ds)]
 
+    def test_non_list_collections_are_reported(self):
+        cases = {
+            "nodes": "MALFORMED_NODE",
+            "edges": "MALFORMED_EDGE",
+            "traces": "MALFORMED_STEP",
+        }
+        for key, code in cases.items():
+            with self.subTest(key=key):
+                ds = _mutual_cycle_dataset()
+                ds[key] = {"e1": {"id": "e1"}}
+                self.assertIn(code, self.codes(ds))
+        ds = _mutual_cycle_dataset()
+        ds["traces"] = [{"id": "t", "steps": {"0": {"nodeId": "a"}}}]
+        self.assertIn("MALFORMED_STEP", self.codes(ds))
+
     def test_non_object_and_idless_nodes_are_reported(self):
         ds = _mutual_cycle_dataset()
         ds["nodes"] += ["junk", {"title": "no id"}, {"id": "", "title": "empty"}]
@@ -912,6 +927,27 @@ class CompileKgYamlTest(unittest.TestCase):
             conn.close()
             ds = strata.compile_kg(db)
         self.assertIn("org:acme", {n["id"] for n in ds["nodes"]})
+
+    def test_text_and_null_source_ids(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "pipeline.db"
+            conn = sqlite3.connect(db)
+            conn.executescript(
+                "CREATE TABLE sources(id TEXT, uri TEXT, title TEXT);"
+                "CREATE TABLE entities(entity_id TEXT, name TEXT, kind TEXT, type TEXT,"
+                " description TEXT, status TEXT, source_id TEXT, merged_into TEXT);"
+                "CREATE TABLE edges(source_entity_id TEXT, target_entity_id TEXT,"
+                " edge_type TEXT, confidence REAL);"
+                "INSERT INTO sources VALUES('src-a','https://example.com/a','A');"
+                "INSERT INTO sources VALUES(NULL,'https://example.com/n','N');"
+                "INSERT INTO entities VALUES('org:acme','Acme','org','organization',"
+                "'d','approved','src-a',NULL);"
+            )
+            conn.commit()
+            conn.close()
+            ds = strata.compile_kg(db)
+        acme = next(n for n in ds["nodes"] if n["id"] == "org:acme")
+        self.assertEqual([s["url"] for s in acme["sources"]], ["https://example.com/a"])
 
 
 class StatusDocTest(unittest.TestCase):

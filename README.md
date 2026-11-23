@@ -45,7 +45,7 @@ skills/
 
 | Plugin | Version | Description | Included Skills |
 | :--- | :--- | :--- | :--- |
-| **`writing-and-editorial`** | `1.0.0` | Authoring, voice matching, style refinement, and anti-AI humanization tools for technical writing and social content. | `alan-writing-style`<br>`googlecloudtech-x-article`<br>`humanizer` |
+| **`writing-and-editorial`** | `1.1.0` | Authoring, voice matching, style refinement, and anti-AI humanization tools for technical writing and social content. | `alan-writing-style`<br>`googlecloudtech-x-article`<br>`humanizer` |
 | **`visual-explainers`** | `1.1.0` | Tools and quality evaluation rubrics for architecture diagrams, terminal animations, YouTube/social thumbnails, and mathematical explainer videos. | `diagram-design`<br>`asciinema-explainer-walkthroughs`<br>`youtube-thumbnail-designer`<br>`manim-video-quality` |
 | **`frontend-engineering`** | `1.2.0` | Full-stack UI development workflows, React component isolation with Storybook, and CUJ capturing. | `ui-developer`<br>`storybook`<br>`cuj-screenshots` |
 | **`spec-gate`** | `0.1.0` | Pre-edit hook (no skills): the agent writes `.agent/tier`, plus a spec with `Verify:` criteria for medium or large work, before its first file edit. Claude Code, OpenCode/CloudCode, and Antigravity/Jetski (advisory). | *(hooks only)* |

@@ -73,7 +73,7 @@ Connect the trend to Google Cloud's agent ecosystem and live developer conversat
 Draft the complete article following `references/article-skeleton.md` in the voice defined in `references/voice-bank.md`.
 - Code must be real and runnable, included only when earned.
 - Ground every claim in an exact number, named artifact, or firsthand result.
-- Keep the "What with Why" structure clear throughout.
+- Keep the "Meaning + Mechanism + Practice" structure clear throughout: why it matters, how it works, what to do.
 
 ### Step 3: Self-Review (Anti-AI Gate)
 Grade the draft against `references/anti-ai-checklist.md`:

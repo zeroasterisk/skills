@@ -904,9 +904,11 @@ def compile_kg(kg_path: Path, graph_id: str | None = None) -> dict[str, Any]:
     if db_file.is_file():
         conn = sqlite3.connect(f"{db_file.resolve().as_uri()}?mode=ro", uri=True)
         try:
-            src_lookup: dict[int, tuple[str, str]] = {}
+            src_lookup: dict[str, tuple[str, str]] = {}
             for row in conn.execute("SELECT id, uri, title FROM sources"):
-                src_lookup[int(row[0])] = (
+                if row[0] is None:
+                    continue
+                src_lookup[str(row[0])] = (
                     str(row[1] or ""),
                     str(row[2] or f"Source {row[0]}"),
                 )
@@ -923,8 +925,8 @@ def compile_kg(kg_path: Path, graph_id: str | None = None) -> dict[str, Any]:
                 slug_to_eid[slug] = eid
 
                 ent_sources = []
-                if sid is not None and int(sid) in src_lookup:
-                    s_uri, s_title = src_lookup[int(sid)]
+                if sid is not None and str(sid) in src_lookup:
+                    s_uri, s_title = src_lookup[str(sid)]
                     ent_sources.append(
                         {"id": f"s-{sid}", "title": s_title, "url": s_uri}
                     )
@@ -2055,6 +2057,14 @@ def validate_dataset(ds: dict[str, Any]) -> list[dict[str, str]]:
         if diag not in diags:
             diags.append(diag)
 
+    for key, code in (
+        ("nodes", "MALFORMED_NODE"),
+        ("edges", "MALFORMED_EDGE"),
+        ("traces", "MALFORMED_STEP"),
+    ):
+        if ds.get(key) is not None and not isinstance(ds[key], list):
+            report(code, f"{key} must be a list, got {type(ds[key]).__name__}.")
+
     by_id: dict[str, dict[str, Any]] = {}
     for n in _as_list(ds.get("nodes")):
         if not isinstance(n, dict):
@@ -2097,6 +2107,8 @@ def validate_dataset(ds: dict[str, Any]) -> list[dict[str, str]]:
             report("MALFORMED_STEP", f"Trace {t!r} is not an object.")
             continue
         trace = t
+        if trace.get("steps") is not None and not isinstance(trace["steps"], list):
+            report("MALFORMED_STEP", f"Trace {trace.get('id')} steps must be a list.")
         for step in _as_list(trace.get("steps")):
             if not isinstance(step, dict):
                 report(
