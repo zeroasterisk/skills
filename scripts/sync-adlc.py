@@ -109,8 +109,11 @@ def sync_adlc(repo_root: pathlib.Path, ref: str) -> None:
         shutil.rmtree(ADLC_PLUGIN_DIR)
 
     extract(repo_root, f"{ref}:plugins/adlc-opencode", ADLC_PLUGIN_DIR)
-    # Upstream gemini skills: adlc, adlc-doctrine, adlc-prosecutor, adlc-self-orchestrate
-    extract(repo_root, f"{ref}:plugins/adlc-gemini/skills", ADLC_PLUGIN_DIR / "skills")
+    # Upstream's tests need its npm workspace and cannot run from the vendored copy.
+    shutil.rmtree(ADLC_PLUGIN_DIR / "test", ignore_errors=True)
+    # Skills, the prosecutor subagents they invoke, and slash commands, for Jetski/Antigravity.
+    for part in ("skills", "agents", "commands"):
+        extract(repo_root, f"{ref}:plugins/adlc-gemini/{part}", ADLC_PLUGIN_DIR / part)
 
     with open(ADLC_PLUGIN_DIR / "package.json", encoding="utf-8") as f:
         version = json.load(f)["version"]

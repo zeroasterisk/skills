@@ -1,0 +1,74 @@
+---
+name: adlc-init
+description: Bootstrap ADLC in this repo for Gemini — install the plugin into the host and scaffold .adlc/.
+---
+
+# /adlc-init (Gemini)
+
+Bootstrap the ADLC runtime for use with `agy` or `jetski`.
+
+1. **Install this plugin into the Gemini host** (idempotent). Always go through the bundled
+   helper — never hand the host the plugin directory yourself. The host reads its
+   install target as `plugin@marketplace` *before* treating it as a path, so an
+   `@` anywhere in the argument (an npm scope, or a checkout under
+   `/home/user@example.com/…`) is parsed as a marketplace and the install fails
+   with `unknown marketplace: adlc/gemini`. The helper stages the plugin
+   under an `@`-free path first:
+   ```sh
+   node /absolute/path/to/plugins/adlc-gemini/bin/cli.mjs install
+   agy plugin list   # (or jetski plugin list) confirm "adlc-gemini" with a "hooks" component
+   ```
+2. **Initialize the ADLC workspace** (creates `.adlc/`). This one *must* run
+   inside the target repository, so the neutral-directory trick used for the
+   install one-liner does not apply — and that is exactly why it does not fall
+   back to `npx @adlc/cli`: npm would resolve a bare name against the repository
+   you are standing in, so a repo shipping a workspace or dependency named
+   `@adlc/cli` would have *its* binary run against your tree. Install the toolkit
+   globally once, then run the real binary:
+   ```sh
+   command -v adlc >/dev/null || npm install -g @adlc/cli
+   adlc init
+   ```
+3. **Resolve ticket storage.** New repositories use `.adlc/tickets/` plus
+   `.adlc/ticket-archive/`. If legacy `.adlc/tickets.json` exists, run
+   `adlc ticket store migrate` to show the validated plan, ask for approval,
+   and apply only with `--write --yes`. If approval is declined—or the session
+   is non-interactive—leave the legacy backend active and continue without
+   modifying it.
+4. **Add the .gitignore stanza** so the ticket store and P1 specs are tracked,
+   everything else under `.adlc/` is not:
+   ```
+   .adlc/*
+   !.adlc/tickets.json
+   !.adlc/tickets/
+   !.adlc/tickets/**
+   !.adlc/ticket-archive/
+   !.adlc/ticket-archive/**
+   !.adlc/specs/
+   ```
+   If `.gitignore` already has the older two-line form (no `!.adlc/specs/`),
+   add just the missing `!.adlc/specs/` line — don't touch anything else. The
+   `specs/` directory holds the P1 spec for every ticket, arguably the most
+   important contract in the lifecycle, so it must be tracked by default.
+5. **Exclude `.adlc/` from this repo's formatters/linters.** The ticket store
+   is machine-written and, once a ticket declares `rails`, becomes a frozen
+   trust root — reformatting it on a ticket branch trips `rails-guard`. Check
+   for these configs and, only for the ones already present, add a `.adlc/`
+   exclusion:
+   - **Biome** (`biome.json`): merge an override —
+     `{ "overrides": [{ "include": [".adlc/**"], "formatter": { "enabled": false }, "linter": { "enabled": false } }] }`.
+   - **Prettier** (`.prettierignore`): append a `.adlc/` line.
+   - **ESLint**: add `.adlc/**` to `ignorePatterns` in a JSON `.eslintrc*`, or
+     append `.adlc/` to `.eslintignore`. For a flat `eslint.config.js`/`.mjs`/`.cjs`,
+     don't auto-edit — tell the user to add `{ ignores: ['.adlc/**'] }` themselves.
+
+   Never create a new formatter/linter config just to add this exclusion. If
+   none of these are present, or the repo uses a different tool, document the
+   manual fallback and move on.
+6. **Wire the CI gate** (the real guarantee): copy `docs/ci/rails-guard.yml` into your
+   pipeline and make it a required check. The in-session hook is advisory — the host (agy/jetski)
+   fails **open** on a non-zero hook exit, so it cannot substitute for CI. The
+   workflow template runs `scripts/rails-guard-ci.mjs` directly; treat that script
+   as a required check in branch protection, not just an informational job.
+7. **Activate enforcement** for a build: `export ADLC_P4_ENFORCEMENT=1` with an active
+   ticket whose `rails[]` are frozen.

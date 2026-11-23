@@ -298,19 +298,21 @@ ok "Checked $symlink_count symlink(s)"
 
 info "6. Scanning tracked files for internal references"
 # Markers for Google-internal references that must not appear in this public repo.
-# Each entry is "name|grep flags|regex". Flags: -i for case-insensitive.
+# Each entry is "name|grep flags|sample that must match|regex". Flags: -i for case-insensitive.
+# Every regex is first run against its sample, so a broken pattern or grep fails the check
+# instead of silently matching nothing.
 leak_markers=(
-  'google3|-i|google3'
-  'corp-domain|-i|\.corp\.(google\.com|goog)\b'
-  'googleplex|-i|googleplex'
-  'moma_search|-i|moma_search'
-  'x20|-i|\bx20\b'
-  'cns-path|-i|/cns/'
-  'go-link||(^|https?://|[^A-Za-z0-9_./-])go/[a-z0-9_-]+'
-  'bug-or-cl-link||(^|https?://|[^A-Za-z0-9_./-])(b|cl)/[0-9]{6,}'
-  'internal-path||/usr/local/google/|/google/(src|bin|data)/'
-  'google-email|-i|@google\.com'
-  'service-account-key|-i|-[0-9a-f]{12}\.json'
+  'google3|-i|see google3/foo|google3'
+  'corp-domain|-i|host.corp.goog|\.corp\.(google\.com|goog)\b'
+  'googleplex|-i|a.googleplex.com|googleplex'
+  'moma_search|-i|use moma_search|moma_search'
+  'x20|-i|on x20 now|\bx20\b'
+  'cns-path|-i|read /cns/ab-d/x|/cns/'
+  'go-link||see https://go/foo|(^|https?://|[^A-Za-z0-9_./-])go/[a-z0-9_-]+'
+  'bug-or-cl-link||fixed in b/123456789|(^|https?://|[^A-Za-z0-9_./-])(b|cl)/[0-9]{6,}'
+  'internal-path||in /usr/local/google/home/u|/usr/local/google/|/google/(src|bin|data)/'
+  'google-email|-i|mail someone@google.com|@google\.com'
+  'service-account-key|-i|proj-0123456789ab.json|-[0-9a-f]{12}\.json'
 )
 # Skipped file: this script holds the marker patterns themselves.
 # Allowed pairs ("file:marker"): .gitignore keeps the machine-local google3/ checkout out of git.
@@ -319,10 +321,15 @@ leak_allowed=(
 )
 leak_hits=0
 for entry in "${leak_markers[@]}"; do
-  m_name="${entry%%|*}"
-  rest="${entry#*|}"
-  m_flags="${rest%%|*}"
-  m_regex="${rest#*|}"
+  IFS='|' read -r m_name m_flags m_sample _ <<<"$entry"
+  m_regex="${entry#*|*|*|}"
+  rc=0
+  printf '%s\n' "$m_sample" | grep -qE ${m_flags:+"$m_flags"} -e "$m_regex" || rc=$?
+  case $rc in
+    0) ;;
+    1) err "Leak marker '$m_name' does not match its own sample"; continue ;;
+    *) err "Leak marker '$m_name' has an invalid regex"; continue ;;
+  esac
   while IFS= read -r hit; do
     [ -n "$hit" ] || continue
     hit_file="${hit%%:*}"
@@ -334,26 +341,42 @@ for entry in "${leak_markers[@]}"; do
     err "Internal reference ($m_name): $(echo "$hit" | cut -c1-160)"
     leak_hits=$((leak_hits + 1))
   done < <(git ls-files -z -- . ':(exclude)scripts/validate-plugins.sh' \
-    | xargs -0 grep -InE ${m_flags:+"$m_flags"} -e "$m_regex" 2>/dev/null || true)
+    | xargs -0 grep -sInE ${m_flags:+"$m_flags"} -e "$m_regex" || true)
 done
 if [ "$leak_hits" -eq 0 ]; then
   ok "No internal references found in tracked files"
 fi
 
 info "7. Checking agents that claim read-only tools declare them"
-# An agent described as read-only must enforce it with a tools list that has no write or shell tool.
-for agent_md in plugins/*/agents/*.md; do
-  [ -f "$agent_md" ] || continue
-  fm="$(awk 'NR == 1 && /^---$/ { in_fm = 1; next } in_fm && /^---$/ { exit } in_fm' "$agent_md")"
-  echo "$fm" | grep -qi '^description:.*read-only' || continue
-  if ! echo "$fm" | grep -q '^tools:'; then
-    err "$agent_md claims read-only tools but declares no tools list"
-  elif echo "$fm" | grep -qE '^\s*-\s*(write_file|edit_file|replace_file_content|run_command)\s*$'; then
-    err "$agent_md claims read-only tools but lists a write or shell tool"
-  else
-    ok "$agent_md declares a read-only tools list"
-  fi
-done
+# An agent described as read-only must list tools, and every tool must be a read or search tool.
+readonly_report="$(python3 - plugins/*/agents/*.md <<'PY'
+import sys, yaml
+READ_ONLY = {"view_file", "grep_search", "find_by_name", "list_dir", "search_web",
+             "read_url_content", "codebase_search", "Read", "Grep", "Glob", "WebFetch", "WebSearch"}
+for path in sys.argv[1:]:
+    text = open(path, encoding="utf-8").read()
+    if not text.startswith("---"):
+        continue
+    fm = yaml.safe_load(text.split("---", 2)[1]) or {}
+    if "read-only" not in str(fm.get("description", "")).lower():
+        continue
+    tools = fm.get("tools")
+    if isinstance(tools, str):
+        tools = [t.strip() for t in tools.split(",") if t.strip()]
+    if not tools:
+        print(f"ERR {path} claims read-only tools but declares no tools list")
+    elif bad := [t for t in tools if t not in READ_ONLY]:
+        print(f"ERR {path} claims read-only tools but lists non-read tools: {', '.join(map(str, bad))}")
+    else:
+        print(f"OK {path} declares a read-only tools list")
+PY
+)" || err "Read-only agent check failed to run"
+while IFS= read -r line; do
+  case "$line" in
+    OK\ *) ok "${line#OK }" ;;
+    ERR\ *) err "${line#ERR }" ;;
+  esac
+done <<<"$readonly_report"
 
 info "8. Checking the vendored adlc plugin loads in CloudCode"
 # adlc >= 1.13.0 exports the OpenCode v2 shape ({id, setup}); CloudCode needs the v1 export.
