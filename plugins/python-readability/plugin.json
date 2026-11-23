@@ -1,0 +1,22 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "python-readability",
+  "version": "1.0.0",
+  "description": "Modern Python and Google readability standards, style guidelines, code review checklists, and linter automation.",
+  "author": {
+    "name": "ghchinoy",
+    "url": "https://github.com/ghchinoy"
+  },
+  "repository": "https://github.com/ghchinoy/agent-skills",
+  "license": "Apache-2.0",
+  "keywords": [
+    "python",
+    "readability",
+    "code-review",
+    "style-guide",
+    "ruff",
+    "mypy",
+    "linting",
+    "google-style"
+  ]
+}

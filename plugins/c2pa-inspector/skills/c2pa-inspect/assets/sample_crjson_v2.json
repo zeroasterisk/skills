@@ -1,0 +1,65 @@
+{
+  "validation_results": {
+    "spec_version": "2.2"
+  },
+  "manifests": [
+    {
+      "label": "urn:uuid:v2-manifest-001",
+      "title": "Digital Artwork v2",
+      "format": "image/png",
+      "claim.v2": {
+        "claim_generator_info": [
+          {
+            "name": "Photoshop",
+            "version": "26.1.0"
+          }
+        ],
+        "signature_info": {
+          "certificateInfo": {
+            "issuer": {
+              "CN": "Adobe Content Authenticity CA"
+            },
+            "serialNumber": "A1B2C3D4E5F6"
+          },
+          "algorithm": "rs256",
+          "timeStampInfo": {
+            "timestamp": "2026-08-30T14:45:00Z"
+          }
+        }
+      },
+      "assertions": [
+        {
+          "label": "c2pa.actions.v2",
+          "data": {
+            "actions": [
+              {
+                "action": "c2pa.created",
+                "digitalSourceType": "https://cv.iptc.org/newscodes/digitalsourcetype/digitalCapture"
+              }
+            ]
+          }
+        },
+        {
+          "label": "c2pa.hash.bmff.v3",
+          "data": {
+            "hash_value": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678"
+          }
+        }
+      ],
+      "validationResults": {
+        "success": [
+          {
+            "code": "claimSignature.validated",
+            "explanation": "Claim signature is valid"
+          }
+        ],
+        "informational": [
+          {
+            "code": "signingCredential.trusted",
+            "explanation": "Root certificate is in trust store"
+          }
+        ]
+      }
+    }
+  ]
+}

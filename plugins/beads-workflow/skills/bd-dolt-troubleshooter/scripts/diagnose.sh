@@ -40,8 +40,17 @@ command -v bd >/dev/null 2>&1 || { red "bd not found in PATH."; exit 1; }
 ISSUES=0
 
 info "0. Engine mode and daemon-error (foundational check)"
-MODE_LINE=$(bd dolt show 2>/dev/null | grep "Mode:" || true)
+DOLT_SHOW_ALL=$(bd dolt show 2>&1 || true)
+MODE_LINE=$(echo "$DOLT_SHOW_ALL" | grep "Mode:" || true)
 printf "    %s\n" "$MODE_LINE"
+if echo "$DOLT_SHOW_ALL" | grep -qi -E "legacy Dolt server workspace|cross-era-upgrades|explicit migration is required"; then
+  red "    PROBLEM: Cross-era legacy Dolt workspace detected (bd v0.55–v0.62 -> v1.3+ guard):"
+  printf "%s\n" "$DOLT_SHOW_ALL" | sed 's/^/      /'
+  red "    Do NOT run scripts/repair.sh directly — bd migrate and bd export are blocked."
+  red "    Fix: Follow references/recovery-playbook.md Case J (inspect raw Dolt count vs issues.jsonl, snapshot, re-init, bd import)."
+  ISSUES=$((ISSUES+1))
+  SKIP_DB_CALLS=1
+fi
 if echo "$MODE_LINE" | grep -q "embedded"; then
   if [ -d .beads/dolt ] && [ "$(ls -A .beads/dolt 2>/dev/null)" ]; then
     red "    PROBLEM: Engine is in embedded mode but .beads/dolt/ contains server-mode data."
@@ -52,7 +61,9 @@ if echo "$MODE_LINE" | grep -q "embedded"; then
     yellow "    Engine is in embedded mode (no server-mode data found in .beads/dolt/)."
   fi
 fi
-if [ -f .beads/daemon-error ]; then
+if [ "${SKIP_DB_CALLS:-0}" -eq 1 ]; then
+  yellow "    Skipping live DB daemon/fingerprint checks until cross-era migration completes."
+elif [ -f .beads/daemon-error ]; then
   red "    PROBLEM: .beads/daemon-error exists — bd failed to start:"
   sed 's/^/      /' .beads/daemon-error
   if grep -q "DATABASE MISMATCH" .beads/daemon-error; then
@@ -61,56 +72,83 @@ if [ -f .beads/daemon-error ]; then
   fi
   ISSUES=$((ISSUES+1))
 else
-  DOLT_SHOW=$(bd dolt show 2>/dev/null || true)
-  if echo "$DOLT_SHOW" | grep -qi "Server not reachable" && [ -f .beads/dolt-server.lock ]; then
+  META_MODE=""
+  META_DB=""
+  if [ -f .beads/metadata.json ]; then
+    META_MODE=$(sed -n 's/.*"dolt_mode"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' .beads/metadata.json | head -1)
+    META_DB=$(sed -n 's/.*"dolt_database"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' .beads/metadata.json | head -1)
+  fi
+  if echo "$DOLT_SHOW_ALL" | grep -qi "Server not reachable" && [ -f .beads/dolt-server.lock ]; then
     red "    PROBLEM: Dolt server is unreachable but .beads/dolt-server.lock exists (lock contention / orphaned process)."
     red "    Fix: Run scripts/find-dolt-server.sh to isolate and stop the orphan, then clear stale runtime files."
     ISSUES=$((ISSUES+1))
     SKIP_DB_CALLS=1
   else
     # Check bd doctor output directly even if daemon-error file is missing
-    REPO_MISMATCH=$(bd doctor 2>&1 | grep -i "Database belongs to different repository" || true)
-    if [ -n "$REPO_MISMATCH" ]; then
-      red "    PROBLEM: Repo Fingerprint mismatch (Database belongs to different repository)."
-      red "    Fix: bd migrate --update-repo-id --yes"
+    DOCTOR_INITIAL=$(bd doctor 2>&1 || true)
+    if echo "$DOCTOR_INITIAL" | grep -qi "database \".*\" not found on Dolt server" || { [ "$META_MODE" = "server" ] && [ -n "$META_DB" ] && [ ! -d ".beads/dolt/$META_DB" ]; }; then
+      if [ -n "$META_DB" ] && [ -d ".beads/embeddeddolt/$META_DB" ]; then
+        red "    PROBLEM: Server-mode database '$META_DB' was bootstrapped into .beads/embeddeddolt/$META_DB instead of .beads/dolt/$META_DB."
+        red "    Fix: Run scripts/repair.sh (or stop scoped server, move .beads/embeddeddolt/$META_DB -> .beads/dolt/$META_DB, restart server; see Case I)."
+      else
+        red "    PROBLEM: Fresh clone / missing server-mode database '${META_DB:-<unknown>}' on running Dolt server (.beads/dolt/${META_DB:-<db>} missing)."
+        red "    Fix: Run scripts/repair.sh (runs 'bd bootstrap --yes' and relocates .beads/embeddeddolt/<db> if needed; see Case I)."
+      fi
       ISSUES=$((ISSUES+1))
+      SKIP_DB_CALLS=1
     else
-      green "    No daemon-error or repo fingerprint mismatch. Good."
+      REPO_MISMATCH=$(echo "$DOCTOR_INITIAL" | grep -i "Database belongs to different repository" || true)
+      if [ -n "$REPO_MISMATCH" ]; then
+        red "    PROBLEM: Repo Fingerprint mismatch (Database belongs to different repository)."
+        red "    Fix: bd migrate --update-repo-id --yes"
+        ISSUES=$((ISSUES+1))
+      else
+        green "    No daemon-error or repo fingerprint mismatch. Good."
+      fi
     fi
   fi
 fi
 
 info "0b. Schema version skew & pending migrations (client binary vs database)"
+SKEW=""
 if [ "${SKIP_DB_CALLS:-0}" -eq 1 ]; then
-  yellow "    Skipping schema checks (resolve lock contention / unreachable server first)."
+  yellow "    Skipping schema checks (resolve cross-era workspace or lock contention first)."
 else
   DOCTOR_OUT=$(bd doctor 2>&1 || true)
-  SKEW=$(echo "$DOCTOR_OUT" | grep -i -E "schema version mismatch|schema skew|pending schema migration|refusing to auto-apply" | head -1 || true)
+  SKEW=$(echo "$DOCTOR_OUT" | grep -i -E "schema version mismatch|schema skew|pending schema migration|refusing to auto-apply|Database: version .* \(CLI:" | head -1 || true)
   if [ -z "$SKEW" ]; then
-    # Also check bd list or bd migrate --inspect output for migration gates
+    # Also check bd migrate --inspect output for migration gates or schema version mismatch
     MIG_CHECK=$(bd migrate --inspect 2>&1 || true)
-    if echo "$MIG_CHECK" | grep -qi -E "refusing to auto-apply|pending schema migration"; then
-      SKEW=$(echo "$MIG_CHECK" | grep -i -E "refusing to auto-apply|pending schema migration" | head -1)
+    if echo "$MIG_CHECK" | grep -qi -E "refusing to auto-apply|pending schema migration|schema version mismatch"; then
+      SKEW=$(echo "$MIG_CHECK" | grep -i -E "refusing to auto-apply|pending schema migration|schema version mismatch" | head -1)
     fi
   fi
-fi
 
-if [ -n "$SKEW" ]; then
-  red "    PROBLEM: schema version skew / pending migrations detected:"
-  printf "      %s\n" "$SKEW"
-  if echo "$SKEW" | grep -qi -E "binary knows up to|is ahead of binary"; then
-    red "    Your bd binary is BEHIND the database (another agent/machine migrated it forward)."
-    red "    Reads warn; writes FAIL (\"Field 'id' doesn't have a default value\" or unexpected schema errors)."
-    red "    Fix: UPGRADE the client to match — scripts/restore-bd.sh (or go install github.com/steveyegge/beads/cmd/bd@main)"
-    red "         (CGO/ICU + PATH-copy caveats: SKILL.md 'Client BEHIND the Database')."
-    red "    Do NOT run 'bd migrate' on the old binary; it can't apply a schema it doesn't know."
+  if [ -n "$SKEW" ]; then
+    red "    PROBLEM: schema version skew / pending migrations detected:"
+    printf "      %s\n" "$SKEW"
+    if echo "$SKEW" | grep -qi -E "binary knows up to|is ahead of binary"; then
+      red "    Your bd binary is BEHIND the database (another agent/machine migrated it forward)."
+      red "    Reads warn; writes FAIL (\"Field 'id' doesn't have a default value\" or unexpected schema errors)."
+      red "    Fix: UPGRADE the client to match — scripts/restore-bd.sh (defaults to @latest; pass --main if DB was migrated by an unreleased main build)"
+      red "         (CGO/ICU + PATH-copy caveats: SKILL.md 'Client BEHIND the Database')."
+      red "    Do NOT run 'bd migrate' on the old binary; it can't apply a schema it doesn't know."
+    else
+      red "    Database has pending migrations blocked by remote-sync gate (or .local_version skipped prompt)."
+      red "    Fix: bd migrate schema --force && bd migrate --force && bd vc commit -m 'chore(bd): commit config working set' && bd recompute-blocked --json && bd dolt push"
+    fi
+    ISSUES=$((ISSUES+1))
   else
-    red "    Database has pending migrations blocked by remote-sync gate."
-    red "    Fix: bd migrate --force (or BD_ALLOW_REMOTE_MIGRATE=1 bd migrate) followed by bd dolt push."
+    green "    No schema version skew or pending migrations."
   fi
-  ISSUES=$((ISSUES+1))
-else
-  green "    No schema version skew or pending migrations."
+
+  if echo "$DOCTOR_OUT" | grep -qi "Installed bd hooks are outdated"; then
+    yellow "    WARNING: Outdated bd git hooks detected. Fix: bd hooks install --force"
+  fi
+  if echo "$DOCTOR_OUT" | grep -qi "Dolt Remote vs Git Origin"; then
+    yellow "    WARNING: Dolt remote matches git origin URL (Dolt Remote vs Git Origin)."
+    yellow "    Fix: Check GCS federation first (Golden Rule 12); if local-only, run 'bd dolt remote remove origin'."
+  fi
 fi
 
 info "0c. Client binary & PATH shadowing check"
@@ -149,26 +187,49 @@ else
 fi
 
 info "1. Dolt server status"
-bd dolt status 2>&1 | sed 's/^/    /' || yellow "    bd dolt status failed"
+DOLT_STATUS=$(bd dolt status 2>&1 || true)
+if [ -n "$DOLT_STATUS" ]; then
+  printf "%s\n" "$DOLT_STATUS" | sed 's/^/    /'
+else
+  yellow "    bd dolt status failed"
+fi
+if echo "$DOLT_STATUS" | grep -q "dolt.local-only=true" && grep -q "remote:" .beads/config.yaml 2>/dev/null; then
+  yellow "    WARNING: dolt.local-only=true is disabling remote sync even though .beads/config.yaml defines sync.remote."
+  yellow "    If remote viewers (e.g. beads-run / GCS federation) rely on this repo, remove 'local-only: true' from"
+  yellow "    .beads/config.yaml, point origin & sync.remote to gs://<bucket>/<project-id>, and run 'bd sync'."
+fi
 
 info "2. PRIMARY: local-only files tracked in git (deterministic)"
 TRACKED_BAD=""
+TRACKED_COUNT=0
 for f in $(git ls-files .beads/ 2>/dev/null); do
   case "$f" in
-    .beads/backup/*|.beads/dolt-server.pid|.beads/dolt-server.port|.beads/dolt-server.lock)
-      TRACKED_BAD="$TRACKED_BAD $f" ;;
+    .beads/backup/*|.beads/backup.*/*|.beads/dolt/*|.beads/dolt.*/*|.beads/dolt-server*|.beads/dolt-config.log|.beads/dolt-monitor.pid*|.beads/*.lock|.beads/.beads-credential-key)
+      TRACKED_BAD="$TRACKED_BAD $f"
+      TRACKED_COUNT=$((TRACKED_COUNT+1)) ;;
   esac
 done
 if [ -n "$TRACKED_BAD" ]; then
-  red "    These local files are committed to git (corruption will spread to clones):"
-  for f in $TRACKED_BAD; do echo "      $f"; done
+  red "    These local/sensitive files are committed to git ($TRACKED_COUNT file(s); corruption/bloat/key leak will spread to clones):"
+  SHOWN=0
+  for f in $TRACKED_BAD; do
+    SHOWN=$((SHOWN+1))
+    if [ "$SHOWN" -le 10 ]; then
+      echo "      $f"
+    fi
+  done
+  if [ "$TRACKED_COUNT" -gt 10 ]; then
+    echo "      ... and $((TRACKED_COUNT-10)) more (run: git rm --cached -r .beads/backup* .beads/dolt* .beads/dolt-server* .beads/dolt-config.log .beads/.beads-credential-key)"
+  fi
   ISSUES=$((ISSUES+1))
 else
-  green "    No backup/runtime files tracked. Good."
+  green "    No backup/runtime/credential files tracked. Good."
 fi
 
 info "3. PRIMARY: Dolt vs JSONL agreement (the real symptom)"
-if command -v python3 >/dev/null 2>&1 && [ -f .beads/issues.jsonl ]; then
+if [ "${SKIP_DB_CALLS:-0}" -eq 1 ]; then
+  yellow "    Skipped (resolve cross-era workspace or lock contention in check 0 first)."
+elif command -v python3 >/dev/null 2>&1 && [ -f .beads/issues.jsonl ]; then
   SAMPLE=$(python3 -c "
 import json
 ids=[json.loads(l, strict=False)['id'] for l in open('.beads/issues.jsonl') if l.strip()]
@@ -188,8 +249,8 @@ for l in open('.beads/issues.jsonl'):
     if [ "$DOLT" = "$JSONL" ]; then
       green "    $id: dolt=$DOLT jsonl=$JSONL OK"
     elif [ "$DOLT" = "?" ]; then
-      if echo "$DOLT_RAW" | grep -qi -E "refusing to auto-apply|Database belongs to different repository|schema version"; then
-        red "    $id: dolt=? (bd query failed due to schema skew / repo-id mismatch; see checks 0 & 0b)"
+      if echo "$DOLT_RAW" | grep -qi -E "refusing to auto-apply|Database belongs to different repository|schema version|not found on Dolt server"; then
+        red "    $id: dolt=? (bd query failed due to missing server DB / schema skew / repo-id mismatch; see checks 0 & 0b)"
       else
         red "    $id: dolt=? jsonl=$JSONL MISMATCH (query failed)"
         MISMATCH=1
@@ -251,6 +312,7 @@ if [ "$ISSUES" -eq 0 ]; then
   fi
 else
   red "Detected $ISSUES problem area(s). See SKILL.md for fixes:"
+  red "  - Cross-era legacy workspace (v0.55–v0.62 -> v1.3+): references/recovery-playbook.md Case J"
   red "  - Automated multi-issue repair: scripts/repair.sh"
   red "  - Engine mode / daemon-error issues: references/recovery-playbook.md Case E"
   red "  - Corrupt backup / write-revert issues: scripts/repair-corrupt-backup.sh"

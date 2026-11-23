@@ -1,0 +1,13 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "go-readability",
+  "version": "1.0.0",
+  "description": "Modern Go and Google readability standards, style guidelines, code review checklists, and testing patterns.",
+  "author": {
+    "name": "ghchinoy",
+    "url": "https://github.com/ghchinoy"
+  },
+  "repository": "https://github.com/ghchinoy/agent-skills",
+  "license": "Apache-2.0",
+  "keywords": ["go", "golang", "readability", "code-review", "style-guide", "testing", "cobra"]
+}

@@ -1,0 +1,33 @@
+digraph G {
+  label="Figure 1 · Comparison of Engineering Paradigms"
+  rankdir=LR
+
+  subgraph cluster_a {
+    label="(a) Baseline Unassisted (Condition A)"
+    in_a   [label="Task + Freeform\nInstructions" class="terminal"]
+    exec_a [label="Executor M\n(Single-Pass)" class="default"]
+    out_a  [label="Unverified Output\n(Residual Defects)" class="warning"]
+    in_a -> exec_a -> out_a
+  }
+
+  subgraph cluster_b {
+    label="(b) Static / Heuristic Linter (Condition B)"
+    in_b   [label="Task + Rigid\nTemplate" class="emphasis"]
+    exec_b [label="Executor M\n(Ungrounded Loop)" class="warning"]
+    out_b  [label="Latency Inflation\n(No Stopping Criterion)" class="error"]
+    in_b -> exec_b -> out_b
+  }
+
+  subgraph cluster_c {
+    label="(c) Closed-Loop Executable Oracle (Conditions C & D)"
+    in_c     [label="Task + Skill\nInstructions" class="primary"]
+    exec_c   [label="Executor M\n(Tool-Grounded)" class="primary"]
+    oracle_c [label="Deterministic Oracle V\n(AST / Schema / Compiler)" class="accent code"]
+    out_c    [label="Verified Artifact\n(Exit Code 0 · PASS)" class="positive"]
+
+    in_c -> exec_c
+    exec_c -> oracle_c [label="Candidate" class="primary"]
+    oracle_c -> exec_c [label="Diagnostics" class="warning"]
+    oracle_c -> out_c  [label="Exit Code 0" class="positive"]
+  }
+}

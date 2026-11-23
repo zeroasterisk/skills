@@ -55,17 +55,22 @@ To retain complete diagnostic integrity and prevent hidden database corruption o
 Instead of manually resolving ICU compiler flags or hunting down shadowed binary installations across your PATH, execute the bundled cross-platform restoration utility:
 
 ```bash
-# Rebuild against @main with full CGO + ICU support and auto-sync PATH binaries:
+# Safe default — rebuild against @latest (highest stable tag) with full CGO + ICU support
+# and symlink shadowed PATH binaries:
 scripts/restore-bd.sh
 
+# If the DB was already migrated past @latest by an unreleased main build:
+scripts/restore-bd.sh --main
+
 # Or target a specific release tag/pseudo-version:
-scripts/restore-bd.sh v1.1.1-0.20260724220040-0251a4d716bc
+scripts/restore-bd.sh v1.3.4
 ```
 
 What `scripts/restore-bd.sh` does automatically:
+* **Safe Target Selection:** Defaults to `@latest` so routine upgrades do not pull unreleased `@main` SQL migrations that would skew sibling repos; accepts `--main` or an explicit `<tag|commit>` when needed.
 * **OS & ICU Discovery:** Probes macOS Homebrew (`brew --prefix icu4c` or versioned packages like `icu4c@78`) or Linux system include paths / `pkg-config`, exporting required `CGO_CFLAGS`, `CGO_CPPFLAGS`, and `CGO_LDFLAGS`.
 * **CGO Compilation:** Invokes `CGO_ENABLED=1 go install github.com/steveyegge/beads/cmd/bd@<target>`.
-* **PATH Synchronization:** Scans `which -a bd` to identify duplicate or shadowed binary installations (such as `~/.local/bin/bd` taking precedence over `~/go/bin/bd`) and synchronizes all copies to ensure the upgrade immediately takes effect.
+* **PATH Symlink Synchronization:** Scans `which -a bd` to identify duplicate or shadowed binary installations (such as `~/.local/bin/bd` taking precedence over `~/go/bin/bd`) and symlinks them (`ln -sf`) to the primary Go binary so both immediate and future `go install` upgrades stay synchronized.
 
 ---
 

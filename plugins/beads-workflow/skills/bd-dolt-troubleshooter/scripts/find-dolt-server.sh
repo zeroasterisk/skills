@@ -75,7 +75,8 @@ else
   echo "    bd dolt stop"
   echo "If a listed PID survives (orphan), stop that specific one:"
   echo "    kill $MATCH_PIDS"
-  echo "Then clear stale runtime files and start the single owner:"
-  echo "    rm -f .beads/dolt-server.lock .beads/dolt-server.port .beads/dolt-server.info .beads/dolt-server.pid"
+  echo "Then clear stale runtime files and start the single owner immediately"
+  echo "(do NOT run 'bd hooks install' or other bd commands before 'bd dolt start', or auto-start will race):"
+  echo "    rm -f .beads/dolt-server.lock .beads/dolt-server.port .beads/dolt-server.info .beads/dolt-server.pid .beads/dolt-server-config.yaml"
   echo "    bd dolt start && bd dolt status"
 fi

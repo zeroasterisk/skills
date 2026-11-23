@@ -17,6 +17,10 @@ Simultaneously, `dolt-server.log` fills with recurring errors like:
 ```
 error running query ... error="column "content_hash" could not be found in any table in scope"
 ```
+Or, if `.beads/.local_version` was already stamped with the new CLI version (e.g. `1.3.1`), `bd list` skips the migration prompt and fails directly with a SQL column error:
+```
+Error: search count issues: Error 1105 (HY000): table "i" does not have column "storage_class"
+```
 
 **Root-cause:**
 
@@ -29,7 +33,7 @@ schema, so any other clone pulling from the remote would get mismatched data —
 a schema fork.
 
 The old server (the running `dolt sql-server`) continues serving the old schema.
-Any client querying for columns from the new schema (like `content_hash`) gets
+Any client querying for columns from the new schema (like `content_hash` or `storage_class`) gets
 SQL errors on every poll.
 
 **Before touching anything, take a filesystem-level backup.** During an active
@@ -46,18 +50,17 @@ cp -R .beads/dolt /tmp/bd-raw-snapshot-$(date +%Y%m%d-%H%M%S)
 
 ```bash
 # 1. On the machine with the running bd server (primary):
-#    The exact gate-bypass flag/subcommand has moved between bd versions —
-#    check `bd migrate --help` for your build. As of bd 1.1.x it's a
-#    top-level flag: `bd migrate --force` (equivalent to setting
-#    BD_ALLOW_REMOTE_MIGRATE=1). Older builds instead required
-#    `BD_ALLOW_REMOTE_MIGRATE=1 bd migrate schema`. Without one of these,
-#    the gate fires first and reports "Schema already at vX" even though
-#    nothing was applied. Note `--force` cannot be combined with `--dry-run`
-#    (opening the store with the gate overridden applies the migration
-#    before any preview could run).
-bd migrate --force                            # applies vX → vY (bd 1.1.x+)
-# BD_ALLOW_REMOTE_MIGRATE=1 bd migrate schema # equivalent on older builds
-bd migrate --inspect       # confirm Schema Version is now vY
+#    In bd 1.3.x+, `bd migrate --force` alone updates the Dolt metadata version
+#    (e.g. 1.1.0 -> 1.3.1) WITHOUT executing pending SQL table migrations
+#    (such as 0054-0066, including 0060_add_storage_class.up.sql). Always run
+#    `bd migrate schema --force` FIRST to apply the SQL table migrations, and
+#    then `bd migrate --force` to update the metadata stamp.
+bd migrate schema --force                     # applies SQL table migrations (vX → vY)
+bd migrate --force                            # updates Dolt metadata version stamp
+bd vc commit -m "chore(bd): commit config working set" 2>/dev/null || true
+bd recompute-blocked --json                   # repairs false blocked flags from migration 0059 (#7037)
+bd hooks install --force                      # updates git hooks to match the new bd version
+bd migrate --inspect       # confirm Schema Version is now vY and Registered Migrations: 0
 bd dolt push               # push migrated schema + data to remote
 
 # 2. On every other clone (including the machine running the watcher):
@@ -109,14 +112,64 @@ almost always `.beads/dolt` in server mode.
 
 **Verify the migration landed:**
 ```bash
-bd migrate --inspect        # Schema Version should match the new bd binary version
-bd doctor                   # should pass schema checks
+bd migrate --inspect        # Schema Version should match the new bd binary version (e.g. 1.2.2)
+bd doctor                   # should pass schema checks with 0 errors
 ```
 
-**Note on the two version numbers you'll see:** `bd migrate --inspect` and the
-gate message use an internal migration counter (`v49 -> v54`); `bd doctor`
-reports a separate semantic-looking "Database: version 1.0.5 (CLI: 1.1.0)".
-These both describe the same skew — don't be thrown by the different scales.
+**Note on the version numbers you'll see:** 
+The gate error message uses internal sequential migration counter IDs (e.g. `(v62 -> v65)`), whereas `bd migrate --inspect` reports the semver release stamp (`Schema Version: 1.2.2, Registered Migrations: 0`), and `bd doctor` may report a third semantic-looking scale ("Database: version 1.0.5 (CLI: 1.2.2)"). These all describe the same underlying schema delta — do not be thrown by the different version scales.
+
+---
+
+### The `unreadable-remote-state` Gate & Which Clone Migrates
+
+**Symptom:**
+When `bd` cannot read or query the remote's schema state directly (e.g., git remote lacks an active Dolt server endpoint, or network/ref skew occurs), the migration gate returns a structured error:
+```json
+{
+  "error": "refusing to auto-apply N pending schema migrations to a remote-backed database (vX -> vY): migrating clones independently forks the schema (#4259)",
+  "hint": "Coordination decision required: only ONE clone may migrate a shared remote...",
+  "remote_migrate_gate": {
+    "fallback_reason": "unreadable-remote-state",
+    "human_decision_required": true,
+    "options": [
+      {
+        "id": "migrate",
+        "commands": ["bd migrate --force", "bd dolt push"],
+        "when": "you are the single designated migrator (only ONE machine, confirmed with the operator) and no other clone has migrated yet"
+      },
+      {
+        "id": "adopt",
+        "commands": ["bd bootstrap"],
+        "when": "another machine has already migrated and pushed"
+      }
+    ]
+  }
+}
+```
+
+**Decision Rule:**
+Only **one clone** may migrate a shared remote. If two clones migrate independently, their internal Dolt commit graphs fork and become unrecoverable without manual database surgery.
+
+1. **Check with the human operator**: Ask if another machine has already performed the migration.
+2. **Preflight pull**: Run `bd dolt pull`. If this pulls in an already-migrated schema from another clone, choose **adopt** (`bd bootstrap`).
+3. **If this machine is the designated migrator**:
+   ```bash
+   # 1. Take a safe pre-migration backup of the JSONL export
+   cp .beads/issues.jsonl /tmp/beads-premigrate.jsonl
+   bd export -o /tmp/beads-export-backup.jsonl 2>/dev/null || true
+
+   # 2. Force the migration
+   bd migrate --force
+
+   # 3. Verify
+   bd migrate --inspect
+   bd doctor
+
+   # 4. Publish to remote so all other clones can adopt
+   bd dolt push
+   ```
+4. **On all other clones**: Do NOT run `--force`. Simply run `bd dolt pull` (or `bd bootstrap` if re-cloning).
 
 **Why the watcher error recurs every 30s:** The watcher is likely running a
 keep-alive or polling loop. Each iteration hits the missing-column SQL error and
@@ -174,25 +227,29 @@ When `bd` hits schema skew, its terminal error prompt instructs you to run `CGO_
 2. **`CGO_ENABLED=0` Trap:** Rebuilding in pure-Go mode bypasses native ICU header linking (`unicode/regex.h`), but silently disables embedded database inspection engines, causing 15+ checks in `bd doctor` to degrade with `Skipped: requires CGO`.
 
 1. **Identify what the installed binary actually is** — `bd --version` is not
-   enough. A dev build shows the same version string as a published tag but may
-   be commits ahead. `(dev)` in the version string is a red flag. Use:
+   enough. Note that `go install …/cmd/bd@vX.Y.Z` always prints `(dev)` in
+   `bd --version` because Go module zips omit `.git` VCS metadata; conversely, a
+   local source build may show a tag version string while being commits ahead. Use:
    ```bash
    go version -m "$(which bd)"
-   # Look for the `mod` line — a pseudo-version
-   # (v1.x.x-0.YYYYMMDDHHMMSS-<hash>) means it was built from an untagged commit.
+   # Look for the `mod` line — a clean tag (e.g. v1.3.4) means an official release;
+   # a pseudo-version (v1.x.x-0.YYYYMMDDHHMMSS-<hash>) means an untagged commit.
    ```
    Then find the target (the version that migrated the DB) by checking `go version -m`
-   on the binary that triggered the migration, or the latest tag/pseudo-version:
+   on the binary that triggered the migration, or comparing `@latest` vs `@main`:
    ```bash
-   go list -m -versions github.com/steveyegge/beads   # tagged releases
-   go list -m github.com/steveyegge/beads@main         # main-tip pseudo-version
+   go list -m -json github.com/steveyegge/beads@latest   # latest tagged release + timestamp
+   go list -m -json github.com/steveyegge/beads@main     # main-tip pseudo-version + timestamp
    ```
-2. Reinstall bd from source at that version, or run the automated restoration script:
+2. Reinstall bd at `@latest` (default) — or `--main` / `<commit>` ONLY if the DB is already ahead of `@latest`:
    ```bash
-   # Automated rebuild against @main with CGO + ICU support and auto-sync PATH binaries:
-   scripts/restore-bd.sh
+   # Safe default: rebuild against @latest with CGO + ICU support and symlink PATH copies:
+   scripts/restore-bd.sh --migrate
 
-   # Or inspect module revisions across multiple installed binaries:
+   # Only if DB was migrated past @latest by an unreleased main build:
+   scripts/restore-bd.sh --main --migrate
+
+   # Inspect module revisions across multiple installed binaries:
    scripts/inspect-binary.sh
    ```
    If building manually:
@@ -238,16 +295,11 @@ below), `@latest` resolves to the same old tag you already have and changes
 nothing:
 
 ```bash
-go list -m -versions github.com/steveyegge/beads   # highest tagged release
-go list -m github.com/steveyegge/beads@main         # main-tip pseudo-version
+go list -m -json github.com/steveyegge/beads@latest   # highest tagged release + commit timestamp
+go list -m -json github.com/steveyegge/beads@main     # main-tip pseudo-version + commit timestamp
 ```
 
-Compare the two. Pseudo-versions sort as `vX.Y.Z-0.<timestamp>-<hash>`; if the
-`@main` pseudo-version's base (`vX.Y.Z`) is *lower than or equal to* the
-highest tag, `main` has not yet been released — a plain `@latest` install
-will **not** advance your schema knowledge past the tag's max version. If
-your binary is already on the latest tag and the DB is still ahead, skip
-straight to the next section.
+Compare the `"Time"` timestamps and migration files (`internal/storage/schema/migrations/`), **not** the `vX.Y.Z` prefix of `@main`'s pseudo-version! When patch releases (e.g. `v1.3.2`–`v1.3.4`) are cut on a release branch while `main` continues toward `v1.4.0`, Go's `@main` pseudo-version retains the older branch-point tag prefix (`v1.3.1-0.20261113...`) even though `main` is newer in commit time and several schema migrations ahead (`0074` vs `0066`). Conversely, if you are already on `@latest` and the DB is still ahead, skip straight to the next section (and do **not** install `@main` on machines where `@latest` already satisfies the DB, or you will advance sibling repos onto unreleased migrations).
 
 ---
 

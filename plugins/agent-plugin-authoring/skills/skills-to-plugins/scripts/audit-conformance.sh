@@ -35,13 +35,24 @@ for dir in .serena .antigravitycli .cache; do
   fi
 done
 
-# Check for symlinks escaping repository root
-for symlink in $(find . -type l -not -path '*/.git/*' 2>/dev/null); do
+# Check for symlinks escaping repository root (skipping git-ignored paths and dependency directories)
+ABS_ROOT="$(pwd -P)"
+while IFS= read -r symlink; do
+  [ -n "$symlink" ] || continue
+  if git check-ignore -q "$symlink" 2>/dev/null; then
+    continue
+  fi
   target="$(readlink "$symlink")"
-  if [[ "$target" == /* ]] || [[ "$target" == ../* ]]; then
+  sym_dir="$(dirname "$symlink")"
+  if command -v realpath >/dev/null 2>&1 && realpath -m . >/dev/null 2>&1; then
+    real_target="$(cd "$sym_dir" 2>/dev/null && realpath -m "$target" 2>/dev/null || true)"
+  else
+    real_target="$(python3 -c "import os, sys; print(os.path.realpath(os.path.join(sys.argv[1], sys.argv[2])))" "$sym_dir" "$target" 2>/dev/null || true)"
+  fi
+  if [ -z "$real_target" ] || { [[ "$real_target" != "$ABS_ROOT" ]] && [[ "$real_target" != "$ABS_ROOT"/* ]]; }; then
     debt "Symlink '$symlink' points outside repository root ($target)"
   fi
-done
+done < <(find . -type l -not -path '*/.git/*' -not -path '*/node_modules/*' 2>/dev/null)
 
 info "2. Scanning Agent Skills for Frontmatter & Conformance Debt"
 find_skills() {

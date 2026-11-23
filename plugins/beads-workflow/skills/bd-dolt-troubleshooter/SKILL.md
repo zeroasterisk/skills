@@ -1,11 +1,11 @@
 ---
 name: bd-dolt-troubleshooter
-description: Diagnose and repair beads (bd) issue-tracker problems caused by its Dolt backend — including engine-mode mismatches, DATABASE MISMATCH repo-ID errors, corrupt auto-backups that revert writes, dolt sql-server lock contention, hook-timeout stash-wipes, orphaned server leaks, and schema version skew (remote-backed migration blocks or client behind DB). Use when bd won't start, daemon-error is present, bd writes revert, issues.jsonl is out of sync, untracked files vanish on commit, or bd fails with "refusing to auto-apply pending schema migrations".
+description: Diagnose and repair beads (bd) issue-tracker problems caused by its Dolt backend — including fresh-clone missing server-mode databases and bootstrap directory misplacement, cross-era legacy Dolt workspaces (v0.55–v0.62 to v1.3+), engine-mode mismatches, DATABASE MISMATCH repo-ID errors, corrupt auto-backups that revert writes, dolt sql-server lock contention, hook-timeout stash-wipes, orphaned server leaks, tracked credential keys, disabled GCS federation remotes, and schema version skew (remote-backed migration blocks, missing storage_class columns, or client behind DB). Use when bd won't start, database "<name>" is not found on Dolt server, daemon-error is present, bd writes revert, issues.jsonl is out of sync, untracked files vanish on commit, or bd fails with "legacy Dolt server workspace", "refusing to auto-apply pending schema migrations", or "does not have column storage_class".
 license: Apache-2.0
 compatibility: Requires the `bd` (beads) CLI and a repo with a `.beads/` directory using the Dolt backend. Diagnostic scripts are POSIX sh; tested on macOS and Linux.
 metadata:
   author: ghchinoy
-  version: "1.9.1"
+  version: "1.10.2"
 ---
 
 # bd / Dolt Troubleshooter
@@ -20,6 +20,33 @@ from a mismatch between four layers:
 1. **Dolt server** — the live database (`.beads/dolt/` in server mode, `.beads/embeddeddolt/` in embedded mode)
 2. **JSONL export** — `.beads/issues.jsonl` (git source of truth)
 3. **Auto-backup** — `.beads/backup/` (a local Dolt backup target)
+
+## Fast-Triage: Schema Skew & "Refusing to auto-apply migrations"
+
+When `bd` refuses to open with `refusing to auto-apply N pending schema migrations to a remote-backed database (vX -> vY)` — or when `.beads/.local_version` was already stamped with the new CLI version so `bd list` skips the gate prompt and fails directly with `Error: search count issues: Error 1105 (HY000): table "i" does not have column "storage_class"`:
+
+1. **Check with the human operator**: Confirm whether another clone has already migrated and pushed.
+2. **Run `bd dolt pull`**: Check if the remote already has the migrated schema.
+3. **If this machine is the single designated migrator**:
+   ```bash
+   cp -R .beads/dolt /tmp/bd-raw-snapshot-$(date +%s)
+   cp .beads/issues.jsonl /tmp/beads-backup.jsonl
+   # In bd v1.3.x+, run `bd migrate schema --force` FIRST to apply SQL table
+   # migrations (0054-0066), then `bd migrate --force` to update metadata:
+   bd migrate schema --force
+   bd migrate --force
+   bd vc commit -m "chore(bd): commit config working set" 2>/dev/null || true
+   bd recompute-blocked --json
+   bd hooks install --force
+   bd migrate --inspect
+   bd doctor
+   bd dolt push
+   ```
+4. **If another clone already migrated**: Do NOT run `--force`. Run `bd bootstrap` to adopt the remote schema.
+
+If `bd` instead refuses with `legacy Dolt server workspace from bd 0.55–0.62 detected; explicit migration is required`, **do not run `scripts/repair.sh` directly** — check raw Dolt row count vs `.beads/issues.jsonl` and follow `references/recovery-playbook.md` → **Case J**.
+
+See `references/schema-version-skew.md` for full runbook, dirty working set recovery, and `unreadable-remote-state` handling.
 
 ## The Signature Failure: Writes Silently Revert
 
@@ -251,8 +278,8 @@ git commit -m "chore(bd): untrack corrupt dolt backup; resync issues.jsonl"
 
 1. **JSONL is the source of truth for git.** After any batch of bd writes, run
    `bd export -o .beads/issues.jsonl` and diff it before committing.
-2. **Never commit `.beads/backup/` or `.beads/dolt-server.*`.** They are
-   machine-local. If they show in `git ls-files`, untrack them.
+2. **Never commit `.beads/backup/`, `.beads/dolt-server.*`, or `.beads/.beads-credential-key`.**
+   They are machine-local (and `.beads-credential-key` is flagged by `bd doctor` as tracked sensitive data). If they show in `git ls-files`, untrack them with `git rm --cached`.
 3. **Verify, don't trust, the success message.** bd printing "Closed X" is not
    proof of persistence during a corruption episode. Re-read with `bd show X`
    *and* grep the JSONL.
@@ -266,17 +293,22 @@ git commit -m "chore(bd): untrack corrupt dolt backup; resync issues.jsonl"
 7. **Disable hooks in repos where beads is unused.** An empty beads repo (no
    issues, no JSONL, no remote) with active hooks is a net liability. Detect with
    `bd list` and `bd dolt show`; disable as shown above.
-8. **`bd --version` lies when the binary is a dev build.** A binary built from
-   local source shows the same version string as the published tag it was branched
-   from, but may be many commits — and schema migrations — ahead. `(dev)` in the
-   output is a red flag. Always verify with `go version -m "$(which bd)"` and
-   compare the `mod` pseudo-version hash across all machines sharing a database.
-9. **"Upgrade to latest" assumes a newer release exists — verify first.** Before
-   prescribing `go install …@latest` for a schema-skew fix, run
-   `go list -m -versions github.com/steveyegge/beads` and compare against the
-   installed tag. If you're already on the latest tag and the DB is still ahead,
-   the DB was migrated by an unreleased/`main` build — you need that specific
-   commit (`go install …@<commit>`), not a repeat of the same tag.
+8. **`bd --version` can be misleading — always inspect module metadata.** First,
+   installing a clean tagged release via `go install …/cmd/bd@vX.Y.Z` always prints
+   `(dev)` in `bd --version` because Go module zips omit `.git` VCS metadata — that
+   alone is benign. Conversely, a binary built from local source may show a tag
+   version string while being commits and schema migrations ahead. Always verify
+   with `go version -m "$(which bd)"` (or `scripts/inspect-binary.sh`): a clean
+   `mod github.com/steveyegge/beads v1.3.4` line confirms a tagged release, whereas
+   a `vX.Y.Z-0.YYYYMMDDHHMMSS-<hash>` pseudo-version means an untagged commit.
+9. **Default upgrades to the latest stable tag (`@latest`), NOT `@main` — unless a DB is already ahead of all tags.**
+   `@main` frequently carries unreleased `vNext` SQL migrations (e.g. `0067`–`0074`
+   while stable `v1.3.4` is at `0066`); blindly installing `@main` will advance
+   local/shared databases forward and schema-skew sibling repos or other machines
+   running stable tags. `scripts/restore-bd.sh` defaults to `@latest` (with `CGO_ENABLED=1`
+   and symlinked PATH sync). Only pass `./scripts/restore-bd.sh --main` or a specific
+   `<commit>` after `go list -m -json github.com/steveyegge/beads@latest` confirms
+   you're already on the latest tag and the database schema is still ahead.
 10. **A repo-fingerprint mismatch after adding a remote late is expected, not
     corruption.** `bd init` computes `repo_id` from `git config remote.origin.url`
     when available, falling back to `sha256(realpath(repo_root))` when no remote
@@ -289,9 +321,14 @@ git commit -m "chore(bd): untrack corrupt dolt backup; resync issues.jsonl"
     Interactive prompts will time out or cancel in non-interactive agent sessions:
     - `bd doctor --fix --yes` (auto-applies all fixable doctor issues)
     - `echo y | bd migrate --update-repo-id` (bypasses interactive confirmation for repo ID updates)
-    - `bd migrate --force` / `BD_ALLOW_REMOTE_MIGRATE=1 bd migrate` (overrides remote schema gate on designated migrator)
-12. **Resolve "Dolt Remote vs Git Origin" endpoint conflicts using config.**
-    When `bd doctor` warns that a Dolt remote shares the same URL as git origin, run `bd config set dolt.local-only true` or remove the conflicting Dolt remote (`bd dolt remote remove origin`).
+    - `bd migrate schema --force && bd migrate --force` (overrides remote schema gate on designated migrator and applies both SQL table and metadata migrations in `bd v1.3.x+`)
+12. **Resolve "Dolt Remote vs Git Origin" endpoint conflicts without breaking GCS federation.**
+    Running `bd init` in a repository with a git `origin` remote (`git+ssh://...`) often auto-populates `.beads/config.yaml` (`sync.remote`) and Dolt's `origin` remote with the git SSH URL, causing `bd doctor` to warn `Dolt Remote vs Git Origin: 1 Dolt remote(s) match the git origin URL: origin`. **Never blindly run `bd config set dolt.local-only true`** when remote viewers (such as `beads-run` / Beads Explorer) rely on GCS bucket federation — `dolt.local-only: true` globally disables all Dolt remote sync (`Remote sync: disabled (dolt.local-only=true)`). Instead:
+    - Check `git log -p -- .beads/config.yaml` and sibling project configs (`grep -h -A1 "^sync:" ~/projects/*/.beads/config.yaml`) to see if the project uses a GCS federation bucket (`gs://<bucket>/<project-id>`).
+    - If federated via GCS: remove `dolt.local-only: true` from `.beads/config.yaml`, set `sync.remote: "gs://<bucket>/<project-id>"`, replace the Dolt `origin` remote (`bd dolt remote remove origin && bd dolt remote add origin gs://<bucket>/<project-id>`), and run `bd dolt push --no-adopt && bd sync`.
+    - If not federated (local + git `issues.jsonl` only): run `bd dolt remote remove origin` and clean up the leftover empty `sync:` stub in `.beads/config.yaml` rather than setting `dolt.local-only: true` (which blocks future federation unless explicitly desired).
+    - **Verify remotes with `bd dolt remote list`:** In server mode, `bd dolt show` may report `Remotes: (none)` even when a remote is registered in Dolt. Always confirm configured remotes with `bd dolt remote list`.
+    - **Watch for implicit git commits:** `bd init`, `bd dolt remote remove`, and `bd dolt remote add` all auto-commit to git, will sweep in anything currently staged in the git index, and can leave a commented `# remote:` stub in `.beads/config.yaml`. Keep the index clean beforehand, inspect `git log` / `git diff <base>..HEAD`, and squash or reset stray auto-commits cleanly before pushing.
 
 ## Manual Verification Snippet
 
@@ -341,11 +378,11 @@ project `AGENTS.md`.
   multi-server lock contention in Case F)
 - `references/cgo-and-schema-drift.md` — detailed runbook on CGO ICU dependencies,
   pure-Go degraded test warnings, multi-agent `@main` schema drift, and cross-platform compilation
-- `scripts/diagnose.sh` — read-only (or `--probe` for write test): primary health check for engine mode, schema skew, repo fingerprint, PATH shadowing, backup corruption, and Dolt/JSONL agreement
-- `scripts/repair.sh` — unified automated repair: creates a raw snapshot backup, clears corrupt backup files, applies schema migrations (`--force`), updates repo fingerprints, untracks local files, runs `bd doctor --fix --yes`, and exports clean JSONL
+- `scripts/diagnose.sh` — read-only (or `--probe` for write test): primary health check for engine mode, missing/misplaced server-mode databases, schema skew, repo fingerprint, PATH shadowing, backup corruption, and Dolt/JSONL agreement
+- `scripts/repair.sh` — unified automated repair: creates a raw snapshot backup, bootstraps/relocates missing server-mode databases, clears corrupt backup files, applies schema migrations (`--force`), updates repo fingerprints, untracks local files, runs `bd doctor --fix --yes` + `bd vc commit`, refreshes active git hooks, and exports clean JSONL
 - `scripts/repair-corrupt-backup.sh` — targeted repair for corrupt backup write-rollback loops
-- `scripts/restore-bd.sh` — utility to rebuild `bd` against `@main` with full CGO/ICU support
-  and automatically synchronize shadowed PATH binaries across macOS and Linux
+- `scripts/restore-bd.sh` — utility to rebuild `bd` against `@latest` (or `--main` / `<commit>`) with `CGO_ENABLED=1` (using native ICU headers when present or `-tags gms_pure_go` fallback),
+  disk-space preflight checks, optional automated schema migration (`--migrate`), and automatic symlinking of shadowed PATH binaries across macOS and Linux
 - `scripts/find-dolt-server.sh` — read-only: list all `dolt sql-server` PIDs with
   their working dirs and flag the one owning the current repo's `.beads/`
 - `scripts/inspect-binary.sh` — read-only: scan PATH for installed `bd` binaries,

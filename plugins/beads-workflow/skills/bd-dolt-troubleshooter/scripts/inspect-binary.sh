@@ -84,6 +84,9 @@ for bin in $CANDIDATES; do
         VCS_REV="$(echo "$MOD_VER" | awk -F- '{print $NF}' | sed 's/+.*$//') (from pseudo-version)"
         RAW_TIME=$(echo "$MOD_VER" | grep -o -E "[0-9]{14}" || echo "")
         VCS_TIME="$(echo "$RAW_TIME" | sed 's/^\([0-9]\{4\}\)\([0-9]\{2\}\)\([0-9]\{2\}\)\([0-9]\{2\}\)\([0-9]\{2\}\)\([0-9]\{2\}\)$/\1-\2-\3 \4:\5:\6 UTC/') (from pseudo-version)"
+      elif [ -z "$VCS_REV" ] && echo "${MOD_VER:-}" | grep -q -E "^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$"; then
+        VCS_REV="tagged release ${MOD_VER} (module zip omits vcs.revision; '(dev)' in 'bd --version' is normal)"
+        VCS_TIME="(release tag)"
       fi
 
       printf "  Go Toolchain : %s\n" "${GO_VER:-unknown}"

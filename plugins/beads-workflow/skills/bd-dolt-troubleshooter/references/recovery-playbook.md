@@ -179,15 +179,18 @@ Re-run the PID+path loop to confirm no remaining process points at this repo's
 > only if it persists). After killing, `pgrep`'s own command line may match the
 > pattern — confirm you're not seeing a false positive from the grep/pgrep itself.
 
-### 3. Clear stale runtime files and start the single owner
+### 3. Clear stale runtime files and start the single owner immediately
 
-These are machine-local and never committed (safe to remove):
+These are machine-local and never committed (safe to remove). Include `dolt-server-config.yaml` when resetting ephemeral port state:
 ```bash
 rm -f .beads/dolt-server.lock .beads/dolt-server.port \
-      .beads/dolt-server.info .beads/dolt-server.pid
+      .beads/dolt-server.info .beads/dolt-server.pid \
+      .beads/dolt-server-config.yaml
 bd dolt start
 bd dolt status
 ```
+
+> **Trap: Auto-start race with other `bd` commands.** Almost every `bd` subcommand (even `bd hooks install --force`) silently auto-starts a background `dolt sql-server` if `.beads/dolt-server.port` is missing. **Always run `bd dolt start` FIRST immediately after `rm -f .beads/dolt-server*`** — never chain another `bd` command ahead of `bd dolt start`, or the first command will spawn a background server and `bd dolt start` will immediately collide with `database "dolt" is locked by another dolt process`.
 
 ### Cross-machine coordination (bind-mount case)
 
@@ -226,16 +229,14 @@ error running query ... error="column "<col>" could not be found in any table in
 
 1. On the **primary** host (where the main bd server runs):
    ```bash
-   # The gate-bypass surface has moved between bd versions — check
-   # `bd migrate --help` for your build. bd 1.1.x: top-level flag
-   # `bd migrate --force` (equiv. to BD_ALLOW_REMOTE_MIGRATE=1). Older
-   # builds: `BD_ALLOW_REMOTE_MIGRATE=1 bd migrate schema`. Without one of
-   # these the gate fires first and reports "Schema already at vX" even
-   # though nothing was applied. `--force` cannot combine with `--dry-run`.
-   bd migrate --force                            # apply vX → vY (bd 1.1.x+)
-   # BD_ALLOW_REMOTE_MIGRATE=1 bd migrate schema # equivalent on older builds
-   bd migrate --inspect                           # confirm Schema Version is now vY
-   bd dolt push                                   # push to remote
+   # In bd 1.3.x+, `bd migrate --force` alone updates Dolt metadata without
+   # applying SQL table migrations (0054-0066). Always run `bd migrate schema --force`
+   # FIRST, followed by `bd migrate --force`, then commit any dirty config rows:
+   bd migrate schema --force                     # apply SQL table migrations (vX → vY)
+   bd migrate --force                            # update Dolt metadata version stamp
+   bd vc commit -m "chore(bd): commit config working set" 2>/dev/null || true
+   bd migrate --inspect                          # confirm Schema Version is now vY
+   bd dolt push                                  # push to remote
    ```
 
 2. On **every other clone** (including the watcher machine):
@@ -307,12 +308,13 @@ binary can't read the newer schema).
 
 **Recovery — upgrade the stranded client to match the DB (never downgrade the DB):**
 
-> **THE CLI RECOMMENDATION TRAP:** When `bd` encounters schema version skew, its terminal error output instructs you to run `CGO_ENABLED=0 go install ...@latest`. **Do NOT follow this advice.** Installing `@latest` fetches an older tagged release (e.g., `v1.1.0`) rather than the active `@main` development branch that migrated your database, leaving you stranded behind the schema. Furthermore, setting `CGO_ENABLED=0` cripples embedded database inspection engines, causing 15+ tests in `bd doctor` to degrade with `Skipped: requires CGO`.
+> **THE CLI RECOMMENDATION TRAP:** When `bd` encounters schema version skew, its terminal error output instructs you to run `CGO_ENABLED=0 go install ...@latest`. **Do NOT set `CGO_ENABLED=0`** — pure-Go mode cripples embedded database inspection engines, causing 15+ tests in `bd doctor` to degrade with `Skipped: requires CGO`. In addition, if another agent migrated the database using an unreleased `@main` build, `@latest` will only fetch the latest published tag and leave you behind; verify first whether `@latest` or `--main` is needed.
 
 1. **Automated Restoration (Recommended):**
-   Execute the bundled restoration script from the skill directory. It automatically handles macOS/Linux ICU dependency discovery, compiles with `CGO_ENABLED=1` against `@main` (or a specified pseudo-version), and synchronizes all shadowed binary installations in your PATH:
+   Execute the bundled restoration script from the skill directory. It automatically handles macOS/Linux ICU dependency discovery, compiles with `CGO_ENABLED=1`, and symlinks shadowed binary installations in your PATH:
    ```bash
-   scripts/restore-bd.sh           # Rebuild against @main and sync PATH binaries
+   scripts/restore-bd.sh           # Rebuild against @latest (safe default across sibling repos)
+   scripts/restore-bd.sh --main    # Use ONLY when DB was migrated past all published tags
    ```
 
 2. **Manual Investigation & Compilation:**
@@ -339,11 +341,170 @@ preflight so the skew surfaces before you rely on writes.
 
 ---
 
+## Case I: Fresh clone in server mode — `database "<name>" not found on Dolt server` & `bd bootstrap` `embeddeddolt/` quirk
+
+**Symptom.** On a fresh git clone (or new machine) of a repo whose `.beads/metadata.json` configures `"dolt_mode": "server"` and `"dolt_database": "<name>"`, every `bd` command fails:
+```
+Error: failed to open database: database "<name>" not found on Dolt server at 127.0.0.1:<port>
+```
+Simultaneously, `bd doctor` reports 3 errors and 6 cascading Federation warnings (`Federation remotesapi: remotesapi port 8080 not accessible`, `Peer Connectivity`, `Sync Staleness`, etc.) even when the project does not use federation.
+
+**Root cause (two-part):**
+1. `.beads/dolt/` is gitignored runtime state. On first invocation on a new clone, `bd` auto-starts `dolt sql-server` against an empty `.beads/dolt/` directory (which exposes only a default empty `dolt` database, not `<name>`).
+2. In `bd v1.3.x`, running `bd bootstrap --yes` when importing from git-tracked `.beads/issues.jsonl` first retries 3 times against the running server (`10s + 20s + 40s` = **70s wait**) and then **imports the JSONL into `.beads/embeddeddolt/<name>` instead of `.beads/dolt/<name>`**. Because `dolt sql-server` serves `.beads/dolt/`, subsequent `bd` commands *still* fail with `database "<name>" not found` immediately after `Imported N issues`!
+
+**Recovery (automated via `scripts/repair.sh`, or step-by-step):**
+
+```bash
+# 1. Configure local role if unset (prevents beads.role warning in bd doctor)
+git config beads.role maintainer
+
+# 2. Bootstrap from .beads/issues.jsonl (allow >=180s timeout for the 70s retry backoff)
+bd bootstrap --yes
+
+# 3. If bd placed the database under .beads/embeddeddolt/<name>, relocate it into .beads/dolt/<name>:
+DB=$(sed -n 's/.*"dolt_database"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' .beads/metadata.json)
+if [ -d ".beads/embeddeddolt/$DB" ] && [ ! -d ".beads/dolt/$DB" ]; then
+  bd dolt stop
+  # Verify no orphan dolt sql-server remains bound to this repo (Case F)
+  scripts/find-dolt-server.sh
+  mkdir -p .beads/dolt
+  mv ".beads/embeddeddolt/$DB" ".beads/dolt/$DB"
+  rm -rf .beads/embeddeddolt
+  rm -f .beads/dolt-server.lock .beads/dolt-server.port \
+        .beads/dolt-server.info .beads/dolt-server.pid \
+        .beads/dolt-server-config.yaml
+  # Start server FIRST before any other bd command (avoids auto-start lock race)
+  bd dolt start
+fi
+
+# 4. Backfill local repo fingerprint & project_id metadata, commit Dolt working set, and verify
+bd doctor --fix --yes
+bd vc commit -m "chore(bd): commit metadata after bootstrap"
+bd doctor          # should pass with 0 warnings, 0 errors
+```
+
+### Sub-case I.2: Unreachable `sync.remote` (e.g., GCS 403 / offline) with git-tracked `.beads/issues.jsonl`
+
+When `.beads/config.yaml` configures a GCS federation remote (`sync.remote: "gs://..."`) that this machine cannot authenticate to (e.g., HTTP `403 AccessDenied` under a different ADC account), `bd bootstrap --yes` fails without falling back to `.beads/issues.jsonl`. Running `bd init --server --reinit-local` directly also fails with exit code `10`:
+```
+! could not verify refs/dolt/data on gs://... (git: 'remote-gs' is not a git command); treating remote as having Dolt history
+bd init refuses: remote 'origin' already has Dolt history (refs/dolt/data).
+```
+
+If you want to restore a working local database from `.beads/issues.jsonl` while keeping `sync.remote` intact (without touching or pushing to GCS):
+
+```bash
+# 1. Record current HEAD and back up config.yaml; temporarily strip `sync:` so bd init does not probe gs://
+BASE_HEAD=$(git rev-parse HEAD)
+cp -f .beads/config.yaml /tmp/bd-config.yaml.bak
+sed -i.bak '/^sync:/,$d' .beads/config.yaml && rm -f .beads/config.yaml.bak
+
+# 2. Stop scoped server, clear empty .beads/dolt, and re-init local server DB (preserves metadata.json project_id)
+bd dolt stop || true
+rm -rf .beads/dolt .beads/dolt-server.* .beads/dolt.gate.lock
+bd init --server --reinit-local --prefix <prefix> --database <db> --non-interactive --skip-agents --skip-hooks
+
+# 3. Import authoritative JSONL and repair blocked flags
+bd import .beads/issues.jsonl
+bd recompute-blocked --json
+
+# 4. Replace bd init's auto-wired git+ssh:// Dolt remote with the original GCS remote
+REMOTE=$(sed -En 's/^[[:space:]]*remote:[[:space:]]*"?([^"[:space:]]+)"?.*/\1/p' /tmp/bd-config.yaml.bak | head -1)
+bd dolt remote remove origin
+[ -n "$REMOTE" ] && bd dolt remote add origin "$REMOTE"
+bd dolt remote list    # confirm with remote list (bd dolt show may print Remotes: (none) in server mode)
+
+# 5. Undo the 3 implicit git auto-commits (bd init, clear sync.remote, update sync.remote) and restore config.yaml
+git reset --mixed "$BASE_HEAD"
+git checkout -- .beads/config.yaml
+rm -f /tmp/bd-config.yaml.bak
+
+# 6. Verify
+bd doctor
+```
+
+> **Do not run `bd dolt push` / `bd sync` against GCS from this locally-imported DB:** its Dolt commit graph has a different root commit than the existing GCS remote. Use local `bd` commands + `bd export -o .beads/issues.jsonl` + `git push` until you have GCS credentials; once authenticated, move `.beads/dolt` aside and run `bd bootstrap --yes` to adopt the shared remote history cleanly.
+
+---
+
+## Case J: Cross-Era Legacy Dolt Server Workspace (`bd v0.55–v0.62` → `bd v1.3+`)
+
+**Symptom:** Every `bd` command (`bd dolt show`, `bd migrate --inspect`, `bd doctor`, `bd list`) immediately refuses with:
+```
+Error: legacy Dolt server workspace from bd 0.60.0 detected; explicit migration is required before this bd version can open or modify the workspace. Preserve .beads unchanged and follow docs/getting-started/upgrading.md#cross-era-upgrades
+```
+
+**Root cause:** `bd v1.3+` refuses workspaces whose `.beads/metadata.json` selects `dolt_mode: server` alongside a pre-v1 `.beads/.local_version` witness (`v0.55.4`–`v0.62.0`) or missing witness with `.beads/dolt/` present. Running `scripts/repair.sh` directly will fail because `bd migrate` and `bd export` are blocked by the cross-era guard.
+
+### 1. Inspect the legacy Dolt DB vs committed `.beads/issues.jsonl` first
+
+Before downloading an old `bd` binary, inspect the legacy Dolt DB directly with the raw `dolt` CLI (read-only) to see whether it holds any issues missing from `.beads/issues.jsonl`:
+
+```bash
+# Confirm no dolt sql-server is running for this repo
+scripts/find-dolt-server.sh
+
+# Check row count & commit history in the legacy Dolt DB
+DB=$(python3 -c "import json; print(json.load(open('.beads/metadata.json'))['dolt_database'])")
+dolt --data-dir .beads/dolt sql -q "use $DB; select count(*) from issues; select commit_hash, date, message from dolt_log limit 10;"
+wc -l .beads/issues.jsonl
+```
+
+- **If the legacy Dolt DB contains unexported issues** not in `.beads/issues.jsonl`: snapshot `.beads/`, copy it to a disposable workspace, export with the verified historical `bd` binary (`v0.60.x`), and import that export into a fresh `v1.3+` workspace (per upstream `docs/getting-started/upgrading.md#cross-era-upgrades`).
+- **Fast path (common on freshly synced clones):** If the legacy Dolt DB has **0 issues** (e.g., an empty initial `bd init` from months ago) or is strictly older than `.beads/issues.jsonl` committed in git, `.beads/issues.jsonl` is already your authoritative export.
+
+### 2. Snapshot, re-initialize in `v1.3+`, and import `.beads/issues.jsonl`
+
+Keep the git staging area clean first (both `bd init` and `bd dolt remote remove` auto-commit staged changes to git):
+
+```bash
+# 1. Full filesystem snapshot before touching anything
+cp -R .beads "/tmp/bd-cross-era-backup-$(date +%s)"
+
+# 2. Remove legacy untracked local DB and runtime state (preserves metadata.json & issues.jsonl)
+rm -rf .beads/dolt .beads/backup .beads/.local_version .beads/dolt-server.* .beads/dolt-monitor.pid.lock
+
+# 3. Re-initialize per-project server mode in bd v1.3+ (preserves existing project_id)
+bd init --server --reinit-local --prefix <prefix> --database <db> --non-interactive --skip-agents
+
+# 4. Import authoritative JSONL and repair blocked flags (bd v1.3.x #7037)
+bd import .beads/issues.jsonl
+bd recompute-blocked --json
+
+# 5. Upgrade legacy git hooks (v0.60 -> v1.3+)
+bd hooks install --force
+```
+
+### 3. Clean up post-init side effects and verify
+
+```bash
+# Untrack sensitive credential key if it was tracked in legacy commits
+git ls-files --error-unmatch .beads/.beads-credential-key >/dev/null 2>&1 \
+  && git rm --cached .beads/.beads-credential-key
+
+# Resolve auto-wired git-origin Dolt remote conflict (see Golden Rule 12 for GCS federation)
+# If local + git issues.jsonl only (no GCS federation):
+bd dolt remote remove origin
+# Then remove any leftover empty `sync:` block in .beads/config.yaml
+
+# Verify health and write persistence
+bd migrate --inspect
+bd doctor
+scripts/diagnose.sh --probe
+
+# Inspect git log — bd init and bd dolt remote remove create auto-commits;
+# squash into one clean commit before pushing.
+git log --oneline -n 5
+```
+
+---
+
 ## Prevention checklist
 
 - [ ] `.beads/backup/` is **not** in `git ls-files`
-- [ ] `.beads/dolt-server.*` are **not** in `git ls-files`
-- [ ] `.beads/.gitignore` contains `backup/`, `dolt-server.pid`, `dolt-server.port`, `dolt-server.lock`
+- [ ] `.beads/dolt-server.*` and `.beads/.beads-credential-key` are **not** in `git ls-files`
+- [ ] `.beads/.gitignore` contains `backup/`, `dolt-server.pid`, `dolt-server.port`, `dolt-server.lock`, `*.corrupt.backup/`, `.beads-credential-key`
 - [ ] CI/agents run `bd export -o .beads/issues.jsonl` before committing bd changes
 - [ ] After bulk bd operations, diff `issues.jsonl` before `git commit`
 - [ ] On any machine that must stay Dolt-free (the non-owning side of a
@@ -353,9 +514,10 @@ preflight so the skew surfaces before you rely on writes.
       the lock. Set it explicitly: `export BEADS_DOLT_AUTO_START=false` before
       running `bd`, and prefer reading state from `.beads/issues.jsonl` directly.
 - [ ] All agents/machines sharing one bd database run compatible bd versions —
-      "compatible" means the same module pseudo-version hash, verified with
-      `go version -m "$(which bd)"`, not just `bd --version` (which is unreliable
-      for dev/local builds that show a tag version string but are commits ahead)
-- [ ] `(dev)` in `bd --version` output triggers a `go version -m "$(which bd)"`
-      check before any operation that could migrate a shared database
+      "compatible" means the same release tag (`v1.3.4`) or module pseudo-version hash,
+      verified with `go version -m "$(which bd)"` (note: `go install …@vX.Y.Z` always
+      prints `(dev)` in `bd --version` because module zips omit `.git` metadata; check
+      the `mod` line in `go version -m` instead)
+- [ ] Routine client upgrades target `@latest` (`scripts/restore-bd.sh`), reserving
+      `--main` for databases already migrated past all published tags
 - [ ] `bd doctor` is run as a session preflight (catches schema skew before writes)

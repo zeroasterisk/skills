@@ -1,0 +1,44 @@
+{
+  "manifests": [
+    {
+      "label": "urn:uuid:ai-training-manifest",
+      "title": "Synthesized Landscape",
+      "format": "image/webp",
+      "claim": {
+        "claim_generator": "GenAI Studio 3.0",
+        "signature": {
+          "issuer": "AI Content CA"
+        }
+      },
+      "assertions": {
+        "c2pa.training-mining": {
+          "entries": {
+            "c2pa.ai_generative_training": { "use": "notAllowed" },
+            "cawg.data_mining": { "use": "notAllowed" },
+            "c2pa.ai_inference": { "use": "allowed" }
+          }
+        },
+        "c2pa.digital_source_type": {
+          "type": "https://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+        },
+        "c2pa.generative": {
+          "model": {
+            "name": "Imagen",
+            "version": "3.0"
+          },
+          "prompt": "A serene mountain lake at sunrise"
+        },
+        "c2pa.author": {
+          "name": "Credentio Author"
+        }
+      },
+      "validation": {
+        "status": [
+          {
+            "code": "claimSignature.validated"
+          }
+        ]
+      }
+    }
+  ]
+}

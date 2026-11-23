@@ -3,7 +3,7 @@ name: technical-post-editorial
 description: Edit and review technical blog posts, specs, and engineering write-ups to ensure clean house-style conformity and pitch-appropriate readability. Use as a post-hoc acceptance gate or review tool.
 license: Apache-2.0
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
   trigger: Reviewing, auditing, or editing a technical post draft
 ---
 
@@ -22,6 +22,10 @@ Two failure modes:
 2. **Overcorrection**: removing every marked choice because a model might have used it (let the model set the terms anyway)
 
 The test for any device: does this clarify a specific claim, or does it signal that a claim is about to appear?
+
+### Scope & Provenance
+
+This skill is a **surface-style gate**. It audits prose for authentic voice; it does not certify authorship of substance. AI detectors (Pangram) and watermarks are gameable: genuine human editing flips a detector's verdict, and a real rewrite removes a watermark, while light edits leave it intact. Passing this gate says nothing about who developed the argument, chose the evidence, or organized the piece. Style conformity is necessary, not sufficient. Do not treat a clean scorecard as proof that the intellectual work is the author's.
 
 ---
 
@@ -74,6 +78,7 @@ VERDICT: REVISE FOR VOICE
 Em dashes in prose frequently signal synthetic drama.
 - No `—` in prose sentences. Use a comma, a colon, a period, or a parenthetical.
 - Exception: code blocks, tables, and markdown list item separators.
+- Note: the em dash is not inherently synthetic. It is a legitimate device when it narrows a broad statement to its exact point ("The clinic failed its patients — it discharged them without translation support"). This rule enforces a deterministic house-style lint, not a claim that the device is always wrong.
 
 ### 2. Active voice, named actors
 Every sentence needs a human or a named system doing something. Passive voice and false agency hide the actor.
@@ -103,6 +108,10 @@ Cut the announcement before the point.
 - "`Environment` isn't documentation, it's behavior." → "`Environment` changes model behavior."
 - "Migrating isn't only about not breaking." → "Migration adds capabilities too."
 
+Watch for the **escalating stack**, where the negative parallelism piles up across three or more clauses to sound cumulative without adding information:
+- "It's not just that it's generous — it's not just that it's reliable — it's not just that it's kind — it's all three." → State the three properties once, plainly.
+- "He's not just nice to me, he's not just nice to you, he's not just nice to everyone in his circle..." → "He's nice to everyone."
+
 ### 6. No staccato fragmentation
 Sentence fragments for emphasis read as manufactured profundity. "That's it. That's the thing." — write complete sentences.
 
@@ -120,6 +129,12 @@ Vary sentence lengths naturally across paragraphs.
 A sentence that announces significance without naming the specific thing is empty.
 - "This is the single decision that made the migration painless" → show the decision, skip the annotation
 - "The implications are significant" → name the implication
+
+Watch for the **significance flourish**, a closing phrase that asserts importance instead of demonstrating it:
+- "This matters because..." → cut, state the point
+- "That distinction matters." → cut
+- "This evolution underscores a larger truth." → name the specific change
+- "It's a small ask, but it says a lot." → cut, or state what specifically it shows
 
 ### 10. Trust the reader
 Skip hand-holding, softening, meta-commentary, and permission-granting. State the facts and let readers conclude.
@@ -162,6 +177,9 @@ Below 35/50: revise.
 | "The obvious fix is X. We did something better." | State the approach directly. |
 | Italicizing a word for emphasis ("it mattered *more*") | Remove. Rewrite if emphasis is needed. |
 | "The lesson that cost us the most time" | Fine as a heading, but the paragraph should open with the lesson, not with the meta-commentary about it costing time. |
+| "This matters because..." | Cut. State the point. |
+| "That distinction matters." / "underscores a larger truth" | Cut, or name the specific change. |
+| "It says a lot." / "says more than we expect" | Cut, or state what specifically it shows. |
 
 ---
 
@@ -169,5 +187,6 @@ Below 35/50: revise.
 
 - stop-slop skill (hardikpandya/stop-slop) — pattern rules
 - Ruth Starkman, "Model Style Is So Cringe" (Substack, March 2026) — nuance on device vs lazy use
+- Ruth Starkman, "Pangram and Watermarking Are Still Meh—" (Substack, August 2026) — detectors and watermarks are gameable; a style gate is not a provenance check for substance
 - docstats (ghchinoy/docstats) — two-axis acceptance gating and deterministic house-style linting
 

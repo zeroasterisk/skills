@@ -1,0 +1,51 @@
+---
+version: 1.0
+colors:
+  primary: '#1D54D8'
+  background: '#F8FAFC'
+  surface: '#FFFFFF'
+  text: '#475569'
+  success: '#10B981'
+typography:
+  headline: 'Inter'
+  body: 'Inter'
+spacing: '8px'
+rounded: '16px'
+components:
+  - 'Header'
+  - 'Button'
+  - 'Card'
+---
+
+## Overview
+A minimalist, focused design system utilizing clean geometry, generous whitespace, and purposeful color contrast.
+
+## Colors
+- primary: #1D54D8 (Primary CTAs, Brand mark)
+- background: #F8FAFC (Canvas background)
+- surface: #FFFFFF (Card containers, Input fields)
+- text: #475569 (Body typography, Neutral details)
+- success: #10B981 (Positive status indicators)
+
+## Typography
+Clean neo-grotesque sans-serif typefaces (Inter) prioritizing high legibility across digital viewports.
+
+## Layout
+Structured modular grid with 24-32px padding on container elements and a clear single-column central focus.
+
+## Elevation & Depth
+Soft, diffuse ambient shadows to separate foreground surfaces from the canvas without harsh outlines.
+
+## Shapes
+Approachably rounded elements with 16px corner radii on cards and pill-shaped (full radius) interactive buttons.
+
+## Components
+- **Buttons**: Pill-shaped primary actions with high-contrast text.
+- **Cards**: Soft-elevated white surfaces on light gray backgrounds.
+- **Inputs**: Clean rounded fields with subtle borders.
+
+## Do's and Don'ts
+- **Do**: Maintain generous whitespace around central interactive elements.
+- **Do**: Use high-contrast primary buttons for primary calls to action.
+- **Don't**: Overcrowd interfaces with unnecessary border dividers.
+- **Don't**: Use sharp 90-degree corners on primary interactive containers.

@@ -1,0 +1,29 @@
+{
+  "version": "1.0.0",
+  "recipes": [
+    {
+      "archetype": "hero",
+      "title": "SaaS Platform Editorial Hero Visual",
+      "aspect_ratio": "16:9",
+      "template": "Ultra-high-resolution, cinematic editorial hero banner featuring {hint}. Aesthetic style: {tone}, visually guided by the brand philosophy: '{summary}'. Strict brand color palette anchored by primary {primary_color}, background canvas {bg_color}, clean surface {surface_color}. Lighting: Soft ambient studio diffusion, subtle volumetric rim illumination, zero harsh shadows. Composition: Dynamic 16:9 wide composition with generous elegant negative space, clean geometric framing, smooth curves with {rounded} roundedness, premium materials and modern architectural surfaces. 8k, photorealistic octane render, high fidelity, shot on 50mm f/1.8 lens."
+    },
+    {
+      "archetype": "ui",
+      "title": "Multi-Layered Digital Application Preview",
+      "aspect_ratio": "16:9",
+      "template": "Polished, high-fidelity digital UI interface preview featuring {hint}. Showcasing clean application cards with {rounded} corner radius, floating gently above a {bg_color} background. Strict color adherence: primary interaction highlights in vibrant {primary_color}, clean white {surface_color} cards, subtle typography in {headline_font} hierarchy. Elevation: Soft, diffuse ambient drop shadow with multi-layered depth (0 10px 30px rgba(0,0,0,0.06)). Aesthetic: {tone}, impeccably organized layout, crisp vector precision, modern SaaS excellence."
+    },
+    {
+      "archetype": "icon",
+      "title": "Tactile 3D Brand Emblem / App Icon",
+      "aspect_ratio": "1:1",
+      "template": "Minimalist 3D brand icon and application mark featuring {hint}. Smooth tactile ceramic and frosted glass material, curved with {rounded} soft radius. Dominated by {primary_color} with subtle specular highlights and {surface_color} accents on an isolated neutral canvas. Centered isometric perspective, studio lighting with soft diffuse reflections, macro focal depth. Clean, iconic, instantly recognizable brand emblem."
+    },
+    {
+      "archetype": "lifestyle",
+      "title": "Brand Context Workspace Photography",
+      "aspect_ratio": "16:9",
+      "template": "High-end editorial lifestyle photography featuring {hint}. Modern workspace context reflecting the brand tone: {tone}. Visual accents thoughtfully incorporating brand colors ({primary_color}) in ambient lighting and sleek accessories. Natural window lighting with soft afternoon diffusion, shallow depth of field, authentic tactile textures. Shot on Hasselblad medium format, natural grading, sophisticated agency design aesthetic."
+    }
+  ]
+}

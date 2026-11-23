@@ -1,0 +1,54 @@
+# Google Python Style Guide pylintrc baseline
+# Derived from https://google.github.io/styleguide/pylintrc
+
+[MAIN]
+py-version = 3.11
+ignore = CVS,.git,.hg,.bzr,.svn,node_modules,.venv
+load-plugins =
+
+[MESSAGES CONTROL]
+# Disable rules that conflict with modern tooling or are redundant with Ruff/Mypy
+disable =
+    raw-checker-failed,
+    bad-inline-option,
+    locally-disabled,
+    file-ignored,
+    suppressed-message,
+    useless-suppression,
+    deprecated-pragma,
+    use-symbolic-message-instead,
+    too-few-public-methods,
+    too-many-arguments,
+    too-many-locals,
+    too-many-instance-attributes
+
+[REPORTS]
+output-format = text
+reports = no
+score = no
+
+[FORMAT]
+max-line-length = 80
+indent-string = '    '
+no-space-check = trailing-comma,dict-separator
+
+[BASIC]
+good-names = i,j,k,ex,Run,_,id
+bad-names = foo,bar,baz,temp,tmp,data,val,obj
+variable-rgx = ^[a-z_][a-z0-9_]*$
+const-rgx = ^(_?[A-Z][A-Z0-9_]*|__[a-z0-9_]+__)$
+class-rgx = ^_?[A-Z][a-zA-Z0-9]*$
+function-rgx = ^_?[a-z][a-z0-9_]*$
+method-rgx = ^_?[a-z][a-z0-9_]*$
+
+[IMPORTS]
+# Google style requires importing modules, not classes or functions directly
+allow-wildcard-with-all = no
+
+[DESIGN]
+max-args = 7
+max-attributes = 10
+max-locals = 15
+max-statements = 50
+max-returns = 6
+max-branches = 12
