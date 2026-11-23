@@ -26,6 +26,7 @@ import datetime
 import importlib.util
 import json
 import math
+import os
 import re
 import sqlite3
 import sys
@@ -228,6 +229,10 @@ def _parse_block_seq(lines: list[str], i: int, indent: int) -> tuple[Any, int]:
     return items, i
 
 
+class YamlParseError(ValueError):
+    """PyYAML could not parse the text."""
+
+
 def parse_yaml_safe(text: str) -> dict[str, Any]:
     """Parse frontmatter into JSON-safe values (dates become ISO strings).
 
@@ -236,7 +241,10 @@ def parse_yaml_safe(text: str) -> dict[str, Any]:
     block scalars. Scalars other than quoted or plain text stay strings.
     """
     if _pyyaml is not None:
-        loaded = _pyyaml.safe_load(text)
+        try:
+            loaded = _pyyaml.safe_load(text)
+        except _pyyaml.YAMLError as exc:
+            raise YamlParseError(" ".join(str(exc).split())) from exc
         return _json_safe(loaded) if isinstance(loaded, dict) else {}
     lines = text.splitlines()
     i = _skip_blank(lines, 0)
@@ -246,7 +254,14 @@ def parse_yaml_safe(text: str) -> dict[str, Any]:
     return parsed if isinstance(parsed, dict) else {}
 
 
-def split_frontmatter(md_text: str) -> tuple[dict[str, Any], str]:
+def split_frontmatter(
+    md_text: str, errors: list[str] | None = None
+) -> tuple[dict[str, Any], str]:
+    """Split YAML frontmatter from the body.
+
+    A YAML error is raised, or appended to `errors` when given (the frontmatter
+    is then treated as empty and the body is still returned).
+    """
     if not md_text.startswith("---"):
         return {}, md_text
     parts = md_text.split("\n---", 1)
@@ -254,11 +269,20 @@ def split_frontmatter(md_text: str) -> tuple[dict[str, Any], str]:
         return {}, md_text
     fm_raw = parts[0][3:]
     body = parts[1].lstrip("\r\n")
-    return parse_yaml_safe(fm_raw), body
+    try:
+        return parse_yaml_safe(fm_raw), body
+    except YamlParseError as exc:
+        if errors is None:
+            raise
+        errors.append(str(exc))
+        return {}, body
 
 
 def now_iso() -> str:
-    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    """Current UTC time, or SOURCE_DATE_EPOCH when set to an integer."""
+    epoch = os.environ.get("SOURCE_DATE_EPOCH", "")
+    stamp = time.gmtime(int(epoch)) if epoch.isdigit() else time.gmtime()
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", stamp)
 
 
 # ---------------------------------------------------------------------------
@@ -406,8 +430,11 @@ def compile_okf(wiki_dir: Path, graph_id: str | None = None) -> dict[str, Any]:
 
     index_path = wiki_root / "index.md"
     index_fm: dict[str, Any] = {}
+    index_errors: list[str] = []
     if index_path.is_file():
-        index_fm, _ = split_frontmatter(index_path.read_text(encoding="utf-8"))
+        index_fm, _ = split_frontmatter(
+            index_path.read_text(encoding="utf-8"), index_errors
+        )
 
     title = str(index_fm.get("title") or wiki_root.name)
     subtitle = str(
@@ -416,6 +443,14 @@ def compile_okf(wiki_dir: Path, graph_id: str | None = None) -> dict[str, Any]:
     )
     root_id = "okf:root"
     diagnostics: list[dict[str, str]] = []
+    for err in index_errors:
+        diagnostics.append(
+            {
+                "level": "warn",
+                "code": "OKF_BAD_FRONTMATTER",
+                "message": f"index.md frontmatter was skipped: {err}",
+            }
+        )
 
     nodes: list[dict[str, Any]] = [
         {
@@ -460,8 +495,17 @@ def compile_okf(wiki_dir: Path, graph_id: str | None = None) -> dict[str, Any]:
                 }
             )
 
-        fm, body = split_frontmatter(fpath.read_text(encoding="utf-8"))
-        if not fm.get("type"):
+        fm_errors: list[str] = []
+        fm, body = split_frontmatter(fpath.read_text(encoding="utf-8"), fm_errors)
+        for err in fm_errors:
+            diagnostics.append(
+                {
+                    "level": "warn",
+                    "code": "OKF_BAD_FRONTMATTER",
+                    "message": f"{rel.as_posix()} frontmatter was skipped: {err}",
+                }
+            )
+        if not fm.get("type") and not fm_errors:
             diagnostics.append(
                 {
                     "level": "warn",
@@ -522,7 +566,10 @@ def compile_okf(wiki_dir: Path, graph_id: str | None = None) -> dict[str, Any]:
             if nid not in entry["touches"]:
                 entry["touches"].append(nid)
 
-        tags = [str(t) for t in (fm.get("tags") or []) if t]
+        raw_tags = fm.get("tags") or []
+        if not isinstance(raw_tags, list):
+            raw_tags = [raw_tags]
+        tags = [str(t) for t in raw_tags if t]
         for t in tags:
             if t.lower() != sec_slug.lower():
                 tag_touches.setdefault(t, []).append(nid)
@@ -770,6 +817,17 @@ def map_kg_container(raw_type: str) -> tuple[str, str]:
     return "grp:projects", "Projects, SDKs & Tools"
 
 
+def _singular(name: str) -> str:
+    """Singular form of a directory name such as entities, companies, or people."""
+    if name.endswith("ies"):
+        return name[:-3] + "y"
+    if name.endswith("sses"):
+        return name[:-2]
+    if name.endswith("s") and not name.endswith("ss"):
+        return name[:-1]
+    return name
+
+
 KG_SQLITE_SCHEMA = (
     "tables sources(id, uri, title), "
     "entities(entity_id, name, kind, type, description, status, source_id, merged_into), "
@@ -940,7 +998,7 @@ def compile_kg(kg_path: Path, graph_id: str | None = None) -> dict[str, Any]:
             else []
         ):
             efm = parse_yaml_safe(cand.read_text(encoding="utf-8"))
-            etype = str(efm.get("type") or cand.parent.name.rstrip("s"))
+            etype = str(efm.get("type") or _singular(cand.parent.name))
             cid, ctitle = map_kg_container(etype)
             ensure_container(cid, ctitle)
             eid_new = f"{etype.lower()}:{slug_raw}"
@@ -1134,7 +1192,11 @@ def normalize_trajectory_file(path: Path) -> dict[str, Any]:
 
     # Format A: JSONL (Jetski transcript.jsonl)
     if path.suffix == ".jsonl":
-        raw_lines = [json.loads(line) for line in text.splitlines() if line.strip()]
+        raw_lines = [
+            row
+            for row in (json.loads(line) for line in text.splitlines() if line.strip())
+            if isinstance(row, dict)
+        ]
         return _normalize_jetski_jsonl(path, raw_lines)
 
     doc = json.loads(text)
@@ -1146,18 +1208,49 @@ def normalize_trajectory_file(path: Path) -> dict[str, Any]:
     raise ValueError(f"Unrecognized trajectory schema in {path}")
 
 
+def _dict(value: Any) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
+
+
+def _to_int(value: Any) -> int:
+    try:
+        return int(value or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _tool_args(raw: Any) -> dict[str, Any]:
+    """Tool arguments as a dict. JSON-encoded strings are decoded when possible."""
+    if isinstance(raw, dict):
+        return raw
+    if isinstance(raw, str):
+        try:
+            decoded = json.loads(raw)
+        except json.JSONDecodeError:
+            decoded = None
+        return decoded if isinstance(decoded, dict) else {"raw": raw}
+    return {"raw": raw} if raw else {}
+
+
 def _normalize_atif_doc(path: Path, doc: dict[str, Any]) -> dict[str, Any]:
     tid = str(doc.get("trajectory_id") or doc.get("session_id") or path.stem)
-    agent_obj = doc.get("agent") or {}
-    agent_name = str(agent_obj.get("name") or "agent")
+    agent_raw = doc.get("agent")
+    agent_obj = _dict(agent_raw)
+    agent_name = str(
+        agent_obj.get("name")
+        or (agent_raw if agent_raw and isinstance(agent_raw, str) else "agent")
+    )
     model_name = str(agent_obj.get("model_name") or "")
     sub_by_id = {
         str(sub.get("trajectory_id") or sub.get("session_id") or f"sub-{i}"): sub
-        for i, sub in enumerate(doc.get("subagent_trajectories") or [])
+        for i, sub in enumerate(_as_list(doc.get("subagent_trajectories")))
+        if isinstance(sub, dict)
     }
 
     events: list[dict[str, Any]] = []
-    for stp in doc.get("steps") or []:
+    for stp in _as_list(doc.get("steps")):
+        if not isinstance(stp, dict):
+            continue
         src = str(stp.get("source") or "agent").lower()
         msg_raw = stp.get("message")
         if isinstance(msg_raw, list):
@@ -1169,14 +1262,14 @@ def _normalize_atif_doc(path: Path, doc: dict[str, Any]) -> dict[str, Any]:
         thought = str(stp.get("reasoning_content") or "").strip()
 
         obs_by_call: dict[str, dict[str, Any]] = {}
-        for res in (stp.get("observation") or {}).get("results") or []:
+        for res in _as_list(_dict(stp.get("observation")).get("results")):
             if isinstance(res, dict) and res.get("source_call_id"):
                 obs_by_call[str(res["source_call_id"])] = res
 
-        tcalls = stp.get("tool_calls") or []
-        metrics = stp.get("metrics") or {}
-        tok = int(metrics.get("prompt_tokens") or 0) + int(
-            metrics.get("completion_tokens") or 0
+        tcalls = [tc for tc in _as_list(stp.get("tool_calls")) if isinstance(tc, dict)]
+        metrics = _dict(stp.get("metrics"))
+        tok = _to_int(metrics.get("prompt_tokens")) + _to_int(
+            metrics.get("completion_tokens")
         )
 
         if not tcalls:
@@ -1198,7 +1291,7 @@ def _normalize_atif_doc(path: Path, doc: dict[str, Any]) -> dict[str, Any]:
             for tc in tcalls:
                 cid = str(tc.get("tool_call_id") or "")
                 fn = str(tc.get("function_name") or "tool")
-                args = tc.get("arguments") or {}
+                args = _tool_args(tc.get("arguments"))
                 res = obs_by_call.get(cid, {})
                 res_content = res.get("content")
                 if isinstance(res_content, list):
@@ -1209,16 +1302,16 @@ def _normalize_atif_doc(path: Path, doc: dict[str, Any]) -> dict[str, Any]:
                     )
                 else:
                     obs_txt = str(res_content or "")
-                extra = res.get("extra") or {}
-                tc_extra = tc.get("extra") or {}
+                extra = _dict(res.get("extra"))
+                tc_extra = _dict(tc.get("extra"))
                 is_err = bool(
                     extra.get("is_error")
                     or tc_extra.get("exit_code", 0) not in (0, None, "0")
                     or "error" in str(extra.get("status", "")).lower()
                 )
                 sub_doc = None
-                for sref in res.get("subagent_trajectory_ref") or []:
-                    ref_id = str(sref.get("trajectory_id") or "")
+                for sref in _as_list(res.get("subagent_trajectory_ref")):
+                    ref_id = str(_dict(sref).get("trajectory_id") or "")
                     if ref_id in sub_by_id:
                         sub_doc = _normalize_atif_doc(path, sub_by_id[ref_id])
                 arg_preview = ", ".join(
@@ -1237,9 +1330,9 @@ def _normalize_atif_doc(path: Path, doc: dict[str, Any]) -> dict[str, Any]:
                     }
                 )
 
-    fm = doc.get("final_metrics") or {}
-    total_tok = int(fm.get("total_prompt_tokens") or 0) + int(
-        fm.get("total_completion_tokens") or 0
+    fm = _dict(doc.get("final_metrics"))
+    total_tok = _to_int(fm.get("total_prompt_tokens")) + _to_int(
+        fm.get("total_completion_tokens")
     )
     return {
         "id": tid,
@@ -1290,7 +1383,9 @@ def _normalize_jetski_jsonl(
             continue
 
         if stype == "PLANNER_RESPONSE":
-            tcalls = s.get("tool_calls") or []
+            tcalls = [
+                tc for tc in _as_list(s.get("tool_calls")) if isinstance(tc, dict)
+            ]
             thought = str(s.get("thinking") or "").strip()[:240]
             msg = str(s.get("content") or "").strip()
 
@@ -1319,12 +1414,7 @@ def _normalize_jetski_jsonl(
                 grouped_by_tool: dict[str, dict[str, Any]] = {}
                 for idx_tc, tc in enumerate(tcalls):
                     fn = str(tc.get("name") or tc.get("tool_name") or "tool")
-                    args = tc.get("arguments") or tc.get("args") or {}
-                    if isinstance(args, str):
-                        try:
-                            args = json.loads(args)
-                        except json.JSONDecodeError:
-                            args = {"raw": args}
+                    args = _tool_args(tc.get("arguments") or tc.get("args"))
                     out_step = outputs[idx_tc] if idx_tc < len(outputs) else {}
                     out_txt = str(out_step.get("content") or "")
                     out_err = _jetski_step_failed(out_step)
@@ -1927,13 +2017,23 @@ def compile_atif_compare(
 # ---------------------------------------------------------------------------
 # 4. Integrity Validator & Standalone / Hub HTML Bundler
 # ---------------------------------------------------------------------------
-def validate_dataset(ds: dict[str, Any]) -> list[dict[str, str]]:
-    """Check rootId, node ids, parent references, edge endpoints, and trace steps.
+def _as_list(value: Any) -> list[Any]:
+    return value if isinstance(value, list) else []
 
+
+def error_diagnostics(diags: list[Any]) -> list[dict[str, Any]]:
+    return [d for d in diags if isinstance(d, dict) and d.get("level") == "error"]
+
+
+def validate_dataset(ds: dict[str, Any]) -> list[dict[str, str]]:
+    """Check ids, parents, edges, and trace steps.
+
+    Reports MISSING_ROOT, BAD_ID, DUPLICATE_ID, MISSING_PARENT, PARENT_CYCLE,
+    MALFORMED_EDGE, DANGLING_EDGE, MALFORMED_STEP, and DANGLING_TRACE_STEP.
     Findings are appended to ds["diagnostics"]; a finding already present is not
     added again, so repeated runs over the same dataset stay stable.
     """
-    diags = list(ds.get("diagnostics") or [])
+    diags = list(_as_list(ds.get("diagnostics")))
 
     def report(code: str, message: str) -> None:
         diag = {"level": "error", "code": code, "message": message}
@@ -1941,29 +2041,55 @@ def validate_dataset(ds: dict[str, Any]) -> list[dict[str, str]]:
             diags.append(diag)
 
     by_id: dict[str, dict[str, Any]] = {}
-    for n in ds.get("nodes") or []:
+    for n in _as_list(ds.get("nodes")):
         if not isinstance(n, dict) or "id" not in n:
+            continue
+        if not isinstance(n["id"], str):
+            report("BAD_ID", f"Node id {n['id']!r} must be a string.")
             continue
         if n["id"] in by_id:
             report("DUPLICATE_ID", f"Node id {n['id']} is defined more than once.")
         by_id[n["id"]] = n
-    if ds.get("rootId") not in by_id:
+
+    def known(node_id: Any) -> bool:
+        return isinstance(node_id, str) and node_id in by_id
+
+    if not known(ds.get("rootId")):
         report("MISSING_ROOT", f"rootId {ds.get('rootId')} missing from nodes.")
     for n in by_id.values():
         parent = n.get("parent")
-        if parent is not None and parent not in by_id:
+        if parent is not None and not known(parent):
             report(
                 "MISSING_PARENT", f"Node {n['id']} references missing parent {parent}."
             )
-    for e in ds.get("edges") or []:
-        if e.get("from") not in by_id or e.get("to") not in by_id:
+    for start in by_id:
+        path: list[str] = []
+        cur: Any = start
+        while known(cur) and cur not in path:
+            path.append(cur)
+            cur = by_id[cur].get("parent")
+        if known(cur):
+            members = sorted(path[path.index(cur) :])
+            report("PARENT_CYCLE", f"Parent cycle among nodes: {', '.join(members)}.")
+    for e in _as_list(ds.get("edges")):
+        if not isinstance(e, dict):
+            report("MALFORMED_EDGE", f"Edge {e!r} is not an object.")
+        elif not known(e.get("from")) or not known(e.get("to")):
             report("DANGLING_EDGE", f"Edge {e.get('id')} references missing endpoint.")
-    for t in ds.get("traces") or []:
-        for step in t.get("steps") or []:
-            if step.get("nodeId") not in by_id:
+    for t in _as_list(ds.get("traces")):
+        trace = t if isinstance(t, dict) else {}
+        if not trace:
+            report("MALFORMED_STEP", f"Trace {t!r} is not an object.")
+        for step in _as_list(trace.get("steps")):
+            if not isinstance(step, dict):
+                report(
+                    "MALFORMED_STEP",
+                    f"Trace {trace.get('id')} has a step that is not an object: {step!r}.",
+                )
+            elif not known(step.get("nodeId")):
                 report(
                     "DANGLING_TRACE_STEP",
-                    f"Trace {t.get('id')} step {step.get('stepIndex')} references missing node {step.get('nodeId')}.",
+                    f"Trace {trace.get('id')} step {step.get('stepIndex')} references missing node {step.get('nodeId')}.",
                 )
     ds["diagnostics"] = diags
     return diags
@@ -2081,7 +2207,7 @@ def _read_dataset(path: Path) -> dict[str, Any]:
 def _run(args: argparse.Namespace) -> int:
     def finish(ds: dict[str, Any], output: Path, **extra: Any) -> int:
         """Validate, then write and report, or print the errors and return 1."""
-        errs = [d for d in validate_dataset(ds) if d.get("level") == "error"]
+        errs = error_diagnostics(validate_dataset(ds))
         if errs:
             print(json.dumps({"status": "error", "errors": errs}), file=sys.stderr)
             return 1
@@ -2134,14 +2260,14 @@ def _run(args: argparse.Namespace) -> int:
         return finish(
             ds,
             args.output,
-            nodes=len(ds.get("nodes", [])),
-            edges=len(ds.get("edges", [])),
+            nodes=len(_as_list(ds.get("nodes"))),
+            edges=len(_as_list(ds.get("edges"))),
         )
 
     if args.cmd == "validate":
         ds = _read_dataset(args.graph_json)
         diags = validate_dataset(ds)
-        errs = [d for d in diags if d.get("level") == "error"]
+        errs = error_diagnostics(diags)
         print(
             json.dumps(
                 {"status": "error" if errs else "ok", "diagnostics": diags}, indent=2
@@ -2155,9 +2281,7 @@ def _run(args: argparse.Namespace) -> int:
         for p in args.datasets:
             ds = _read_dataset(p)
             diags = validate_dataset(ds)
-            errs += [
-                {**d, "dataset": str(p)} for d in diags if d.get("level") == "error"
-            ]
+            errs += [{**d, "dataset": str(p)} for d in error_diagnostics(diags)]
             loaded.append(ds)
         if errs:
             print(json.dumps({"status": "error", "errors": errs}), file=sys.stderr)

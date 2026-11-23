@@ -10,6 +10,7 @@ import re
 import shutil
 import sqlite3
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -552,6 +553,15 @@ class CompileOkfTest(unittest.TestCase):
         self.assertEqual([(e["from"], e["to"]) for e in ds["edges"]], [("a", "b")])
         self.assertNotIn("BROKEN_MD_LINK", [d["code"] for d in ds["diagnostics"]])
 
+    def test_scalar_tags_become_one_tag(self):
+        for name, mod in self.parsers():
+            with self.subTest(parser=name), mock.patch.object(strata, "_pyyaml", mod):
+                ds = self._compile_text(
+                    {"a.md": "---\ntype: T\ntags: alpha\n---\nText.\n"}
+                )
+                node = next(n for n in ds["nodes"] if n["id"] == "a")
+                self.assertEqual(node["tags"], ["alpha"])
+
     def test_link_outside_the_bundle_is_a_warning(self):
         ds = self._compile_text(
             {"a.md": "---\ntype: T\n---\nSee [readme](../README.md).\n"}
@@ -661,6 +671,25 @@ class CompileKgYamlTest(unittest.TestCase):
                 self.assertEqual(len(steps), 2)
                 self.assertIn("Acme ships.", steps[0]["observation"])
 
+    def test_entity_type_falls_back_to_a_singular_directory_name(self):
+        timeline = (
+            "events:\n  - date: 2026-01-01\n    title: T\n    actors: [plain, firm]\n"
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "timeline.yaml").write_text(timeline, encoding="utf-8")
+            (root / "entities" / "companies").mkdir(parents=True)
+            (root / "entities" / "plain.yaml").write_text(
+                "name: Plain\n", encoding="utf-8"
+            )
+            (root / "entities" / "companies" / "firm.yaml").write_text(
+                "name: Firm\n", encoding="utf-8"
+            )
+            ids = {n["id"] for n in strata.compile_kg(root)["nodes"]}
+        self.assertIn("entity:plain", ids)
+        self.assertIn("company:firm", ids)
+        self.assertNotIn("entitie:plain", ids)
+
     def test_graph_with_no_entities_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             (Path(tmp) / "timeline.yaml").write_text(
@@ -689,6 +718,167 @@ class CompileKgYamlTest(unittest.TestCase):
             conn.close()
             ds = strata.compile_kg(db)
         self.assertIn("org:acme", {n["id"] for n in ds["nodes"]})
+
+
+class ShortcutDocTest(unittest.TestCase):
+    def test_every_advertised_shortcut_has_a_key_handler(self):
+        template = (SKILL_DIR / "assets" / "template.html").read_text(encoding="utf-8")
+        viewer = VIEWER_JS.read_text(encoding="utf-8")
+        keys = re.findall(r'(?:title|placeholder)="[^"]*\((\S)\)"', template)
+        self.assertGreaterEqual(len(keys), 3)
+        for key in keys:
+            with self.subTest(key=key):
+                self.assertIn(f'ev.key === "{key}"', viewer)
+
+
+class ReproducibleOutputTest(unittest.TestCase):
+    @unittest.skipUnless(OKF_BUNDLE.is_dir(), "example OKF bundle not found")
+    def test_source_date_epoch_makes_output_byte_identical(self):
+        with (
+            tempfile.TemporaryDirectory() as tmp,
+            mock.patch.dict("os.environ", {"SOURCE_DATE_EPOCH": "1700000000"}),
+        ):
+            for suffix in (".json", ".html"):
+                outs = []
+                for n in (1, 2):
+                    out = Path(tmp) / f"run{n}{suffix}"
+                    code, _, err = run_main(
+                        ["compile-okf", str(OKF_BUNDLE), "-o", str(out)]
+                    )
+                    self.assertEqual(code, 0, err)
+                    outs.append(out.read_bytes())
+                self.assertEqual(outs[0], outs[1])
+            data = json.loads((Path(tmp) / "run1.json").read_text(encoding="utf-8"))
+        self.assertEqual(data["generatedAt"], "2023-11-14T22:13:20Z")
+
+
+MALFORMED_DATASETS = {
+    "non-dict edge": ("MALFORMED_EDGE", {"edges": ["x"]}),
+    "non-dict trace step": (
+        "MALFORMED_STEP",
+        {"traces": [{"id": "t", "steps": ["x", 3]}]},
+    ),
+    "list-valued node id": ("BAD_ID", {"nodes": [{"id": ["a"], "title": "t"}]}),
+    "parent cycle": (
+        "PARENT_CYCLE",
+        {"parentCycle": True},
+    ),
+}
+
+
+def _malformed(extra):
+    ds = _mutual_cycle_dataset()
+    if extra.get("parentCycle"):
+        ds["nodes"][1]["parent"] = "b"
+        ds["nodes"][2]["parent"] = "a"
+        return ds
+    for key, value in extra.items():
+        ds[key] = ds[key] + value if isinstance(ds[key], list) else value
+    return ds
+
+
+def run_cli(*argv):
+    proc = subprocess.run(
+        [sys.executable, str(SKILL_DIR / "scripts" / "strata.py"), *map(str, argv)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert "Traceback" not in proc.stdout + proc.stderr, proc.stderr
+    return proc
+
+
+class MalformedInputTest(unittest.TestCase):
+    def test_validate_reports_malformed_structures(self):
+        for name, (code, extra) in MALFORMED_DATASETS.items():
+            with self.subTest(case=name), tempfile.TemporaryDirectory() as tmp:
+                src = Path(tmp) / "ds.json"
+                src.write_text(json.dumps(_malformed(extra)), encoding="utf-8")
+                proc = run_cli("validate", src)
+                self.assertEqual(proc.returncode, 1)
+                codes = [d["code"] for d in json.loads(proc.stdout)["diagnostics"]]
+                self.assertIn(code, codes)
+
+    def test_compile_json_and_build_hub_exit_1_with_json_on_stderr(self):
+        for name, (code, extra) in MALFORMED_DATASETS.items():
+            for argv in (("compile-json",), ("build-hub",)):
+                with self.subTest(case=name, cmd=argv[0]):
+                    with tempfile.TemporaryDirectory() as tmp:
+                        src = Path(tmp) / "ds.json"
+                        src.write_text(json.dumps(_malformed(extra)), encoding="utf-8")
+                        proc = run_cli(*argv, src, "-o", Path(tmp) / "out.json")
+                    self.assertEqual(proc.returncode, 1)
+                    err = json.loads(proc.stderr)
+                    self.assertEqual(err["status"], "error")
+                    self.assertIn(code, [e["code"] for e in err["errors"]])
+
+    def test_parent_cycle_is_reported_once_and_stays_stable(self):
+        ds = _malformed({"parentCycle": True})
+        first = strata.validate_dataset(ds)
+        self.assertEqual([d["code"] for d in first].count("PARENT_CYCLE"), 1)
+        self.assertEqual(strata.validate_dataset(ds), first)
+
+    def test_non_dict_diagnostics_do_not_crash_the_cli(self):
+        ds = _mutual_cycle_dataset()
+        ds["diagnostics"] = ["x", 3]
+        with tempfile.TemporaryDirectory() as tmp:
+            src = Path(tmp) / "ds.json"
+            src.write_text(json.dumps(ds), encoding="utf-8")
+            proc = run_cli("compile-json", src, "-o", Path(tmp) / "out.json")
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+
+    def test_atif_accepts_string_agent_and_json_string_arguments(self):
+        doc = _atif_doc("bash", 0, "ok")
+        doc["agent"] = "plain-agent"
+        doc["steps"][0]["tool_calls"][0]["arguments"] = '{"cmd": "ls -la"}'
+        doc["steps"].append("not a step")
+        with tempfile.TemporaryDirectory() as tmp:
+            src = Path(tmp) / "run.json"
+            src.write_text(json.dumps(doc), encoding="utf-8")
+            out = Path(tmp) / "out.json"
+            proc = run_cli("compile-atif", src, "-o", out)
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            text = out.read_text(encoding="utf-8")
+        self.assertIn("plain-agent", text)
+        self.assertIn("cmd=ls -la", text)
+
+    def test_atif_non_json_arguments_are_kept_as_raw_text(self):
+        self.assertEqual(strata._tool_args("not json"), {"raw": "not json"})
+        self.assertEqual(strata._tool_args("[1, 2]"), {"raw": "[1, 2]"})
+        self.assertEqual(strata._tool_args(None), {})
+
+    @unittest.skipUnless(importlib.util.find_spec("yaml"), "PyYAML not installed")
+    def test_bad_frontmatter_is_a_warning_not_a_crash(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "b"
+            bundle.mkdir()
+            (bundle / "bad.md").write_text(
+                "---\ntitle: [unclosed\ntype: T\n---\nBody.\n", encoding="utf-8"
+            )
+            (bundle / "good.md").write_text(
+                "---\ntype: T\n---\nOK.\n", encoding="utf-8"
+            )
+            out = Path(tmp) / "out.json"
+            proc = run_cli("compile-okf", bundle, "-o", out)
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            data = json.loads(out.read_text(encoding="utf-8"))
+        diags = [d for d in data["diagnostics"] if d["code"] == "OKF_BAD_FRONTMATTER"]
+        self.assertEqual([d["level"] for d in diags], ["warn"])
+        self.assertIn("bad.md", diags[0]["message"])
+        self.assertEqual(
+            {"bad", "good"}, {n["id"] for n in data["nodes"]} & {"bad", "good"}
+        )
+
+    def test_bad_yaml_in_kg_files_is_a_json_error(self):
+        if not importlib.util.find_spec("yaml"):
+            self.skipTest("PyYAML not installed")
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "timeline.yaml").write_text(
+                "events: [unclosed\n", encoding="utf-8"
+            )
+            proc = run_cli("compile-kg", tmp, "-o", Path(tmp) / "out.json")
+        self.assertEqual(proc.returncode, 1)
+        self.assertEqual(json.loads(proc.stderr)["status"], "error")
 
 
 def run_main(argv):

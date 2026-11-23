@@ -21,7 +21,7 @@ Independent implementation inspired by Adam Gospodarczyk's (`@overment`) [`overm
 ## How it works
 
 1. **Extract facts.** Run an adapter (`compile-okf`, `compile-kg`, `compile-atif`) over existing artifacts, or write a `strata-graph/1` JSON spec and run `compile-json`.
-2. **Validate and build.** `scripts/strata.py` checks the root id, duplicate node ids, parent references, edge endpoints, and trace step node ids. It does not call an LLM. It then bundles CSS, JSON, and JS into one HTML file.
+2. **Validate and build.** `scripts/strata.py` checks the root id, node ids, parent references and cycles, edge endpoints, and trace step node ids. It does not call an LLM. It then bundles CSS, JSON, and JS into one HTML file.
 
 ## CLI quick reference
 
@@ -54,6 +54,8 @@ python3 "$STRATA" build-hub okf.json kg.json atif.json process.json -o /tmp/expl
 ```
 
 An output path that ends in `.json` writes the dataset instead of HTML. That is how you produce the inputs for `build-hub`.
+
+Set `SOURCE_DATE_EPOCH` to a Unix timestamp to fix `generatedAt`, so the same input gives byte-identical output.
 
 ## Writing a process or system graph (`strata-graph/1`)
 

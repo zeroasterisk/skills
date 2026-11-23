@@ -103,7 +103,7 @@ Optional fields that change how the viewer draws a dataset:
 | `axisNotes` | dataset | List of `{ "nodeId": "...", "text": "..." }`. Draws a note in the left margin beside that node on the root view. |
 | `quietBypass` | node | `true` dims forward edges that skip more than one row on the root view. |
 
-The validator (`validate`, and every `compile-*` command) reports these errors: `MISSING_ROOT`, `DUPLICATE_ID`, `MISSING_PARENT`, `DANGLING_EDGE`, and `DANGLING_TRACE_STEP`.
+The validator (`validate`, and every `compile-*` command) reports these errors: `MISSING_ROOT`, `BAD_ID`, `DUPLICATE_ID`, `MISSING_PARENT`, `PARENT_CYCLE`, `MALFORMED_EDGE`, `DANGLING_EDGE`, `MALFORMED_STEP`, and `DANGLING_TRACE_STEP`.
 
 ## 2. Status & Flow Semantics
 

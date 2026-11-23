@@ -2532,17 +2532,14 @@
     renderAll();
   });
 
-  dom.zoomIn.addEventListener("click", () => {
+  function stepZoom(delta) {
     const cur = st.zoom ?? 0.9;
-    st.zoom = Math.min(2.2, +(cur + 0.15).toFixed(2));
+    st.zoom = Math.min(2.2, Math.max(0.3, +(cur + delta).toFixed(2)));
     if (st.currentLayout) applyScale(st.currentLayout);
-  });
+  }
 
-  dom.zoomOut.addEventListener("click", () => {
-    const cur = st.zoom ?? 0.9;
-    st.zoom = Math.max(0.3, +(cur - 0.15).toFixed(2));
-    if (st.currentLayout) applyScale(st.currentLayout);
-  });
+  dom.zoomIn.addEventListener("click", () => stepZoom(0.15));
+  dom.zoomOut.addEventListener("click", () => stepZoom(-0.15));
 
   dom.zoomFit.addEventListener("click", () => {
     st.zoom = null;
@@ -2713,6 +2710,9 @@
     } else if (ev.key === "0") {
       st.zoom = null;
       if (st.currentLayout) applyScale(st.currentLayout);
+    } else if (!ev.ctrlKey && !ev.metaKey && !ev.altKey) {
+      if (ev.key === "+" || ev.key === "=") stepZoom(0.15);
+      else if (ev.key === "-") stepZoom(-0.15);
     }
   });
 
