@@ -1288,7 +1288,7 @@ def _normalize_atif_doc(path: Path, doc: dict[str, Any]) -> dict[str, Any]:
                 }
             )
         else:
-            for tc in tcalls:
+            for tc_idx, tc in enumerate(tcalls):
                 cid = str(tc.get("tool_call_id") or "")
                 fn = str(tc.get("function_name") or "tool")
                 args = _tool_args(tc.get("arguments"))
@@ -1325,7 +1325,8 @@ def _normalize_atif_doc(path: Path, doc: dict[str, Any]) -> dict[str, Any]:
                         "thought": thought or msg,
                         "observation": obs_txt[:240],
                         "is_error": is_err,
-                        "tokens": tok,
+                        # The step's tokens are counted once, on its first call.
+                        "tokens": tok if tc_idx == 0 else 0,
                         "subagent": sub_doc,
                     }
                 )

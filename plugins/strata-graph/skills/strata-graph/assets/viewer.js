@@ -99,6 +99,7 @@
     expandAll: false,
     hopDepth: 1,
     zoom: null, // null = auto-fit (capped at 1.0)
+    scale: 1, // effective scale from the last applyScale, the start for zoom steps
     theme: document.documentElement.getAttribute("data-theme") || "dark",
     hiddenRels: new Set(),
     hideBlindAlleys: false,
@@ -2087,6 +2088,7 @@
       const fitY = vh / lay.height;
       scale = Math.max(0.42, Math.min(1.0, Math.min(fitX, fitY)));
     }
+    st.scale = scale;
     dom.canvas.style.width = `${lay.width}px`;
     dom.canvas.style.height = `${lay.height}px`;
     dom.canvas.style.transform = `scale(${scale.toFixed(3)})`;
@@ -2146,9 +2148,9 @@
 
     // Case 2: Selected Cross-Cutting Slice
     if (st.selectedId && st.selectedId.startsWith("slice:")) {
-      const sl = level.slices.find((s) => s.id === st.selectedId);
-      if (sl) {
-        const ov = sl.overlay;
+      // Search can select a slice that the level model left out (it shows at most 18).
+      const ov = ds.overlays.find((o) => `slice:${o.id}` === st.selectedId);
+      if (ov) {
         const tags = h("div", "d-tags");
         tags.appendChild(h("span", "tag", `◆ ${ov.kind}`));
         tags.appendChild(h("span", "badge", `${ov.touches.length} total touches`));
@@ -2533,7 +2535,7 @@
   });
 
   function stepZoom(delta) {
-    const cur = st.zoom ?? 0.9;
+    const cur = st.zoom ?? st.scale;
     st.zoom = Math.min(2.2, Math.max(0.3, +(cur + delta).toFixed(2)));
     if (st.currentLayout) applyScale(st.currentLayout);
   }
@@ -2573,7 +2575,12 @@
   });
 
   // Viewport background click clears selection
+  let suppressViewportClick = false;
   dom.viewport.addEventListener("click", () => {
+    if (suppressViewportClick) {
+      suppressViewportClick = false;
+      return;
+    }
     if (st.selectedId || st.selectedBundleKey || st.compareTargetId) {
       st.selectedId = null;
       st.selectedBundleKey = null;
@@ -2590,17 +2597,27 @@
       startX: ev.clientX,
       startY: ev.clientY,
       scrollLeft: dom.viewport.scrollLeft,
-      scrollTop: dom.viewport.scrollTop
+      scrollTop: dom.viewport.scrollTop,
+      moved: false
     };
     dom.viewport.classList.add("panning");
   });
   window.addEventListener("mousemove", (ev) => {
     if (!panState) return;
+    if (Math.hypot(ev.clientX - panState.startX, ev.clientY - panState.startY) > 4) panState.moved = true;
     dom.viewport.scrollLeft = panState.scrollLeft - (ev.clientX - panState.startX);
     dom.viewport.scrollTop = panState.scrollTop - (ev.clientY - panState.startY);
   });
   window.addEventListener("mouseup", () => {
     if (panState) {
+      // The click that follows a drag must not clear the selection. The flag is
+      // reset on the next task in case no click reaches the viewport.
+      if (panState.moved) {
+        suppressViewportClick = true;
+        setTimeout(() => {
+          suppressViewportClick = false;
+        }, 0);
+      }
       panState = null;
       dom.viewport.classList.remove("panning");
     }
@@ -2609,7 +2626,7 @@
   dom.viewport.addEventListener("wheel", (ev) => {
     if (ev.ctrlKey || ev.metaKey) {
       ev.preventDefault();
-      const cur = st.zoom ?? 0.9;
+      const cur = st.zoom ?? st.scale;
       const delta = ev.deltaY < 0 ? 0.1 : -0.1;
       st.zoom = Math.max(0.3, Math.min(2.2, +(cur + delta).toFixed(2)));
       if (st.currentLayout) applyScale(st.currentLayout);

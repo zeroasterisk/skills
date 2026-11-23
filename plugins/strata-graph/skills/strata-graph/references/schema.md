@@ -137,6 +137,34 @@ With a directory instead, `compile-kg` reads `relations.yaml` and `timeline.yaml
 
 **`compile-okf` section names.** Relation types between wiki sections are chosen from the section folder names. This is an optional naming convention. A link into `patterns` is `composes-pattern`, into `architectures` is `defines-architecture`, to or from `taxonomy` is `defines-term`, to or from `governance` is `governs`, and to or from `projects` is `implements`. A link whose heading mentions `arch` or `pattern` is also `composes-pattern`. All other links are `references`. A wiki with different section names still compiles and gets the generic `references` relation.
 
+### ATIF input
+
+`compile-atif` reads an ATIF v1.x JSON document: an object with a `steps` array.
+
+- Document: `trajectory_id` or `session_id` (id, default is the file name), `agent` (an object with `name` and `model_name`, or just a name string), `notes`, `subagent_trajectories`, and `final_metrics` (`total_prompt_tokens`, `total_completion_tokens`).
+- Step: `source`, `message` (text or a list of `{text}` parts), `reasoning_content`, `tool_calls`, `observation.results`, and `metrics` (`prompt_tokens`, `completion_tokens`).
+- Tool call: `tool_call_id`, `function_name`, `arguments` (an object or a JSON-encoded string), and `extra.exit_code`. A call is paired with the result whose `source_call_id` matches.
+- Result: `content`, `extra.is_error`, `extra.status`, and `subagent_trajectory_ref` (links to an entry of `subagent_trajectories`).
+- A call fails when `extra.is_error` is set, `exit_code` is not 0, or `extra.status` contains "error". The result text is never searched.
+- Step tokens are counted once, on the step's first tool call. Without `final_metrics` the total is the sum over all events.
+
+### Jetski JSONL input
+
+`compile-atif` reads a Jetski `transcript.jsonl` file (one JSON object per line) when the path ends in `.jsonl`. Lines that are not objects are skipped.
+
+| Step `type` | Fields read | Use |
+| :--- | :--- | :--- |
+| `USER_INPUT` | `content` | A user-goal turn. `<USER_REQUEST>` tags are removed, and a `<CONTEXT_SUMMARY>` message is skipped. |
+| `PLANNER_RESPONSE` | `content`, `thinking`, `tool_calls`, `model` | An agent turn. Each tool call has `name` (or `tool_name`) and `arguments` (or `args`, an object or a JSON string). Without tool calls, `content` becomes an agent-update turn. |
+| `GENERIC` | `content`, `status`, `error`, `exit_code` (or `exitCode`) | The output of a tool call. |
+
+All other step types are ignored. The first non-empty `model` in the file is the run's model.
+
+- **Pairing.** The `GENERIC` steps that directly follow a `PLANNER_RESPONSE` are its tool outputs, matched to the calls by position.
+- **Failure.** An output fails only when `status` is `ERROR` or `FAILED`, `error` is set, or the exit code is not 0. The output text is never searched.
+- **Grouping.** Calls to the same tool in one turn become one event. Failed calls stay separate. Consecutive identical successful events merge into one event with a count, labeled `<tool> ×N batch`.
+- **Id and title.** When the path contains `.system_generated`, the id is the first 12 characters of the session directory name, which is the grandparent of the `logs` directory (`<session>/.system_generated/logs/transcript.jsonl`). Otherwise the id is the file name without its suffix. The title is `Jetski transcript <id>`.
+
 ## 4. Multi-Dataset Hub Envelope (`strata-hub/1`)
 
 ```json

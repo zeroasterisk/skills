@@ -341,14 +341,94 @@ class BrowserRenderTest(unittest.TestCase):
         self.assertNotIn("→", out["afterPip"])
         self.assertNotIn("→", out["afterStep"])
 
-    def _run_page_script(self, body):
+    def _run_page_script(self, body, dataset=None):
         script = f"<script>(function () {{ const out = {{}}; {body}\n"
         script += 'document.body.setAttribute("data-result", JSON.stringify(out)); })();</script>'
-        proc = _dump_dom(_mutual_cycle_dataset(), script)
+        proc = _dump_dom(dataset or _mutual_cycle_dataset(), script)
         self.assertNotIn("Uncaught", proc.stderr)
         m = re.search(r'data-result="([^"]*)"', proc.stdout)
         self.assertIsNotNone(m, "page script did not run")
         return json.loads(html_module.unescape(m.group(1)))
+
+    def test_dragging_the_viewport_keeps_the_selection(self):
+        out = self._run_page_script("""
+          const viewport = document.getElementById("viewport");
+          const selected = () => !!document.querySelector(".block.selected");
+          const mouse = (target, type, x) =>
+            target.dispatchEvent(new MouseEvent(type, { bubbles: true, clientX: x, clientY: 10 }));
+          const pick = () => document.querySelector('.block[data-box-id="a"]')
+            .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+          pick();
+          out.picked = selected();
+          mouse(viewport, "mousedown", 100);
+          mouse(window, "mousemove", 150);
+          mouse(window, "mouseup", 150);
+          mouse(viewport, "click", 150);
+          out.afterDrag = selected();
+          mouse(viewport, "mousedown", 100);
+          mouse(window, "mouseup", 101);
+          mouse(viewport, "click", 101);
+          out.afterPlainClick = selected();
+        """)
+        self.assertTrue(out["picked"])
+        self.assertTrue(out["afterDrag"])
+        self.assertFalse(out["afterPlainClick"])
+
+    def test_zoom_out_starts_from_the_fitted_scale(self):
+        ds = _mutual_cycle_dataset()
+        ds["edges"] = []
+        for i in range(14):
+            ds["nodes"].append(
+                {
+                    "id": f"n{i}",
+                    "title": f"N{i}",
+                    "kind": "stage",
+                    "status": "ready",
+                    "parent": "r",
+                }
+            )
+        out = self._run_page_script(
+            """
+          const readout = document.getElementById("zoom-fit");
+          const pct = () => parseInt(readout.textContent.match(/(\\d+)%/)[1], 10);
+          out.fit = pct();
+          document.getElementById("zoom-out").click();
+          out.after = pct();
+        """,
+            ds,
+        )
+        self.assertLess(out["fit"], 75)
+        self.assertLess(out["after"], out["fit"])
+
+    def test_search_can_select_a_slice_beyond_the_visible_cap(self):
+        ds = _mutual_cycle_dataset()
+        ds["overlays"] = [
+            {
+                "id": f"ov{i}",
+                "title": f"Overlay {i}",
+                "kind": "policy",
+                "touches": ["a", "b"],
+            }
+            for i in range(1, 22)
+        ]
+        ds["overlays"].append(
+            {"id": "ov22", "title": "Overlay 22", "kind": "policy", "touches": ["a"]}
+        )
+        out = self._run_page_script(
+            """
+          const input = document.getElementById("search-input");
+          input.value = "overlay 22";
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+          const item = document.querySelector("#search-results .r-item");
+          out.hit = item ? item.textContent : "";
+          item.click();
+          const title = document.querySelector("#panel-body .d-title");
+          out.title = title ? title.textContent : "";
+        """,
+            ds,
+        )
+        self.assertIn("Overlay 22", out["hit"])
+        self.assertEqual(out["title"], "Overlay 22")
 
     def test_escape_closes_diagnostics_drawer_and_resets_aria(self):
         out = self._run_page_script("""
@@ -422,6 +502,29 @@ class EmbeddedJsonTest(unittest.TestCase):
 
 
 class SchemaDocTest(unittest.TestCase):
+    def test_every_trajectory_input_format_has_a_heading(self):
+        help_text = " ".join(strata._build_parser().format_help().split())
+        m = re.search(r"Compile 1\.\.N (.+?) trajectories", help_text)
+        self.assertIsNotNone(m, help_text)
+        formats = re.split(r",\s*|\s+or\s+", m.group(1))
+        self.assertGreaterEqual(len(formats), 2)
+        headings = [
+            line.lstrip("#").strip().lower()
+            for line in (SKILL_DIR / "references" / "schema.md")
+            .read_text(encoding="utf-8")
+            .splitlines()
+            if line.startswith("#")
+        ]
+        for name in formats:
+            with self.subTest(format=name):
+                self.assertTrue(
+                    any(
+                        h.startswith(name.lower()) and h.endswith("input")
+                        for h in headings
+                    ),
+                    f"no '{name} input' heading in schema.md",
+                )
+
     def test_first_json_example_validates(self):
         text = (SKILL_DIR / "references" / "schema.md").read_text(encoding="utf-8")
         m = re.search(r"```json\n(.*?)\n```", text, re.DOTALL)
@@ -1047,6 +1150,48 @@ def _atif_doc(tool, exit_code, output):
             }
         ],
     }
+
+
+class AtifTokenTest(unittest.TestCase):
+    def test_step_tokens_are_counted_once_across_tool_calls(self):
+        call = {"function_name": "bash", "arguments": {}}
+        doc = {
+            "steps": [
+                {
+                    "source": "agent",
+                    "message": "run three",
+                    "metrics": {"prompt_tokens": 10, "completion_tokens": 5},
+                    "tool_calls": [
+                        {**call, "tool_call_id": "a"},
+                        {**call, "tool_call_id": "b"},
+                        {**call, "tool_call_id": "c"},
+                    ],
+                }
+            ]
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            src = Path(tmp) / "run.json"
+            src.write_text(json.dumps(doc), encoding="utf-8")
+            norm = strata.normalize_trajectory_file(src)
+        self.assertEqual([e["tokens"] for e in norm["events"]], [15, 0, 0])
+        self.assertEqual(norm["total_tokens"], 15)
+
+
+ROWS = [{"type": "USER_INPUT", "content": "Do the thing"}]
+
+
+class JetskiIdTest(unittest.TestCase):
+    def test_system_generated_path_uses_the_session_directory(self):
+        path = Path(
+            "/data/brain/abcdef123456-7890-session/.system_generated/logs/transcript.jsonl"
+        )
+        norm = strata._normalize_jetski_jsonl(path, ROWS)
+        self.assertEqual(norm["id"], "abcdef123456")
+        self.assertEqual(norm["title"], "Jetski transcript abcdef123456")
+
+    def test_other_paths_use_the_file_stem(self):
+        norm = strata._normalize_jetski_jsonl(Path("/tmp/run-7.jsonl"), ROWS)
+        self.assertEqual(norm["id"], "run-7")
 
 
 class AtifCompareTest(unittest.TestCase):
