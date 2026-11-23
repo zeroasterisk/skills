@@ -18,7 +18,11 @@ Scan the text mechanically. Any match requires an immediate rewrite.
 - [ ] **No Forced Groups of Three:** Check lists and sentences; do not force items into neat triads.
 - [ ] **No Decorative Emojis:** No 🚀, 💡, ✅, 🔥 in titles, headings, or bullet points.
 - [ ] **No Bold Mini-Headings on Every Bullet:** Avoid vertical lists where every single bullet point starts with `**Topic Name:**`. Write fluent paragraphs or natural lists.
-- [ ] **Sentence-Case Headings:** Use sentence case (`## Building resilient agent loops`), not title case (`## Building Resilient Agent Loops`).
+- [ ] **Sentence-Case Headings (No Clickbait Scolding):** Use direct sentence case (`## How you grade your agent`), never title case or social-media clickbait (`## The Evaluation Hierarchy Most Teams Skip`).
+- [ ] **No Mechanical Section Recap Transitions:** Cut formulaic end-of-section summaries and bridge sentences (*"Now that we've covered X, let's explore Y"*, *"Each answers a different question and catches failures the others miss"*, *"Good tooling won't save..."*). End sections cleanly when the point lands.
+- [ ] **No Callout-Box Spam (`Applied tip:` / `Pro tip:`):** Do not pepper long-form docs with boxed tips that restate or fragment the narrative. Weave real-world examples and practical rules into the prose; keep callouts only when genuinely standalone and high-value.
+- [ ] **No Negative-Restatement Table Columns or Redundant Recap Tables:** Cut columns like `"What it misses"` or `"What breaks if you skip it"` that merely invert adjacent rows; replace with direct `"Example"` cells, and delete tables that simply repeat the prose above them.
+- [ ] **De-Anthropomorphize Models & Agents:** Agents *generate*, *call*, *write*, or *return* outputs; do not write *"what the agent said"*, *"its closing pitch"*, or *"how it felt"*.
 - [ ] **Straight Quotes:** Use standard ASCII quotes (`"` and `'`), not curly quotes (`“`, `”`, `‘`, `’`).
 
 ---
