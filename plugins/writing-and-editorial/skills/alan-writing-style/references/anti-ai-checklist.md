@@ -33,7 +33,7 @@ Evaluate the text through Alan's specific perspective as a 20-year engineer turn
 
 - [ ] **Sub-Surface "Muppet" Warmth:** Does the piece have earnest, nerdy warmth rather than sterile corporate distance? Is there a subtle winking parenthetical `(...)`, an observational smile, or a self-deprecating aside?
 - [ ] **Is the Humor Muted?** Ensure the humor stays strictly below the surface. If it sounds like a standup routine, wacky marketing, or forced slang, dial it back. The baseline must remain an authoritative DevRel / technical architect voice.
-- [ ] **"What with Why":** Does every technical description clearly articulate *why* it matters to the developer?
+- [ ] **"Meaning + Mechanism + Practice":** Does every technical description say *why* it matters, *how* it works, and *what to do* with it?
 - [ ] **Altitudes Check:** Does the piece bridge the gap between high-level architectural intent (Altitude 3/2) and low-level protocol reality (Altitude 1/0: network timeouts, schema changes, event logs)?
 - [ ] **No Demoware or Unearned Hype:** Are all performance claims, latency numbers, and architecture trade-offs honest? Are edge cases and messy failure modes acknowledged?
 - [ ] **Concrete Proof of Depth:** Are named errors, actual protocol fields, and real system constraints cited?

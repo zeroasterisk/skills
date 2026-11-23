@@ -1,10 +1,13 @@
 ---
 name: council-delegate
-description: "Independent, cold-start council delegate (Jetski frontmatter) with shell execution off and isolated context for unbiased code review, architecture feedback, and ideation."
+description: "Independent, cold-start council delegate with read-only codebase tools and isolated context for unbiased code review, architecture feedback, and ideation."
 mainAgent: false
 subagent: true
 hidden: true
 model: pro
+tools:
+  - view_file
+  - grep_search
 commandExecutionPolicy: off
 ---
 

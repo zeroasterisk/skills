@@ -8,7 +8,7 @@ Concrete execution templates for running isolated 3-delegate council rounds insi
 
 ### A. Default Single-Tier Subagent (`council-delegate`)
 
-When the `council` plugin is enabled before a conversation starts and no `~/.config/council/roster.json` is configured, `council-delegate` (`plugins/council/agents/council-delegate.md`) is pre-registered as a hidden subagent on the `pro` tier. It runs with shell execution off and is told not to edit files; for read-only enforcement at the tool boundary, use roster seats with the `tools` list in section B.
+When the `council` plugin is enabled before a conversation starts and no `~/.config/council/roster.json` is configured, `council-delegate` (`plugins/council/agents/council-delegate.md`) is pre-registered as a hidden subagent on the `pro` tier with a read-only `tools` list (`view_file`, `grep_search`) and shell execution off.
 
 ### B. Multi-Model Roster Pinning (`~/.config/council/roster.json` + `~/.gemini/config/agents/`)
 
@@ -44,6 +44,7 @@ Example `~/.gemini/config/agents/<type_name>/agent.json`:
         ],
         "tools": [
           {"name": "view_file", "builtin": true},
+          {"name": "grep_search", "builtin": true},
           {"name": "search_web", "builtin": true},
           {"name": "send_message", "builtin": true}
         ],
@@ -124,7 +125,7 @@ cp -r ~/.gemini/config/agents/council-* "${ART_DIR}/.agents/agents/" 2>/dev/null
 
 When `run_workflow` is available in your tool declarations, prefer it over manual subagent calls:
 * Every delegate runs as an isolated, single-use cold-start trajectory (`agent()`).
-* `from advanced import parallel` with `return_exceptions=True` prevents a single delegate error or timeout from canceling the other two delegates.
+* The built-in `parallel(items, fn)` cancels the remaining items when one raises, so `run_seat` catches each seat's error and returns it. One failed delegate then cannot cancel the other two, and the fallback retry can run.
 * If `~/.config/council/roster.json` is present, the script automatically loads the 3 model-pinned seats and retries any failed primary seat once on `fallback`.
 * Ordering `findings` *before* `score` in the `finish` JSON Schema enforces findings-first adversarial grading.
 
@@ -143,7 +144,6 @@ Call `run_workflow` with `Description="Council review (Round <N>)"` and `Args={"
 ```python
 import json
 from pathlib import Path
-from advanced import parallel
 
 ctx_path = args["context_path"]
 is_review = bool(args.get("is_scored_review", True))
@@ -237,8 +237,15 @@ def spawn_seat(seat, role_prefix="Council"):
         kwargs["model"] = seat["model"]
     return agent(**kwargs)
 
+async def run_seat(seat):
+    # parallel() cancels the other items when one raises, so catch per seat.
+    try:
+        return await spawn_seat(seat)
+    except Exception as err:
+        return err
+
 phase(f"Round {round_num}: Parallel Council")
-results = await parallel(seats, spawn_seat, return_exceptions=True)
+results = await parallel(seats, run_seat)
 
 output = []
 for idx, (seat, res) in enumerate(zip(seats, results)):

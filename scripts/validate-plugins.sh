@@ -340,7 +340,22 @@ if [ "$leak_hits" -eq 0 ]; then
   ok "No internal references found in tracked files"
 fi
 
-info "7. Checking the vendored adlc plugin loads in CloudCode"
+info "7. Checking agents that claim read-only tools declare them"
+# An agent described as read-only must enforce it with a tools list that has no write or shell tool.
+for agent_md in plugins/*/agents/*.md; do
+  [ -f "$agent_md" ] || continue
+  fm="$(awk 'NR == 1 && /^---$/ { in_fm = 1; next } in_fm && /^---$/ { exit } in_fm' "$agent_md")"
+  echo "$fm" | grep -qi '^description:.*read-only' || continue
+  if ! echo "$fm" | grep -q '^tools:'; then
+    err "$agent_md claims read-only tools but declares no tools list"
+  elif echo "$fm" | grep -qE '^\s*-\s*(write_file|edit_file|replace_file_content|run_command)\s*$'; then
+    err "$agent_md claims read-only tools but lists a write or shell tool"
+  else
+    ok "$agent_md declares a read-only tools list"
+  fi
+done
+
+info "8. Checking the vendored adlc plugin loads in CloudCode"
 # adlc >= 1.13.0 exports the OpenCode v2 shape ({id, setup}); CloudCode needs the v1 export.
 if grep -qE '^export default \{' plugins/adlc/index.mjs; then
   err "plugins/adlc/index.mjs uses the OpenCode v2 export; vendor a v1 release (scripts/sync-adlc.py --ref v1.12.0)"

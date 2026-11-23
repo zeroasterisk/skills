@@ -3,14 +3,14 @@
 
 Copies a tagged release of https://github.com/voodootikigod/adlc.git into
 plugins/adlc and writes an Agent Plugins v1.0.0 manifest. The plugin version
-comes from the vendored package.json. CloudCode reads that same package.json to
-install @adlc/opencode from npm, so the vendored skills and the runtime plugin
-stay on one release.
+comes from the vendored package.json. Keep the CloudCode plugin entry
+(@adlc/opencode@<version>) on that same version, so the vendored skills and the
+runtime plugin match.
 
 Usage:
   python3 scripts/sync-adlc.py               # Vendor the newest release CloudCode can load
   python3 scripts/sync-adlc.py --ref v1.12.0 # Vendor a specific tag
-  python3 scripts/sync-adlc.py --dry-run     # Print the tag that would be vendored
+  python3 scripts/sync-adlc.py --dry-run     # Fetch and check tags; leave plugins/adlc alone
 
 adlc >= 1.13.0 exports the OpenCode v2 plugin shape ({id, setup}), which
 CloudCode cannot load. Without --ref, the script picks the newest release with
@@ -140,15 +140,12 @@ def main() -> int:
     parser.add_argument(
         "--allow-v2", action="store_true", help="Vendor a tag even if it uses the OpenCode v2 plugin export"
     )
-    parser.add_argument("--dry-run", action="store_true", help="Print the tag that would be vendored and exit")
+    parser.add_argument("--dry-run", action="store_true", help="Fetch and check tags, print the one that would be vendored, change nothing in plugins/")
     args = parser.parse_args()
 
     ensure_remote(REPO_ROOT)
     candidates = [args.ref] if args.ref else release_tags(REPO_ROOT)
     for tag in candidates:
-        if args.dry_run and (args.ref or args.allow_v2):
-            log(f"[dry-run] Would vendor {tag} into {ADLC_PLUGIN_DIR}")
-            return 0
         ref = fetch_tag(REPO_ROOT, tag)
         if args.allow_v2 or not uses_v2_export(REPO_ROOT, ref):
             break
