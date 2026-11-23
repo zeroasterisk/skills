@@ -7,7 +7,7 @@
     {
       "name": "adlc",
       "source": "./plugins/adlc",
-      "description": "Agentic Development Lifecycle (ADLC) skills from upstream: phase router, doctrine, prosecutor, and self-orchestration. The prosecutor subagent fan-out needs upstream's adlc-gemini plugin.",
+      "description": "Agentic Development Lifecycle (ADLC) skills plus the OpenCode rails-guard runtime, commands, and prosecutor agents. On Gemini or Claude Code, install upstream's adlc-gemini or adlc-claude-code plugin for the prosecutor fan-out.",
       "skills": [
         "./plugins/adlc/skills/adlc",
         "./plugins/adlc/skills/adlc-doctrine",

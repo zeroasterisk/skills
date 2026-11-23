@@ -34,10 +34,13 @@ class CouncilTemplateTest(unittest.TestCase):
         os.chdir(self.workspace)
         src = template_source()
         helpers = src[src.index("READ_ONLY_TOOLS") : src.index("seats = [vet(")]
-        helpers = helpers.replace(
-            'Path.home() / ".gemini" / "config" / "agents"',
-            f"Path({str(self.agents)!r})",
+        home_agents = 'Path.home() / ".gemini" / "config" / "agents"'
+        self.assertEqual(
+            helpers.count(home_agents),
+            1,
+            "template moved; the test must not read ~/.gemini",
         )
+        helpers = helpers.replace(home_agents, f"Path({str(self.agents)!r})")
         module_file = self.workspace / "council_template.py"
         module_file.write_text(
             "import re\nfrom pathlib import Path\nlogs = []\nlog = logs.append\n"
@@ -55,7 +58,7 @@ class CouncilTemplateTest(unittest.TestCase):
         path.write_text(text, encoding="utf-8")
 
     def vet(self, **seat):
-        return self.ns["vet"]({"label": "L", **seat}, 0)
+        return self.ns["vet"]({"label": "L", **seat})
 
     def test_template_compiles_with_top_level_await(self):
         compile(

@@ -119,7 +119,7 @@ def read_agent(seat):
     return None
 
 
-def vet(seat, idx):
+def vet(seat):
     """Keep a seat only if its tools are verifiably read-only; otherwise use `research`."""
     research = {"label": f"{seat['label']}; substituted research", "type_name": "research", "model": "pro"}
     if seat["type_name"] == "research":
@@ -141,9 +141,9 @@ def vet(seat, idx):
     return {**seat, "tier": agent_file["model"] or "inherit"}
 
 
-seats = [vet(s, i) for i, s in enumerate(seats)]
+seats = [vet(s) for s in seats]
 if fallback_seat:
-    fallback_seat = vet(fallback_seat, len(seats))
+    fallback_seat = vet(fallback_seat)
 
 scoring_block = (
     """Scoring rubric (findings-first):

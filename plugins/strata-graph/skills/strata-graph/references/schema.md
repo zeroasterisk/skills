@@ -150,6 +150,10 @@ With a directory instead, `compile-kg` reads `relations.yaml` and `timeline.yaml
 - A call fails when `extra.is_error` is set, `exit_code` is not 0, or `extra.status` contains "error". The result text is never searched.
 - Step tokens are counted once, on the step's first tool call. Without `final_metrics` the total is the sum over all events.
 
+In `--mode decision` (ATIF and Jetski input), a failed call becomes a `blind-alley` turn with an `explores-spur` edge from the last successful turn. The next successful turn adds a `backtrack` edge from each pending failed turn back to the last successful turn. The data does not say that the agent changed its approach, so these arcs only record the order of events.
+
+The turns are split into `phase:1`, `phase:2`, and `phase:3` at fixed cut points of the turn count (28% and 68%). The phases carry no meaning beyond position in the run.
+
 ### Jetski JSONL input
 
 `compile-atif` reads a Jetski `transcript.jsonl` file (one JSON object per line) when the path ends in `.jsonl`. Lines that are not objects are skipped.

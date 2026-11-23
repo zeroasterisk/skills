@@ -299,6 +299,12 @@
     };
   }
 
+  // Synthetic boxes (slices, outside ghosts) live in the same map as real node ids, so
+  // their keys start with "~", which node ids from the compilers never do.
+  function sliceBoxId(overlayId) {
+    return `~slice:${overlayId}`;
+  }
+
   // Any change of the selected block also drops a picked wire bundle and a path target,
   // because the inspector and highlighting check selectedBundleKey first.
   function setSelection(id) {
@@ -357,7 +363,7 @@
         });
       }
     } else {
-      // Collect leaf descendants (or 2nd-level blocks) inside focus, capped at 110 for crisp readability
+      // Collect leaf descendants (or 2nd-level blocks) inside focus, at most 110
       const leaves = [];
       function walk(u, topGroup) {
         if (!u.kids.length) {
@@ -415,7 +421,7 @@
     const rawPairEdges = new Map(); // key "u->v" or "back:u->v" -> bundle
 
     function ensureGhost(map, targetNodeId, zone) {
-      const gid = `${zone}:${targetNodeId}`;
+      const gid = `~${zone}:${targetNodeId}`;
       if (!map.has(gid)) {
         const base = ds.byId.get(targetNodeId);
         map.set(gid, {
@@ -490,7 +496,7 @@
       }
       if (touchedVis.size >= 1) {
         activeSlices.push({
-          id: `slice:${ov.id}`,
+          id: sliceBoxId(ov.id),
           overlay: ov,
           zone: "slice",
           isSlice: true,
@@ -589,8 +595,8 @@
     }
 
     const spineIds = new Set(spineItems.map((x) => x.id));
-    // Separate forward spine bundles vs explicit backtracks, then run DFS cycle detection
-    // so residual cycles ALSO route as clean outer return arcs instead of fake downward arrows!
+    // Separate forward spine bundles from explicit backtracks, then run DFS cycle
+    // detection so residual cycles also route as return arcs.
     const forwardCandidates = [];
     const backBundles = [];
 
@@ -749,7 +755,7 @@
       }
     }
 
-    // Wrap overly wide ranks cleanly so rows fit viewport proportions
+    // Wrap wide ranks into several rows to fit the viewport width
     const maxPerRow = Math.max(3, Math.min(7, Math.floor((Math.max(viewportW, 880) - 120) / (GEO.cardW + GEO.colGap))));
     const maxBase = Math.max(0, ...Array.from(baseRank.values()));
     const rowOf = new Map();
@@ -854,7 +860,7 @@
         continue;
       }
       if (ev.row <= eu.row) {
-        // Backward or same-position loop -> route cleanly as outer return arc
+        // Backward or same-row loop: route as an outer return arc
         b.isLoop = true;
         backBundles.push(b);
         continue;
@@ -1011,7 +1017,7 @@
       }
     }
 
-    // Place Cross-Cutting Web Slices in dedicated bottom band (zero spine distortion!)
+    // Cross-cutting slices go in a separate band below the spine
     let bandY = null;
     if (level.slices.length > 0) {
       bandY = curY - GEO.rowGap + GEO.bandGap;
@@ -1147,7 +1153,7 @@
       });
     }
 
-    // Build crisp horizontal left->right routes for same-row forward pairs
+    // Horizontal left-to-right routes for forward pairs in the same row
     for (const b of horizBundles) {
       const bu = boxes.get(b.u);
       const bv = boxes.get(b.v);
@@ -1394,7 +1400,7 @@
     const focusTarget = st.hoverId || st.selectedId;
     if (focusTarget && lay.boxes.has(focusTarget)) {
       litNodes.add(focusTarget);
-      if (focusTarget.startsWith("slice:")) {
+      if (lay.boxes.get(focusTarget).ref.isSlice) {
         for (const sr of lay.sliceRoutes) {
           if (sr.sliceId === focusTarget) {
             litBundles.add(sr.key);
@@ -2148,47 +2154,45 @@
     }
 
     // Case 2: Selected Cross-Cutting Slice
-    if (st.selectedId && st.selectedId.startsWith("slice:")) {
+    const ov = st.selectedId ? ds.overlays.find((o) => sliceBoxId(o.id) === st.selectedId) : null;
+    if (ov) {
       // Search can select a slice that the level model left out (it shows at most 18).
-      const ov = ds.overlays.find((o) => `slice:${o.id}` === st.selectedId);
-      if (ov) {
-        const tags = h("div", "d-tags");
-        tags.appendChild(h("span", "tag", `◆ ${ov.kind}`));
-        tags.appendChild(h("span", "badge", `${ov.touches.length} total touches`));
-        dom.panelBody.appendChild(tags);
-        dom.panelBody.appendChild(h("h2", "d-title", ov.title));
-        dom.panelBody.appendChild(h("p", "d-id", ov.id));
-        if (ov.summary) dom.panelBody.appendChild(h("p", "d-sum", ov.summary));
+      const tags = h("div", "d-tags");
+      tags.appendChild(h("span", "tag", `◆ ${ov.kind}`));
+      tags.appendChild(h("span", "badge", `${ov.touches.length} total touches`));
+      dom.panelBody.appendChild(tags);
+      dom.panelBody.appendChild(h("h2", "d-title", ov.title));
+      dom.panelBody.appendChild(h("p", "d-id", ov.id));
+      if (ov.summary) dom.panelBody.appendChild(h("p", "d-sum", ov.summary));
 
-        const href = safeUrl(ov.url);
-        if (href) {
-          const linkWrap = h("div", "d-actions");
-          const a = h("a", "d-action", "Open Canonical Source ↗");
-          a.href = href;
-          a.target = "_blank";
-          a.rel = "noopener noreferrer";
-          linkWrap.appendChild(a);
-          dom.panelBody.appendChild(linkWrap);
-        }
-
-        const sec = h("div", "d-sec");
-        sec.appendChild(h("h3", null, `Touched Concepts / Blocks (${ov.touches.length})`));
-        const ul = h("ul", "d-list");
-        for (const tid of ov.touches) {
-          const tn = ds.byId.get(tid);
-          if (!tn) continue;
-          const li = h("li", "d-conn");
-          const jump = h("button", "d-jump", tn.title);
-          jump.type = "button";
-          jump.addEventListener("click", () => jumpToNode(ds, tid));
-          li.appendChild(jump);
-          if (tn.summary) li.appendChild(h("p", "d-snippet", tn.summary));
-          ul.appendChild(li);
-        }
-        sec.appendChild(ul);
-        dom.panelBody.appendChild(sec);
-        return;
+      const href = safeUrl(ov.url);
+      if (href) {
+        const linkWrap = h("div", "d-actions");
+        const a = h("a", "d-action", "Open Canonical Source ↗");
+        a.href = href;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        linkWrap.appendChild(a);
+        dom.panelBody.appendChild(linkWrap);
       }
+
+      const sec = h("div", "d-sec");
+      sec.appendChild(h("h3", null, `Touched Concepts / Blocks (${ov.touches.length})`));
+      const ul = h("ul", "d-list");
+      for (const tid of ov.touches) {
+        const tn = ds.byId.get(tid);
+        if (!tn) continue;
+        const li = h("li", "d-conn");
+        const jump = h("button", "d-jump", tn.title);
+        jump.type = "button";
+        jump.addEventListener("click", () => jumpToNode(ds, tid));
+        li.appendChild(jump);
+        if (tn.summary) li.appendChild(h("p", "d-snippet", tn.summary));
+        ul.appendChild(li);
+      }
+      sec.appendChild(ul);
+      dom.panelBody.appendChild(sec);
+      return;
     }
 
     // Case 3: Selected Node (or Ghost, or Current Level Container fallback)
@@ -2392,7 +2396,8 @@
     });
     el.addEventListener("click", (ev) => {
       ev.stopPropagation();
-      if (ev.shiftKey && st.selectedId && st.selectedId !== boxId && !st.selectedId.startsWith("slice:") && !boxId.startsWith("slice:")) {
+      const selectedIsSlice = curDs().overlays.some((o) => sliceBoxId(o.id) === st.selectedId);
+      if (ev.shiftKey && st.selectedId && st.selectedId !== boxId && !selectedIsSlice && !ref.isSlice) {
         st.compareTargetId = boxId;
         st.selectedBundleKey = null;
         renderAll();
@@ -2676,7 +2681,7 @@
           jumpToNode(ds, hit.item.id);
         } else {
           st.focusId = ds.rootId;
-          setSelection(`slice:${hit.item.id}`);
+          setSelection(sliceBoxId(hit.item.id));
           renderAll();
         }
       });

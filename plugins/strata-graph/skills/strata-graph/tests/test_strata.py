@@ -172,6 +172,48 @@ class CompileAtifTest(unittest.TestCase):
             [e["observation"] for e in errors], ["first failed", "second failed"]
         )
 
+    def test_step_indexes_count_from_one_without_gaps(self):
+        clean = self._compile(
+            _transcript({"type": "GENERIC", "status": "DONE", "content": "ok"})
+        )
+        recovered = self._compile(
+            _transcript(
+                {"type": "GENERIC", "status": "ERROR", "error": "boom", "content": ""}
+            )
+        )
+        for name, ds in (("clean", clean), ("recovered", recovered)):
+            with self.subTest(run=name):
+                steps = ds["traces"][0]["steps"]
+                self.assertGreaterEqual(len(steps), 2)
+                self.assertEqual(
+                    [st["stepIndex"] for st in steps], list(range(1, len(steps) + 1))
+                )
+        self.assertIn(
+            "backtrack", [st["role"] for st in recovered["traces"][0]["steps"]]
+        )
+
+    def test_retry_after_failure_uses_neutral_wording(self):
+        call = {"name": "read_file", "args": {"Path": "/x"}}
+        rows = [
+            {"type": "USER_INPUT", "content": "Read it"},
+            {"type": "PLANNER_RESPONSE", "tool_calls": [call]},
+            {"type": "GENERIC", "status": "ERROR", "error": "denied", "content": ""},
+            {"type": "PLANNER_RESPONSE", "tool_calls": [call]},
+            {"type": "GENERIC", "status": "DONE", "content": "ok"},
+        ]
+        ds = self._compile(rows)
+        self.assertTrue([e for e in ds["edges"] if e["flowRole"] == "backtrack"])
+        texts = []
+        for edge in ds["edges"]:
+            texts += [edge.get("summary", ""), edge.get("contextSnippet", "")]
+        for step in ds["traces"][0]["steps"]:
+            texts += [step.get("label", ""), step.get("thought", "")]
+        joined = " ".join(texts).lower()
+        for word in ("abandoned", "pivot", "winning", "hypothesis"):
+            self.assertNotIn(word, joined)
+        phases = [n["id"] for n in ds["nodes"] if n["kind"] == "phase"]
+        self.assertEqual(phases, ["phase:1", "phase:2", "phase:3"])
+
     def test_no_event_cap(self):
         rows = []
         for i in range(40):
@@ -537,6 +579,70 @@ class BrowserRenderTest(unittest.TestCase):
         self.assertNotIn("Uncaught", proc.stderr)
         for node_id in ("a", "b"):
             self.assertRegex(proc.stdout, rf'class="b-title"[^>]*>{node_id}<')
+
+    def test_real_ids_that_look_like_synthetic_box_ids_stay_distinct(self):
+        def node(node_id, title, parent):
+            return {
+                "id": node_id,
+                "title": title,
+                "kind": "stage",
+                "status": "ready",
+                "parent": parent,
+            }
+
+        ds = _mutual_cycle_dataset()
+        ds["nodes"] = [
+            node("r", "Root", None),
+            node("c1", "Group One", "r"),
+            node("slice:auth", "Auth Node", "c1"),
+            node("bot:x", "Bot X Node", "c1"),
+            node("x", "Outside X", "r"),
+            node("xk", "Outside Kid", "x"),
+        ]
+        # The outside end of the edge is lifted to its container "x", which gets the
+        # ghost box that must not collide with the real node "bot:x".
+        ds["edges"] = [{"id": "e1", "from": "bot:x", "to": "xk", "relation": "next"}]
+        ds["overlays"] = [
+            {
+                "id": "auth",
+                "title": "Auth Overlay",
+                "kind": "policy",
+                "touches": ["slice:auth", "bot:x"],
+            }
+        ]
+        out = self._run_page_script(
+            """
+          document.querySelector('.block[data-box-id="c1"]')
+            .dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+          const count = (id) =>
+            Array.from(document.querySelectorAll(".block[data-box-id]"))
+              .filter((el) => el.dataset.boxId === id).length;
+          out.counts = {
+            realSlice: count("slice:auth"),
+            realBot: count("bot:x"),
+            overlay: count("~slice:auth"),
+            ghost: count("~bot:x"),
+          };
+          const title = () => {
+            const t = document.querySelector("#panel-body .d-title");
+            return t ? t.textContent : "";
+          };
+          const pick = (id) => {
+            Array.from(document.querySelectorAll(".block[data-box-id]"))
+              .find((el) => el.dataset.boxId === id)
+              .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+            return title();
+          };
+          out.pickedSlice = pick("slice:auth");
+          out.pickedBot = pick("bot:x");
+        """,
+            ds,
+        )
+        self.assertEqual(
+            out["counts"], {"realSlice": 1, "realBot": 1, "overlay": 1, "ghost": 1}
+        )
+        self.assertEqual(out["pickedSlice"], "Auth Node")
+        self.assertEqual(out["pickedBot"], "Bot X Node")
 
     def test_html_comment_text_does_not_swallow_the_page(self):
         ds = _mutual_cycle_dataset()
@@ -1025,6 +1131,27 @@ class CompileKgYamlTest(unittest.TestCase):
             ds = strata.compile_kg(db)
         acme = next(n for n in ds["nodes"] if n["id"] == "org:acme")
         self.assertEqual([s["url"] for s in acme["sources"]], ["https://example.com/a"])
+
+
+class CommentStyleTest(unittest.TestCase):
+    FILES = (
+        ("assets/viewer.js", ("//", "/*", "*")),
+        ("assets/viewer.css", ("/*", "*")),
+        ("scripts/strata.py", ("#",)),
+    )
+
+    def test_no_exclamation_or_hype_in_comment_lines(self):
+        for name, starts in self.FILES:
+            text = (SKILL_DIR / name).read_text(encoding="utf-8")
+            for number, line in enumerate(text.splitlines(), 1):
+                stripped = line.strip()
+                if not stripped.startswith(starts):
+                    continue
+                with self.subTest(file=name, line=number):
+                    self.assertFalse(
+                        stripped.rstrip("*/ ").endswith("!"), f"{name}:{number}"
+                    )
+                    self.assertNotIn("crisp", stripped.lower(), f"{name}:{number}")
 
 
 class StatusDocTest(unittest.TestCase):

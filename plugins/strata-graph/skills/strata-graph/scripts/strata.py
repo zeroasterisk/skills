@@ -1202,14 +1202,14 @@ ATIF_RELATIONS = {
         "category": "flow",
     },
     "explores-spur": {
-        "label": "explores hypothesis / blind alley",
+        "label": "failed call",
         "darkColor": "#fb7185",
         "lightColor": "#be123c",
         "dash": "6 3",
         "category": "counterfactual",
     },
     "backtracks-to": {
-        "label": "↺ backtracks & pivots",
+        "label": "↺ return after failed call",
         "darkColor": "#fb923c",
         "lightColor": "#c2410c",
         "dash": "7 4",
@@ -1554,7 +1554,7 @@ def compile_atif_decision(
             "kind": "trajectory",
             "status": "ready",
             "parent": None,
-            "summary": f"Agent trajectory ({norm['agent']}) showing forward reasoning trunk, blind-alley spurs (✕), explicit backtrack pivots (↺), and nested subagents.",
+            "summary": f"Agent trajectory ({norm['agent']}) with failed calls (✕), return arcs after them (↺), and nested subagents.",
             "sources": [],
             "tags": [norm["agent"]],
             "metrics": {
@@ -1570,11 +1570,11 @@ def compile_atif_decision(
     tool_touches: dict[str, list[str]] = {}
     diagnostics: list[dict[str, str]] = []
 
-    # Group turns into logical lifecycle phases
+    # Fixed cut points of the turn count: the first 28%, the next 40%, the rest.
     phases = [
-        ("phase:orient", "1. Opening turns"),
-        ("phase:search", "2. Middle turns"),
-        ("phase:verify", "3. Closing turns"),
+        ("phase:1", "Phase 1 (first 28% of turns)"),
+        ("phase:2", "Phase 2 (28% to 68% of turns)"),
+        ("phase:3", "Phase 3 (last 32% of turns)"),
     ]
     for pid, ptitle in phases:
         nodes.append(
@@ -1597,7 +1597,6 @@ def compile_atif_decision(
     pending_blind_ids: list[str] = []
     blind_count = 0
     backtrack_count = 0
-    step_seq = 0
 
     for idx, ev in enumerate(evs):
         nid = f"turn:{idx + 1}"
@@ -1628,7 +1627,7 @@ def compile_atif_decision(
                 "metrics": {
                     "turn": idx + 1,
                     "tool": ev.get("tool") or "reasoning",
-                    "outcome": "BLIND ALLEY / ERROR" if is_blind else "OK",
+                    "outcome": "ERROR" if is_blind else "OK",
                 },
             }
         )
@@ -1636,7 +1635,6 @@ def compile_atif_decision(
         if ev.get("tool"):
             tool_touches.setdefault(ev["tool"], []).append(nid)
 
-        # Nested subagent children!
         if has_sub:
             sub = ev["subagent"]
             prev_sub_id = None
@@ -1668,7 +1666,6 @@ def compile_atif_decision(
                     )
                 prev_sub_id = snid
 
-        step_seq += 1
         if is_blind:
             blind_count += 1
             anchor = last_trunk_id
@@ -1680,16 +1677,16 @@ def compile_atif_decision(
                         "to": nid,
                         "relation": "explores-spur",
                         "flowRole": "forward",
-                        "summary": f"Exploratory attempt hit obstacle: {ev['label']}",
+                        "summary": f"Failed call: {ev['label']}",
                         "contextSnippet": ev.get("observation", "")[:180],
                     }
                 )
             pending_blind_ids.append(nid)
             trace_steps.append(
                 {
-                    "stepIndex": step_seq,
+                    "stepIndex": len(trace_steps) + 1,
                     "nodeId": nid,
-                    "label": f"✕ Blind Alley — {ev['label']}",
+                    "label": f"✕ Failed call: {ev['label']}",
                     "role": "blind-alley",
                     "isError": True,
                     "thought": ev.get("thought", ""),
@@ -1700,11 +1697,11 @@ def compile_atif_decision(
                 {
                     "level": "info",
                     "code": "BLIND_ALLEY_DETECTED",
-                    "message": f"Turn T{idx + 1} ({ev['label']}) classified as blind alley.",
+                    "message": f"Turn T{idx + 1} ({ev['label']}) reported an error.",
                 }
             )
         else:
-            # Recovering from 1 or more blind alleys -> emit explicit ↺ backtrack arc(s) + revisit anchor!
+            # The first successful turn after failed calls closes them with return arcs.
             if pending_blind_ids:
                 pivot_target = last_trunk_id or nid
                 for bid in pending_blind_ids:
@@ -1716,19 +1713,18 @@ def compile_atif_decision(
                             "to": pivot_target,
                             "relation": "backtracks-to",
                             "flowRole": "backtrack",
-                            "summary": f"↺ Backtracked from dead-end {bid} to pivot strategy",
-                            "contextSnippet": f"Agent abandoned {bid} and pivoted to {ev['label']}.",
+                            "summary": f"↺ Return from failed {bid} to {pivot_target}",
+                            "contextSnippet": f"Next successful turn after {len(pending_blind_ids)} failed call(s): {ev['label']}.",
                         }
                     )
                 if last_trunk_id:
-                    step_seq += 1
                     trace_steps.append(
                         {
-                            "stepIndex": step_seq,
+                            "stepIndex": len(trace_steps) + 1,
                             "nodeId": last_trunk_id,
-                            "label": f"↺ Backtrack & Re-evaluate at {last_trunk_id}",
+                            "label": f"↺ Return to {last_trunk_id}",
                             "role": "backtrack",
-                            "thought": f"Pivoting away from {len(pending_blind_ids)} unproductive spur(s) toward {ev['label']}.",
+                            "thought": f"Next successful turn after {len(pending_blind_ids)} failed call(s): {ev['label']}.",
                         }
                     )
                 pending_blind_ids.clear()
@@ -1741,15 +1737,14 @@ def compile_atif_decision(
                         "to": nid,
                         "relation": "delegates-subagent" if has_sub else "advances-to",
                         "flowRole": "forward",
-                        "summary": f"Advances along winning trunk to {ev['label']}",
+                        "summary": f"Next turn: {ev['label']}",
                     }
                 )
             last_trunk_id = nid
 
-            step_seq += 1
             trace_steps.append(
                 {
-                    "stepIndex": step_seq,
+                    "stepIndex": len(trace_steps) + 1,
                     "nodeId": nid,
                     "label": ev["label"],
                     "role": "subagent"
@@ -1834,11 +1829,11 @@ def compile_atif_compare(
         },
         {
             "id": "state:planner",
-            "title": "Planner & Hypothesis Router",
+            "title": "Planner",
             "kind": "stage",
             "status": "gate",
             "parent": root_id,
-            "summary": "Central reasoning hub where agents select tools, evaluate errors, and pivot after blind alleys.",
+            "summary": "Node that every tool call in a run starts from.",
             "sources": [],
             "tags": [],
             "metrics": {},
@@ -1863,7 +1858,7 @@ def compile_atif_compare(
 
     def canonical_tool_bucket(tool_name: str | None) -> tuple[str, str, str]:
         if not tool_name:
-            return ("state:planner", "Planner & Hypothesis Router", "stage")
+            return ("state:planner", "Planner", "stage")
         tl = tool_name.lower()
         if "subagent" in tl or tl in ("task", "invoke_agent", "invoke_subagent"):
             return (
@@ -1979,7 +1974,7 @@ def compile_atif_compare(
                     {
                         "stepIndex": len(steps_out) + 1,
                         "nodeId": "state:planner",
-                        "label": "↺ Backtrack to Planner & Pivot Strategy",
+                        "label": "↺ Return to planner after failed call",
                         "role": "backtrack",
                     }
                 )
