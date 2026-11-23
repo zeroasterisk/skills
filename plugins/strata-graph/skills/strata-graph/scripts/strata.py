@@ -758,7 +758,7 @@ def compile_okf(wiki_dir: Path, graph_id: str | None = None) -> dict[str, Any]:
         "relations": OKF_RELATIONS,
         "nodes": nodes,
         "edges": edges,
-        "overlays": overlays[:24],
+        "overlays": overlays,
         "traces": [],
         "diagnostics": diagnostics,
     }
@@ -1170,7 +1170,7 @@ def compile_kg(kg_path: Path, graph_id: str | None = None) -> dict[str, Any]:
         ov
         for ov in sorted(source_overlays.values(), key=lambda x: -len(x["touches"]))
         if len(ov["touches"]) >= 2
-    ][:18]
+    ]
 
     return {
         "schema": "strata-graph/1",
@@ -1411,7 +1411,7 @@ def _jetski_step_failed(step: dict[str, Any]) -> bool:
 def _normalize_jetski_jsonl(
     path: Path, raw_steps: list[dict[str, Any]]
 ) -> dict[str, Any]:
-    """Synthesize semantic turns & real blind alleys from a Jetski transcript.jsonl."""
+    """Parse a Jetski transcript.jsonl into turns and failed calls."""
     events: list[dict[str, Any]] = []
     n = len(raw_steps)
     i = 0
@@ -1797,6 +1797,40 @@ def compile_atif_decision(
     }
 
 
+# Tool names from ATIF and Jetski runs that count as the same capability.
+TOOL_BUCKETS = {
+    "subagent": (
+        "cap:subagent",
+        "Subagent delegation (task / invoke_agent)",
+        "subagent",
+    ),
+    "read": (
+        "cap:file_inspect",
+        "File inspection (read_file / view_file / grep_search)",
+        "tool",
+    ),
+    "write": (
+        "cap:artifact_write",
+        "File authoring (write_file / edit_file / replace_file_content)",
+        "tool",
+    ),
+    "shell": ("cap:shell_exec", "Shell execution (bash / run_command)", "tool"),
+}
+TOOL_BUCKET_BY_NAME = {
+    "task": "subagent",
+    "invoke_agent": "subagent",
+    "invoke_subagent": "subagent",
+    "read_file": "read",
+    "view_file": "read",
+    "grep_search": "read",
+    "write_file": "write",
+    "edit_file": "write",
+    "replace_file_content": "write",
+    "bash": "shell",
+    "run_command": "shell",
+}
+
+
 def compile_atif_compare(
     traj_paths: list[Path], graph_id: str | None = None
 ) -> dict[str, Any]:
@@ -1807,11 +1841,11 @@ def compile_atif_compare(
     nodes: list[dict[str, Any]] = [
         {
             "id": root_id,
-            "title": f"Cross-Trajectory Interaction & Blind-Alley Comparison ({len(norms)} Runs)",
+            "title": f"Comparison of {len(norms)} trajectories",
             "kind": "atif-comparison",
             "status": "ready",
             "parent": None,
-            "summary": "Shared capability, tool, subagent, and failure-mode graph comparing multiple real ATIF / Jetski agent trajectories side-by-side.",
+            "summary": f"Shared tool, subagent, and failure graph across {len(norms)} trajectories.",
             "sources": [],
             "tags": [],
             "metrics": {"runs_compared": len(norms)},
@@ -1860,22 +1894,10 @@ def compile_atif_compare(
         if not tool_name:
             return ("state:planner", "Planner", "stage")
         tl = tool_name.lower()
-        if "subagent" in tl or tl in ("task", "invoke_agent", "invoke_subagent"):
-            return (
-                "cap:subagent",
-                "Subagent Delegation (task / invoke_agent)",
-                "subagent",
-            )
-        if tl == "read_file":
-            return ("cap:file_inspect", "File inspection (read_file)", "tool")
-        if tl in ("write_file", "edit_file"):
-            return (
-                "cap:artifact_write",
-                "File authoring (write_file / edit_file)",
-                "tool",
-            )
-        if tl in ("bash", "run_command"):
-            return ("cap:shell_exec", "Shell execution (bash / run_command)", "tool")
+        if "subagent" in tl:
+            return TOOL_BUCKETS["subagent"]
+        if tl in TOOL_BUCKET_BY_NAME:
+            return TOOL_BUCKETS[TOOL_BUCKET_BY_NAME[tl]]
         return (f"cap:{tl}", f"Tool: {tool_name}", "tool")
 
     def add_edge(u: str, v: str, rel: str, flow: str, run_title: str) -> None:
@@ -2051,7 +2073,7 @@ def compile_atif_compare(
         "subtitle": f"Click '⇄ Compare All' in the ATIF bar to see R1..R{len(norms)} footprints across shared tools, subagents, and blind-alley recovery loops.",
         "domain": "atif-compare",
         "generatedAt": now_iso(),
-        "sourceLabel": f"{len(norms)} real trajectories",
+        "sourceLabel": f"{len(norms)} trajectories",
         "rootId": root_id,
         "relations": ATIF_RELATIONS,
         "nodes": nodes,

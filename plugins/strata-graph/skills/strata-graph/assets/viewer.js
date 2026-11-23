@@ -351,6 +351,8 @@
     const focus = ds.byId.get(st.focusId) || ds.byId.get(ds.rootId);
     const spineMap = new Map();
     const groupFrames = new Map(); // parentId -> title when expandAll is true
+    const MAX_LEAVES = 110;
+    let hiddenLeaves = 0;
 
     if (!st.expandAll) {
       for (const child of focus.kids) {
@@ -375,7 +377,8 @@
         }
       }
       walk(focus, null);
-      const capped = leaves.slice(0, 110);
+      const capped = leaves.slice(0, MAX_LEAVES);
+      hiddenLeaves = leaves.length - capped.length;
       for (const item of capped) {
         if (st.hideBlindAlleys && (item.node.status === "blind-alley" || item.node.status === "error")) continue;
         const gid = item.group && item.group.id !== item.node.id ? item.group.id : null;
@@ -524,6 +527,7 @@
       liftedIn,
       liftedOut,
       slices: visibleSlices,
+      hiddenLeaves,
       relCounts,
       groupFrames,
       resolveInside
@@ -1543,6 +1547,7 @@
       `${level.spineMap.size} spine blocks`,
       `${level.bundles.length} wire bundles`
     ];
+    if (level.hiddenLeaves) statsParts.push(`+${level.hiddenLeaves} more blocks not shown`);
     if (ghostCount) statsParts.push(`${ghostCount} outside ghosts`);
     if (level.slices.length) {
       statsParts.push(
@@ -1974,12 +1979,12 @@
       // Compare All Runs mode: attach run-colored indicator chips to visited nodes
       ds.traces.forEach((tr, rIdx) => {
         const touched = new Set();
-        let hadErr = false;
+        const failed = new Set();
         for (const step of tr.steps) {
           const visId = level.resolveInside(step.nodeId);
           if (visId) {
             touched.add(visId);
-            if (step.isError || step.role === "blind-alley") hadErr = true;
+            if (step.isError || step.role === "blind-alley") failed.add(visId);
           }
         }
         for (const visId of touched) {
@@ -1987,7 +1992,7 @@
           visitMap.get(visId).push({
             text: `R${rIdx + 1}`,
             color: tr.color,
-            cls: hadErr ? "chip-blind" : ""
+            cls: failed.has(visId) ? "chip-blind" : ""
           });
         }
       });

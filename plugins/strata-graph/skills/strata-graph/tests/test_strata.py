@@ -644,6 +644,95 @@ class BrowserRenderTest(unittest.TestCase):
         self.assertEqual(out["pickedSlice"], "Auth Node")
         self.assertEqual(out["pickedBot"], "Bot X Node")
 
+    def test_expanded_mode_marks_leaves_beyond_the_cap(self):
+        ds = _mutual_cycle_dataset()
+        ds["edges"] = []
+        ds["nodes"] = [
+            {
+                "id": "r",
+                "title": "Root",
+                "kind": "process",
+                "status": "ready",
+                "parent": None,
+            },
+            {
+                "id": "g",
+                "title": "Group",
+                "kind": "stage",
+                "status": "ready",
+                "parent": "r",
+            },
+        ] + [
+            {
+                "id": f"leaf{i}",
+                "title": f"Leaf {i}",
+                "kind": "step",
+                "status": "ready",
+                "parent": "g",
+            }
+            for i in range(120)
+        ]
+        out = self._run_page_script(
+            """
+          document.getElementById("mode-toggle").click();
+          out.stats = document.querySelector(".lh-stats").textContent;
+        """,
+            ds,
+        )
+        self.assertIn("110 spine blocks", out["stats"])
+        self.assertIn("+10 more blocks not shown", out["stats"])
+
+    def test_compare_all_marks_only_the_failing_block(self):
+        def doc(steps):
+            return {"schema_version": "ATIF-v1.4", "steps": steps}
+
+        def step(tool, code):
+            return _atif_doc(tool, code, "x")["steps"][0]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = []
+            for i, steps in enumerate(
+                (
+                    [step("read_file", 0)],
+                    [step("github_search", 1), step("read_file", 0)],
+                )
+            ):
+                path = Path(tmp) / f"run{i}.json"
+                path.write_text(json.dumps(doc(steps)), encoding="utf-8")
+                paths.append(path)
+            ds = strata.compile_atif_compare(paths)
+        out = self._run_page_script(
+            """
+          const pill = Array.from(document.querySelectorAll(".trace-pill"))
+            .find((b) => b.textContent.includes("Compare All"));
+          pill.click();
+          out.chips = {};
+          for (const box of document.querySelectorAll(".block[data-box-id]")) {
+            out.chips[box.dataset.boxId] = Array.from(box.querySelectorAll(".visit-chip"))
+              .map((c) => ({
+                text: c.textContent,
+                blind: c.classList.contains("chip-blind"),
+                colored: c.style.borderColor !== "",
+              }));
+          }
+        """,
+            ds,
+        )
+        chips = out["chips"]
+        for node_id in ("state:intake", "state:synthesis", "state:planner"):
+            with self.subTest(node=node_id):
+                self.assertTrue(chips[node_id])
+                for chip in chips[node_id]:
+                    self.assertFalse(chip["blind"], chips[node_id])
+                    self.assertTrue(chip["colored"], chips[node_id])
+        blind_nodes = {
+            node_id
+            for node_id, items in chips.items()
+            if any(c["blind"] for c in items)
+        }
+        self.assertEqual(blind_nodes, {"err:obstacle"})
+        self.assertEqual([c["text"] for c in chips["err:obstacle"]], ["R2"])
+
     def test_html_comment_text_does_not_swallow_the_page(self):
         ds = _mutual_cycle_dataset()
         ds["nodes"][1]["title"] = "<!-- <script></script> Alpha"
@@ -845,6 +934,16 @@ class CompileOkfTest(unittest.TestCase):
         self.assertNotIn("PARENT_CYCLE", codes)
         ids = {n["id"] for n in ds["nodes"]}
         self.assertTrue({"sec:auth", "sec/auth", "okf:root", "okf/root"} <= ids)
+
+    def test_all_theme_slices_are_kept(self):
+        files = {}
+        for i in range(90):
+            files[f"c{i:02d}.md"] = (
+                f"---\ntype: T\ntags: [theme{i // 3}]\n---\nBody {i}.\n"
+            )
+        ds = self._compile_text(files)
+        themes = [o for o in ds["overlays"] if o["kind"] == "theme"]
+        self.assertEqual(len(themes), 30)
 
     def test_scalar_tags_become_one_tag(self):
         for name, mod in self.parsers():
@@ -1053,6 +1152,33 @@ class CompileKgYamlTest(unittest.TestCase):
         self.assertIn("Fine", titles)
         self.assertNotIn("LEAKED", titles)
 
+    def test_all_source_slices_are_kept(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "pipeline.db"
+            conn = sqlite3.connect(db)
+            conn.executescript(
+                "CREATE TABLE sources(id INTEGER, uri TEXT, title TEXT);"
+                "CREATE TABLE entities(entity_id TEXT, name TEXT, kind TEXT, type TEXT,"
+                " description TEXT, status TEXT, source_id INTEGER, merged_into TEXT);"
+                "CREATE TABLE edges(source_entity_id TEXT, target_entity_id TEXT,"
+                " edge_type TEXT, confidence REAL);"
+            )
+            for k in range(22):
+                conn.execute(
+                    "INSERT INTO sources VALUES (?, ?, ?)",
+                    (k, f"https://example.test/{k}", f"Doc {k}"),
+                )
+                for j in range(2):
+                    conn.execute(
+                        "INSERT INTO entities VALUES (?, ?, 'org', 'organization',"
+                        " 'd', 'approved', ?, NULL)",
+                        (f"org:e{k}-{j}", f"E{k}-{j}", k),
+                    )
+            conn.commit()
+            conn.close()
+            ds = strata.compile_kg(db)
+        self.assertEqual(len(ds["overlays"]), 22)
+
     def test_scalar_actors_are_one_entity(self):
         timeline = "events:\n  - date: 2026-01-01\n    title: T\n    actors: acme\n"
         with tempfile.TemporaryDirectory() as tmp:
@@ -1152,6 +1278,25 @@ class CommentStyleTest(unittest.TestCase):
                         stripped.rstrip("*/ ").endswith("!"), f"{name}:{number}"
                     )
                     self.assertNotIn("crisp", stripped.lower(), f"{name}:{number}")
+
+
+class WordingTest(unittest.TestCase):
+    FILES = (
+        "scripts/strata.py",
+        "assets/viewer.js",
+        "assets/viewer.css",
+        "SKILL.md",
+        "references/schema.md",
+        "../../README.md",
+    )
+    BANNED = ("never lie", "real blind alleys", "side-by-side", "beautiful", "seamless")
+
+    def test_no_sales_style_phrases(self):
+        for name in self.FILES:
+            text = (SKILL_DIR / name).read_text(encoding="utf-8").lower()
+            for phrase in self.BANNED:
+                with self.subTest(file=name, phrase=phrase):
+                    self.assertNotIn(phrase, text)
 
 
 class StatusDocTest(unittest.TestCase):
@@ -1626,6 +1771,42 @@ class AtifCompareTest(unittest.TestCase):
             [("cap:shell_exec", "state:synthesis")],
         )
         self.assertIn("Traversed 1×", outcome[0]["summary"])
+
+    def test_jetski_and_atif_file_reads_share_one_node(self):
+        jetski = _jsonl(
+            [
+                {"type": "USER_INPUT", "content": "Look"},
+                {
+                    "type": "PLANNER_RESPONSE",
+                    "tool_calls": [{"name": "view_file", "args": {"Path": "/a"}}],
+                },
+                {"type": "GENERIC", "status": "DONE", "content": "ok"},
+            ]
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            a = Path(tmp) / "jetski.jsonl"
+            a.write_text(jetski, encoding="utf-8")
+            b = Path(tmp) / "atif.json"
+            b.write_text(json.dumps(_atif_doc("read_file", 0, "ok")), encoding="utf-8")
+            ds = strata.compile_atif_compare([a, b])
+        ids = {n["id"] for n in ds["nodes"]}
+        self.assertIn("cap:file_inspect", ids)
+        self.assertNotIn("cap:view_file", ids)
+        self.assertNotIn("cap:read_file", ids)
+        touched = {e["from"] for e in ds["edges"] if e["to"] == "cap:file_inspect"} | {
+            e["to"] for e in ds["edges"] if e["from"] == "cap:file_inspect"
+        }
+        self.assertTrue(touched)
+
+    def test_tool_name_table_covers_both_vocabularies(self):
+        by_name = strata.TOOL_BUCKET_BY_NAME
+        for name in ("read_file", "view_file", "grep_search"):
+            self.assertEqual(by_name[name], "read")
+        for name in ("write_file", "edit_file", "replace_file_content"):
+            self.assertEqual(by_name[name], "write")
+        for name in ("bash", "run_command"):
+            self.assertEqual(by_name[name], "shell")
+        self.assertEqual(by_name["invoke_subagent"], "subagent")
 
     def test_failed_run_has_no_edge_to_goal_node(self):
         ds = self._compile([_atif_doc("bash", 1, "bad")])

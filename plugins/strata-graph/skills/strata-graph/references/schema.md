@@ -118,7 +118,7 @@ The validator (`validate`, and every `compile-*` command) reports these errors: 
 
 | `edge.flowRole` | Layout & Routing Behavior |
 | :--- | :--- |
-| `"forward"` (default) | Participates in Sugiyama topological layering + PAV channel alignment; residual cycles in cyclic KGs/wikis are automatically promoted to outer return arcs so downward arrows never lie. |
+| `"forward"` (default) | Participates in Sugiyama topological layering + PAV channel alignment; residual cycles in cyclic KGs/wikis are promoted to return arcs so forward edges always point down. |
 | `"backtrack"` / `"loop"` | Excluded from downward rank forcing; routed along a dedicated cubic Bezier return rail at the left or right margin, with an arrowhead and a clickable `↺` pill badge. |
 
 Trace steps use `role` instead of `status`: `normal`, `blind-alley`, `backtrack`, `subagent`, or `goal`.
