@@ -6,7 +6,7 @@ license: Apache-2.0
 
 # Strata graph (`strata-graph`)
 
-A compiler, validator, and interactive HTML explorer for structured graphs of about 15 to 1,500 nodes. These graphs have a hierarchical or causal spine, a dense set of cross-cutting links, and optional traces over time. The output is one HTML file that works from `file://` with no network access.
+A compiler, validator, and interactive HTML explorer for structured graphs of tens to a few hundred nodes. These graphs have a hierarchical or causal spine, a dense set of cross-cutting links, and optional traces over time. The output is one HTML file that works from `file://` with no network access.
 
 Independent implementation inspired by Adam Gospodarczyk's (`@overment`) [`overment/limen`](https://github.com/overment/limen) (`limen picture`, MIT License). It keeps limen's main idea: agents curate facts, and a deterministic compiler with no LLM builds the HTML. It also uses hierarchical edge lifting with `OUTSIDE` ghost blocks, cross-cutting bands, and weighted Pool-Adjacent-Violators (PAV) multi-lane routing. It adds OKF v0.2 wikis, knowledge graphs, stateful processes, and ATIF and Jetski trajectories with dead-end marks (`✕`) and backtrack return arcs (`↺`).
 
@@ -15,8 +15,8 @@ Independent implementation inspired by Adam Gospodarczyk's (`@overment`) [`overm
 | Scale and shape | Tool | Why |
 | :--- | :--- | :--- |
 | Up to about 15 nodes | `diagram-design` | A hand-laid single-frame SVG or PNG for a doc or slide. |
-| About 15 to 1,500 nodes with a spine and cross-cutting links | `strata-graph` | Drill-down, lifted edge bundles, `OUTSIDE` ghost blocks, path tracing, cross-cutting slices, and trajectory scrubbing. |
-| More than about 1,500 flat nodes | A force-directed graph viewer | `strata-graph` is not built for this scale, and a flat overview does not need a causal reading order. |
+| Tens to a few hundred nodes with a spine and cross-cutting links | `strata-graph` | Drill-down, lifted edge bundles, `OUTSIDE` ghost blocks, path tracing, cross-cutting slices, and trajectory scrubbing. |
+| Thousands of flat nodes | A force-directed graph viewer | `strata-graph` is not built for this scale, and a flat overview does not need a causal reading order. |
 
 ## How it works
 

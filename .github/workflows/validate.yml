@@ -24,7 +24,7 @@ jobs:
       - name: Install dependencies
         run: pip install pyyaml
 
-      - name: Test sync.py
+      - name: Run repo unit tests
         run: python3 -m unittest discover -s tests -v
 
       - name: Save PR title and body for the leak scan

@@ -24,9 +24,13 @@ def template_source() -> str:
 
 class CouncilTemplateTest(unittest.TestCase):
     def setUp(self):
-        self.agents = pathlib.Path(tempfile.mkdtemp())
-        self.workspace = pathlib.Path(tempfile.mkdtemp())
-        self.cwd = os.getcwd()
+        agents_tmp = tempfile.TemporaryDirectory()
+        workspace_tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(agents_tmp.cleanup)
+        self.addCleanup(workspace_tmp.cleanup)
+        self.agents = pathlib.Path(agents_tmp.name)
+        self.workspace = pathlib.Path(workspace_tmp.name)
+        self.addCleanup(os.chdir, os.getcwd())
         os.chdir(self.workspace)
         src = template_source()
         helpers = src[src.index("READ_ONLY_TOOLS") : src.index("seats = [vet(")]
@@ -44,9 +48,6 @@ class CouncilTemplateTest(unittest.TestCase):
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         self.ns = vars(module)
-
-    def tearDown(self):
-        os.chdir(self.cwd)
 
     def agent(self, name, text, where=None):
         path = (where or self.agents) / f"{name}.md"

@@ -61,11 +61,11 @@ Every council round must preserve three strict isolation boundaries so delegates
 1. **Check `~/.config/council/roster.json` first**:
    * Read `~/.config/council/roster.json` if present on the local machine. It defines `seats` (3 entries with `label` and `type_name`) plus an optional `fallback` seat. Each `type_name` is a read-only custom agent defined locally.
    * **Model pinning**: Request-time `model` values take a tier name, not a model ID (for example `inherit`, `flash_lite`, `flash`, `pro`); documented custom-agent frontmatter takes `inherit`, `flash`, or `pro`. Distinct models per seat need per-agent pinning from the harness; see [`references/jetski-harness.md`](references/jetski-harness.md). Custom agents are discovered at conversation start, so start a new conversation after adding one.
-   * **Automatic fallback seat**: If a requested model is unavailable in the harness's model list or errors out at runtime (e.g., quota/capacity exhaustion), substitute the `fallback` seat from `roster.json` and label the delegate row transparently with the actual model that ran.
+   * **Automatic fallback seat**: If a requested model is unavailable in the harness's model list or errors out at runtime (e.g., quota/capacity exhaustion), substitute the `fallback` seat from `roster.json` and label the row as the fallback seat (see rule 3).
 2. **Default fallback when no `roster.json` exists**:
    * **Jetski / Antigravity**: Run three isolated built-in `research` subagents on `model="pro"`.
    * **T3 Code**: Use `orchestrator_capabilities` + `delegate_task` to pick three flagship models across providers at high reasoning effort, with `isolation: "worktree"` (tool restrictions are not enforced there).
-3. **Never fake or silently substitute**: Always verify live availability when configuring new models and label every row in `## Council review` with the exact model or delegate type that actually executed. A roster `label` is the intended model; unless the harness reports the model that ran, label the row with the seat's `type_name` and tier and mark the model as unverified.
+3. **Never fake or silently substitute**: Always verify live availability when configuring new models and label every row in `## Council review` with what is known to have run. A roster `label` is only the intended model, so unless the harness reports the model, use the template's `delegate` string: the seat's `type_name`, its tier, and the intended model (for example `research (pro; intended: <label>)`).
 
 ## 4. Running a Council Round in Jetski
 
@@ -112,10 +112,10 @@ Rounds: 2
 
 | Delegate | Round 1 | Round 2 |
 | --- | --- | --- |
-| Seat 1 (<Actual Model 1>) | 7.5/10 | 9.5/10 |
-| Seat 2 (<Actual Model 2>) | 8/10 | 9.5/10 |
-| Seat 3 (<Actual Model 3>) | 7/10 | 10/10 |
+| research (pro; intended: <Model 1>) | 7.5/10 | 9.5/10 |
+| council-seat-2 (pro; intended: <Model 2>) | 8/10 | 9.5/10 |
+| council-seat-3 (inherit; intended: <Model 3>) | 7/10 | 10/10 |
 ```
 
-* **Honest labels & scores**: Replace the `Delegate` column names with the exact models that ran (including any fallback substitution). If a delegate gives no score, write `no score`. Do not invent one.
+* **Honest labels & scores**: Use each delegate's `delegate` string from the template output (including any fallback substitution); name a model only when the harness reported it. If a delegate gives no score, write `no score`. Do not invent one.
 * **Chat-only by default**: Show the `## Council review` scorecard in your chat response only. Do **not** insert `## Council review` scorecards or internal agent process artifacts into PR/CL descriptions or published documents unless the user or the target repository's `AGENTS.md` explicitly asks for it.

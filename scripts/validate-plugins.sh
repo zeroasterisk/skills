@@ -345,6 +345,19 @@ for entry in "${leak_markers[@]}"; do
     [ -n "${LEAK_SCAN_EXTRA:-}" ] && printf '%s\0' "$LEAK_SCAN_EXTRA"; } \
     | xargs -0 grep -sIHnE ${m_flags:+"$m_flags"} -e "$m_regex" || true)
 done
+# Optional machine-local phrases (for example lines from unpublished drafts) that must not be
+# published. The file lives outside the repo, so the phrases themselves are never committed.
+leak_denylist="${LEAK_DENYLIST:-$HOME/.config/skills-sync/leak-denylist.txt}"
+if [ -f "$leak_denylist" ]; then
+  while IFS= read -r phrase; do
+    case "$phrase" in "" | "#"*) continue ;; esac
+    while IFS= read -r hit; do
+      [ -n "$hit" ] || continue
+      err "Denylisted phrase from $leak_denylist: ${hit%%:*}"
+      leak_hits=$((leak_hits + 1))
+    done < <(git ls-files -z -- . ':(exclude)scripts/validate-plugins.sh' | xargs -0 grep -sIHnF -e "$phrase" || true)
+  done <"$leak_denylist"
+fi
 if [ "$leak_hits" -eq 0 ]; then
   ok "No internal references found in tracked files"
 fi

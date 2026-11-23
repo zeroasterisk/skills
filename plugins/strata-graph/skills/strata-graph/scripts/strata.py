@@ -1422,7 +1422,7 @@ def _normalize_jetski_jsonl(
                     {
                         "source": "user",
                         "tool": None,
-                        "label": f"User Goal: {raw_c[:56]}…",
+                        "label": f"User Goal: {_clip(raw_c, 56)}",
                         "thought": "",
                         "observation": raw_c[:260],
                         "is_error": False,
@@ -1452,7 +1452,7 @@ def _normalize_jetski_jsonl(
                     {
                         "source": "agent",
                         "tool": None,
-                        "label": f"Agent Update: {msg[:52]}…",
+                        "label": f"Agent Update: {_clip(msg, 52)}",
                         "thought": thought,
                         "observation": msg[:240],
                         "is_error": False,
@@ -2067,6 +2067,10 @@ def compile_atif_compare(
 # ---------------------------------------------------------------------------
 # 4. Integrity Validator & Standalone / Hub HTML Bundler
 # ---------------------------------------------------------------------------
+def _clip(text: str, n: int) -> str:
+    return text if len(text) <= n else text[:n] + "…"
+
+
 def _as_list(value: Any) -> list[Any]:
     return value if isinstance(value, list) else []
 

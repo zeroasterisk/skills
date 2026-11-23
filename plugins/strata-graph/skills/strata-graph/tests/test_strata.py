@@ -140,6 +140,18 @@ class CompileAtifTest(unittest.TestCase):
         self.assertEqual(events[0]["count"], 3)
         self.assertIn("×3", events[0]["label"])
 
+    def test_short_labels_are_not_marked_truncated(self):
+        rows = [
+            {"type": "USER_INPUT", "content": "Fix the build."},
+            {"type": "PLANNER_RESPONSE", "content": "Done.", "tool_calls": []},
+        ]
+        labels = [
+            e["label"]
+            for e in strata._normalize_jetski_jsonl(Path("t.jsonl"), rows)["events"]
+        ]
+        self.assertTrue(labels)
+        self.assertFalse(any("…" in label for label in labels), labels)
+
     def test_failed_calls_to_one_tool_in_a_turn_stay_separate(self):
         rows = [
             {
