@@ -46,6 +46,12 @@
     return node;
   }
 
+  // Data values (status, role, level, tier) become CSS class names, and classList.add
+  // throws on whitespace, so reduce them to a safe token.
+  function cssToken(value) {
+    return String(value).toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "");
+  }
+
   function svgEl(tag, attrs, cls) {
     const node = document.createElementNS(SVG_NS, tag);
     if (cls) node.setAttribute("class", cls);
@@ -2008,7 +2014,7 @@
         const node = ref.node;
         const hasKids = node.kids && node.kids.length > 0 && !st.expandAll;
         if (hasKids) card.classList.add("has-kids");
-        if (node.status) card.classList.add(`st-${node.status}`);
+        if (node.status) card.classList.add(`st-${cssToken(node.status)}`);
 
         const head = h("div", "b-head");
         head.appendChild(h("span", "b-kind", node.kind || "node"));
@@ -2019,8 +2025,8 @@
               : node.status === "open-gap"
                 ? "◆ open gap"
                 : node.status;
-          head.appendChild(h("span", `badge st-${node.status}`, statusLabel));
-        } else if (node.trust && node.trust.tier === "verified") {
+          head.appendChild(h("span", `badge st-${cssToken(node.status)}`, statusLabel));
+        } else if (node.trust && node.trust.tier === "human-reviewed") {
           head.appendChild(h("span", "badge st-verified", "verified"));
         }
         card.appendChild(head);
@@ -2192,10 +2198,10 @@
     const tags = h("div", "d-tags");
     tags.appendChild(h("span", "tag", targetNode.kind || "block"));
     if (targetNode.status) {
-      tags.appendChild(h("span", `badge st-${targetNode.status}`, targetNode.status));
+      tags.appendChild(h("span", `badge st-${cssToken(targetNode.status)}`, targetNode.status));
     }
     if (targetNode.trust && targetNode.trust.tier) {
-      tags.appendChild(h("span", `badge st-${targetNode.trust.tier === "verified" ? "verified" : "draft"}`, `OKF: ${targetNode.trust.tier}`));
+      tags.appendChild(h("span", `badge st-${targetNode.trust.tier === "human-reviewed" ? "verified" : "draft"}`, `OKF: ${targetNode.trust.tier}`));
     }
     if (isGhostSel) tags.appendChild(h("span", "badge", "Outside Current Focus"));
     dom.panelBody.appendChild(tags);
@@ -2257,7 +2263,7 @@
           const top = h("div", "d-conn-top");
           top.appendChild(h("strong", null, `Step ${s.stepIndex}: ${s.label}`));
           if (s.role && s.role !== "normal") {
-            top.appendChild(h("span", `badge st-${s.role === "blind-alley" ? "blind-alley" : s.role}`, s.role));
+            top.appendChild(h("span", `badge st-${cssToken(s.role)}`, s.role));
           }
           li.appendChild(top);
           if (s.thought) li.appendChild(h("p", "d-snippet", `Thought: ${s.thought}`));
@@ -2353,7 +2359,7 @@
     }
     for (const d of ds.diagnostics) {
       const row = h("div", "diag-row");
-      row.appendChild(h("span", `diag-code lv-${d.level || "info"}`, `[${(d.level || "info").toUpperCase()}] ${d.code || "CHECK"}`));
+      row.appendChild(h("span", `diag-code lv-${cssToken(d.level || "info")}`, `[${(d.level || "info").toUpperCase()}] ${d.code || "CHECK"}`));
       row.appendChild(h("span", null, d.message));
       dom.drawer.appendChild(row);
     }

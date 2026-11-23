@@ -11,9 +11,18 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 SKILL_DIR = Path(__file__).resolve().parent.parent
 VIEWER_JS = SKILL_DIR / "assets" / "viewer.js"
+OKF_BUNDLE = (
+    SKILL_DIR.parents[2]
+    / "okf-authoring"
+    / "skills"
+    / "okf-author"
+    / "assets"
+    / "example-bundle"
+)
 
 _spec = importlib.util.spec_from_file_location(
     "strata", SKILL_DIR / "scripts" / "strata.py"
@@ -108,6 +117,10 @@ class CompileAtifTest(unittest.TestCase):
             )
         )
         self.assertEqual(ds["traces"][0]["blindAlleyCount"], 1)
+        # The agent recovers on the next turn, so exactly one return arc exists.
+        backtracks = [e for e in ds["edges"] if e["flowRole"] == "backtrack"]
+        self.assertEqual(len(backtracks), 1)
+        self.assertIn("1 ↺ backtrack", ds["subtitle"])
 
     def test_no_event_cap(self):
         rows = []
@@ -259,6 +272,15 @@ class BrowserRenderTest(unittest.TestCase):
         )
         self.assertIn("3 zorps", proc.stdout)
 
+    def test_status_with_whitespace_still_renders(self):
+        ds = _mutual_cycle_dataset()
+        ds["nodes"][1]["status"] = "in progress"
+        proc = _dump_dom(ds)
+        self.assertNotIn("Uncaught", proc.stderr)
+        self.assertIn("Alpha", proc.stdout)
+        self.assertIn("Beta", proc.stdout)
+        self.assertIn("st-in-progress", proc.stdout)
+
     def test_html_comment_text_does_not_swallow_the_page(self):
         ds = _mutual_cycle_dataset()
         ds["nodes"][1]["title"] = "<!-- <script></script> Alpha"
@@ -303,12 +325,147 @@ class SchemaDocTest(unittest.TestCase):
         self.assertEqual(errors, [])
 
 
+@unittest.skipUnless(OKF_BUNDLE.is_dir(), "example OKF bundle not found")
+class CompileOkfTest(unittest.TestCase):
+    def parsers(self):
+        yield "fallback", None
+        if importlib.util.find_spec("yaml"):
+            yield "pyyaml", importlib.import_module("yaml")
+
+    def compile(self, yaml_module):
+        with mock.patch.object(strata, "_pyyaml", yaml_module):
+            return strata.compile_okf(OKF_BUNDLE)
+
+    def test_example_bundle_has_no_diagnostics_and_no_reserved_nodes(self):
+        for name, mod in self.parsers():
+            with self.subTest(parser=name):
+                ds = self.compile(mod)
+                codes = [d["code"] for d in ds["diagnostics"]]
+                self.assertNotIn("OKF_MISSING_TYPE", codes)
+                ids = {n["id"] for n in ds["nodes"]}
+                self.assertNotIn("tables:index", ids)
+                self.assertNotIn("index", ids)
+                self.assertNotIn("log", ids)
+                self.assertIn("tables:orders", ids)
+
+    def test_trust_tiers_follow_the_actor_convention(self):
+        for name, mod in self.parsers():
+            with self.subTest(parser=name):
+                by_id = {n["id"]: n for n in self.compile(mod)["nodes"]}
+                self.assertEqual(
+                    by_id["computations:revenue"]["trust"]["tier"], "machine-confirmed"
+                )
+                self.assertEqual(
+                    by_id["metrics:revenue"]["trust"]["tier"], "human-reviewed"
+                )
+                self.assertEqual(
+                    by_id["references:skills:run-on-bq"]["trust"]["tier"], "unverified"
+                )
+                # No `status` key means stable, which is ready, not draft.
+                self.assertEqual(by_id["tables:customers"]["status"], "ready")
+
+    def test_tags_are_whole_words_and_dates_are_strings(self):
+        for name, mod in self.parsers():
+            with self.subTest(parser=name):
+                by_id = {n["id"]: n for n in self.compile(mod)["nodes"]}
+                self.assertEqual(
+                    by_id["metrics:revenue"]["tags"], ["finance", "revenue"]
+                )
+                self.assertEqual(
+                    by_id["metrics:revenue"]["trust"]["staleAfter"], "2026-12-31"
+                )
+
+    def test_compiles_to_json_and_html_with_each_parser(self):
+        for name, mod in self.parsers():
+            for suffix in (".json", ".html"):
+                with (
+                    self.subTest(parser=name, output=suffix),
+                    tempfile.TemporaryDirectory() as tmp,
+                    mock.patch.object(strata, "_pyyaml", mod),
+                ):
+                    out = Path(tmp) / f"bundle{suffix}"
+                    code, _, err = run_main(
+                        ["compile-okf", str(OKF_BUNDLE), "-o", str(out)]
+                    )
+                    self.assertEqual(code, 0, err)
+                    self.assertTrue(out.exists())
+
+    def test_parse_yaml_safe_converts_dates_and_flow_lists(self):
+        text = (
+            "stale_after: 2026-12-31\nat: 2026-06-20T22:53:05Z\ntags: [a, bc]  # note\n"
+        )
+        for name, mod in self.parsers():
+            with self.subTest(parser=name):
+                with mock.patch.object(strata, "_pyyaml", mod):
+                    fm = strata.parse_yaml_safe(text)
+                self.assertEqual(fm["stale_after"], "2026-12-31")
+                self.assertEqual(fm["at"], "2026-06-20T22:53:05Z")
+                self.assertEqual(fm["tags"], ["a", "bc"])
+                json.dumps(fm)
+
+
+def run_main(argv):
+    out, err = io.StringIO(), io.StringIO()
+    with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+        code = strata.main(argv)
+    return code, out.getvalue(), err.getvalue()
+
+
 class CliTest(unittest.TestCase):
-    def _run(self, argv):
-        out, err = io.StringIO(), io.StringIO()
-        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
-            code = strata.main(argv)
-        return code, out.getvalue(), err.getvalue()
+    _run = staticmethod(run_main)
+
+    def _bad_dataset(self):
+        ds = _mutual_cycle_dataset()
+        ds["edges"].append({"id": "e3", "from": "a", "to": "zzz", "relation": "next"})
+        return ds
+
+    def test_compile_commands_exit_1_on_error_diagnostics(self):
+        cases = {
+            "compile-okf": ("compile_okf", "bundle_dir"),
+            "compile-kg": ("compile_kg", "kg.db"),
+            "compile-atif": ("compile_atif_decision", "run.json"),
+        }
+        for cmd, (func, arg) in cases.items():
+            with (
+                self.subTest(cmd=cmd),
+                tempfile.TemporaryDirectory() as tmp,
+                mock.patch.object(strata, func, return_value=self._bad_dataset()),
+            ):
+                out = Path(tmp) / "out.json"
+                code, stdout, err = self._run(
+                    [cmd, str(Path(tmp) / arg), "-o", str(out)]
+                )
+                self.assertEqual(code, 1)
+                self.assertIn("DANGLING_EDGE", err)
+                self.assertNotIn('"status": "ok"', stdout)
+                self.assertFalse(out.exists())
+
+    def test_compile_okf_exits_1_for_duplicate_concept_ids(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = Path(tmp) / "bundle"
+            (bundle / "a").mkdir(parents=True)
+            (bundle / "a" / "b.md").write_text("---\ntype: T\n---\n", encoding="utf-8")
+            (bundle / "a:b.md").write_text("---\ntype: T\n---\n", encoding="utf-8")
+            code, _, err = self._run(
+                ["compile-okf", str(bundle), "-o", str(Path(tmp) / "o.json")]
+            )
+        self.assertEqual(code, 1)
+        self.assertIn("DUPLICATE_ID", err)
+
+    def test_compile_atif_reports_the_effective_mode(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            a, b = Path(tmp) / "a.json", Path(tmp) / "b.json"
+            a.write_text(json.dumps(_atif_doc("bash", 0, "ok")), encoding="utf-8")
+            b.write_text(json.dumps(_atif_doc("bash", 0, "ok")), encoding="utf-8")
+            out = Path(tmp) / "o.json"
+            code, stdout, _ = self._run(
+                ["compile-atif", str(a), str(b), "--mode", "decision", "-o", str(out)]
+            )
+            self.assertEqual(code, 0)
+            self.assertEqual(json.loads(stdout)["mode"], "compare")
+            code, stdout, _ = self._run(["compile-atif", str(a), "-o", str(out)])
+            self.assertEqual(code, 0)
+            self.assertEqual(json.loads(stdout)["mode"], "decision")
 
     def test_compile_kg_rejects_database_with_wrong_schema(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -388,6 +545,11 @@ class AtifCompareTest(unittest.TestCase):
     def test_nonzero_exit_code_is_an_error(self):
         ds = self._compile([_atif_doc("bash", 2, "")], mode_compare=False)
         self.assertEqual(ds["traces"][0]["blindAlleyCount"], 1)
+        # The run ends on the failure, so no return arc is wired or reported.
+        self.assertFalse([e for e in ds["edges"] if e["flowRole"] == "backtrack"])
+        self.assertIn("0 ↺ backtrack", ds["subtitle"])
+        messages = " ".join(d["message"] for d in ds["diagnostics"])
+        self.assertNotIn("backtrack arc", messages)
 
     def test_goal_step_only_when_final_event_succeeds(self):
         ds = self._compile([_atif_doc("bash", 0, "ok"), _atif_doc("bash", 1, "bad")])

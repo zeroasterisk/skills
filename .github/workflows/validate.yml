@@ -37,5 +37,11 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Lint strata-graph viewer (no-undef)
+        run: >-
+          npx --yes eslint@8.57.0 --no-eslintrc --env browser,es2022
+          --parser-options ecmaVersion:2022 --rule '{"no-undef":"error"}'
+          plugins/strata-graph/skills/strata-graph/assets/viewer.js
+
       - name: Test spec-gate hooks
         run: node --test plugins/spec-gate/test/*.test.mjs

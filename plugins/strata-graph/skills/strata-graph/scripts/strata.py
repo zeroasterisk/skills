@@ -22,8 +22,10 @@ Independent implementation inspired by Adam Gospodarczyk's (@overment) limen pic
 from __future__ import annotations
 
 import argparse
+import datetime
 import importlib.util
 import json
+import math
 import re
 import sqlite3
 import sys
@@ -42,12 +44,86 @@ ASSETS_DIR = SCRIPT_DIR.parent / "assets"
 
 
 # ---------------------------------------------------------------------------
-# Minimal safe YAML frontmatter fallback (used only if PyYAML is absent)
+# YAML frontmatter parsing (PyYAML when installed, a small fallback otherwise)
 # ---------------------------------------------------------------------------
+def _json_safe(value: Any) -> Any:
+    """Convert YAML-only scalars (dates, sets, bytes, NaN) so json.dumps accepts them."""
+    if isinstance(value, dict):
+        return {str(_json_safe(k)): _json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(v) for v in value]
+    if isinstance(value, (set, frozenset)):
+        return sorted((_json_safe(v) for v in value), key=str)
+    if isinstance(value, (datetime.datetime, datetime.date)):
+        return value.isoformat().replace("+00:00", "Z")
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    if isinstance(value, float) and not math.isfinite(value):
+        return str(value)
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    return str(value)
+
+
+def _unquote(text: str) -> str:
+    return text.strip().strip("'\"")
+
+
+def _strip_comment(text: str) -> str:
+    text = text.strip()
+    if text[:1] in ("'", '"'):
+        return text
+    return re.sub(r"\s+#.*$", "", text)
+
+
+def _split_flow(inner: str) -> list[str]:
+    """Split on commas that are outside quotes and nested brackets."""
+    parts: list[str] = []
+    depth = 0
+    quote = ""
+    cur = ""
+    for ch in inner:
+        if quote:
+            quote = "" if ch == quote else quote
+        elif ch in "'\"":
+            quote = ch
+        elif ch in "[{":
+            depth += 1
+        elif ch in "]}":
+            depth -= 1
+        elif ch == "," and depth == 0:
+            parts.append(cur)
+            cur = ""
+            continue
+        cur += ch
+    parts.append(cur)
+    return [p.strip() for p in parts if p.strip()]
+
+
+def _flow_value(text: str) -> Any:
+    parsed = _parse_flow(text)
+    return parsed if parsed is not None else _unquote(text)
+
+
+def _parse_flow(text: str) -> list[Any] | dict[str, Any] | None:
+    """Parse a one-line [a, b] list or {k: v} mapping. Returns None for other text."""
+    text = text.strip()
+    if text.startswith("[") and text.endswith("]"):
+        return [_flow_value(p) for p in _split_flow(text[1:-1])]
+    if text.startswith("{") and text.endswith("}"):
+        mapping: dict[str, Any] = {}
+        for part in _split_flow(text[1:-1]):
+            key, _, val = part.partition(":")
+            mapping[_unquote(key)] = _flow_value(val)
+        return mapping
+    return None
+
+
 def parse_yaml_safe(text: str) -> dict[str, Any]:
+    """Parse frontmatter into JSON-safe values (dates become ISO strings)."""
     if _pyyaml is not None:
         loaded = _pyyaml.safe_load(text)
-        return loaded if isinstance(loaded, dict) else {}
+        return _json_safe(loaded) if isinstance(loaded, dict) else {}
     result: dict[str, Any] = {}
     cur_key: str | None = None
     for raw_line in text.splitlines():
@@ -58,9 +134,13 @@ def parse_yaml_safe(text: str) -> dict[str, Any]:
         if indent == 0 and ":" in line and not line.startswith("-"):
             k, v = line.split(":", 1)
             k = k.strip()
-            v = v.strip().strip("'\"")
-            if v:
-                result[k] = v
+            v = _strip_comment(v)
+            flow = _parse_flow(v)
+            if flow is not None:
+                result[k] = flow
+                cur_key = None
+            elif _unquote(v):
+                result[k] = _unquote(v)
                 cur_key = None
             else:
                 result[k] = []
@@ -68,12 +148,15 @@ def parse_yaml_safe(text: str) -> dict[str, Any]:
         elif (
             line.startswith("- ") and cur_key and isinstance(result.get(cur_key), list)
         ):
-            val = line[2:].strip().strip("'\"")
-            if ":" in val:
+            val = _strip_comment(line[2:])
+            flow = _parse_flow(val)
+            if flow is not None:
+                result[cur_key].append(flow)
+            elif ":" in val:
                 sub_k, sub_v = val.split(":", 1)
-                result[cur_key].append({sub_k.strip(): sub_v.strip().strip("'\"")})
+                result[cur_key].append({sub_k.strip(): _unquote(sub_v)})
             else:
-                result[cur_key].append(val)
+                result[cur_key].append(_unquote(val))
         elif (
             indent > 0
             and ":" in line
@@ -84,7 +167,7 @@ def parse_yaml_safe(text: str) -> dict[str, Any]:
             last = result[cur_key][-1]
             if isinstance(last, dict):
                 sub_k, sub_v = line.split(":", 1)
-                last[sub_k.strip()] = sub_v.strip().strip("'\"")
+                last[sub_k.strip()] = _unquote(_strip_comment(sub_v))
     return result
 
 
@@ -169,18 +252,26 @@ def classify_okf_relation(src_sec: str, dst_sec: str, heading: str) -> str:
 
 
 def derive_okf_trust(fm: dict[str, Any]) -> dict[str, Any]:
+    """Derive the OKF v0.2 trust tier (section 5.3) from `verified` only.
+
+    unverified: no verifier. machine-confirmed: verifiers, none with a `human:`
+    actor. human-reviewed: at least one `human:` verifier.
+    """
     verified = fm.get("verified")
-    generated = fm.get("generated")
-    status = str(fm.get("status", "draft")).lower()
-    if status == "deprecated":
-        tier = "deprecated"
-    elif isinstance(verified, dict) and verified.get("by"):
-        by = str(verified.get("by", ""))
-        tier = "verified" if not by.startswith("agent:") else "machine-confirmed"
-    elif isinstance(verified, list) and verified:
-        tier = "verified"
+    if isinstance(verified, dict):
+        verified = [verified]
+    actors = [
+        str(v["by"])
+        for v in (verified if isinstance(verified, list) else [])
+        if isinstance(v, dict) and v.get("by")
+    ]
+    if any(a.startswith("human:") for a in actors):
+        tier = "human-reviewed"
+    elif actors:
+        tier = "machine-confirmed"
     else:
-        tier = "draft"
+        tier = "unverified"
+    generated = fm.get("generated")
     return {
         "tier": tier,
         "generatedBy": generated.get("by") if isinstance(generated, dict) else None,
@@ -228,7 +319,7 @@ def compile_okf(wiki_dir: Path, graph_id: str | None = None) -> dict[str, Any]:
 
     for fpath in md_files:
         rel = fpath.relative_to(wiki_root)
-        if rel.as_posix() in ("index.md", "log.md"):
+        if fpath.name in ("index.md", "log.md"):
             continue
         parts = rel.parts
         sec_slug = parts[0] if len(parts) > 1 else "general"
@@ -269,15 +360,14 @@ def compile_okf(wiki_dir: Path, graph_id: str | None = None) -> dict[str, Any]:
 
     for fpath, nid in file_to_node_id.items():
         fm, body, sec_slug = file_meta[fpath]
-        raw_status = str(fm.get("status", "draft")).lower()
+        raw_status = str(fm.get("status") or "stable").lower()
         trust = derive_okf_trust(fm)
         status = (
             "deprecated"
             if raw_status == "deprecated"
-            else "ready"
-            if trust["tier"] in ("verified", "machine-confirmed")
-            or raw_status in ("active", "published", "ratified")
             else "draft"
+            if raw_status == "draft"
+            else "ready"
         )
 
         node_sources: list[dict[str, Any]] = []
@@ -1229,6 +1319,7 @@ def compile_atif_decision(
     last_trunk_id: str | None = None
     pending_blind_ids: list[str] = []
     blind_count = 0
+    backtrack_count = 0
     step_seq = 0
 
     for idx, ev in enumerate(evs):
@@ -1332,7 +1423,7 @@ def compile_atif_decision(
                 {
                     "level": "info",
                     "code": "BLIND_ALLEY_DETECTED",
-                    "message": f"Turn T{idx + 1} ({ev['label']}) classified as blind alley; backtrack arc wired to pivot.",
+                    "message": f"Turn T{idx + 1} ({ev['label']}) classified as blind alley.",
                 }
             )
         else:
@@ -1340,6 +1431,7 @@ def compile_atif_decision(
             if pending_blind_ids:
                 pivot_target = last_trunk_id or nid
                 for bid in pending_blind_ids:
+                    backtrack_count += 1
                     edges.append(
                         {
                             "id": f"bt-{bid}->{pivot_target}",
@@ -1408,7 +1500,7 @@ def compile_atif_decision(
         "schema": "strata-graph/1",
         "id": graph_id or f"atif-{norm['id']}",
         "title": f"ATIF Trajectory: {norm['title']}",
-        "subtitle": f"{len(evs)} semantic turns · {blind_count} blind alleys (✕) with explicit ↺ backtrack return arcs.",
+        "subtitle": f"{len(evs)} semantic turns · {blind_count} blind alleys (✕), {backtrack_count} ↺ backtrack return arcs.",
         "domain": "atif-trajectory",
         "generatedAt": now_iso(),
         "sourceLabel": traj_paths[0].name,
@@ -1811,7 +1903,13 @@ def main(argv: list[str] | None = None) -> int:
         "compile-atif", help="Compile 1..N ATIF or Jetski JSONL trajectories."
     )
     p_atif.add_argument("inputs", type=Path, nargs="+")
-    p_atif.add_argument("--mode", choices=["decision", "compare"], default="decision")
+    p_atif.add_argument(
+        "--mode",
+        choices=["decision", "compare"],
+        default="decision",
+        help="decision (one run) or compare. With several inputs the result is always "
+        "a comparison, and the output reports mode compare.",
+    )
     p_atif.add_argument("-o", "--output", type=Path, required=True)
     p_atif.add_argument("--id", default=None)
 
@@ -1838,22 +1936,25 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
 
+    def finish(ds: dict[str, Any], output: Path, **extra: Any) -> int:
+        """Validate, then write and report, or print the errors and return 1."""
+        errs = [d for d in validate_dataset(ds) if d.get("level") == "error"]
+        if errs:
+            print(json.dumps({"status": "error", "errors": errs}), file=sys.stderr)
+            return 1
+        write_output(ds, output)
+        print(json.dumps({"status": "ok", **extra, "output": str(output)}))
+        return 0
+
     if args.cmd == "compile-okf":
         ds = compile_okf(args.wiki_dir, graph_id=args.id)
-        validate_dataset(ds)
-        write_output(ds, args.output)
-        print(
-            json.dumps(
-                {
-                    "status": "ok",
-                    "nodes": len(ds["nodes"]),
-                    "edges": len(ds["edges"]),
-                    "overlays": len(ds["overlays"]),
-                    "output": str(args.output),
-                }
-            )
+        return finish(
+            ds,
+            args.output,
+            nodes=len(ds["nodes"]),
+            edges=len(ds["edges"]),
+            overlays=len(ds["overlays"]),
         )
-        return 0
 
     if args.cmd == "compile-kg":
         try:
@@ -1861,64 +1962,42 @@ def main(argv: list[str] | None = None) -> int:
         except KGSchemaError as exc:
             print(json.dumps({"status": "error", "error": str(exc)}), file=sys.stderr)
             return 1
-        validate_dataset(ds)
-        write_output(ds, args.output)
-        print(
-            json.dumps(
-                {
-                    "status": "ok",
-                    "nodes": len(ds["nodes"]),
-                    "edges": len(ds["edges"]),
-                    "overlays": len(ds["overlays"]),
-                    "output": str(args.output),
-                }
-            )
+        return finish(
+            ds,
+            args.output,
+            nodes=len(ds["nodes"]),
+            edges=len(ds["edges"]),
+            overlays=len(ds["overlays"]),
         )
-        return 0
 
     if args.cmd == "compile-atif":
+        mode = (
+            "compare" if args.mode == "compare" or len(args.inputs) > 1 else "decision"
+        )
         ds = (
             compile_atif_compare(args.inputs, graph_id=args.id)
-            if args.mode == "compare" or len(args.inputs) > 1
+            if mode == "compare"
             else compile_atif_decision(args.inputs, graph_id=args.id)
         )
-        validate_dataset(ds)
-        write_output(ds, args.output)
-        print(
-            json.dumps(
-                {
-                    "status": "ok",
-                    "mode": args.mode,
-                    "nodes": len(ds["nodes"]),
-                    "edges": len(ds["edges"]),
-                    "traces": len(ds["traces"]),
-                    "output": str(args.output),
-                }
-            )
+        return finish(
+            ds,
+            args.output,
+            mode=mode,
+            nodes=len(ds["nodes"]),
+            edges=len(ds["edges"]),
+            traces=len(ds["traces"]),
         )
-        return 0
 
     if args.cmd == "compile-json":
         ds = json.loads(args.spec_path.read_text(encoding="utf-8"))
         ds.setdefault("schema", "strata-graph/1")
         ds.setdefault("generatedAt", now_iso())
-        diags = validate_dataset(ds)
-        errs = [d for d in diags if d.get("level") == "error"]
-        if errs:
-            print(json.dumps({"status": "error", "errors": errs}), file=sys.stderr)
-            return 1
-        write_output(ds, args.output)
-        print(
-            json.dumps(
-                {
-                    "status": "ok",
-                    "nodes": len(ds.get("nodes", [])),
-                    "edges": len(ds.get("edges", [])),
-                    "output": str(args.output),
-                }
-            )
+        return finish(
+            ds,
+            args.output,
+            nodes=len(ds.get("nodes", [])),
+            edges=len(ds.get("edges", [])),
         )
-        return 0
 
     if args.cmd == "validate":
         ds = json.loads(args.graph_json.read_text(encoding="utf-8"))

@@ -45,7 +45,7 @@
       "parent": "proc:root",
       "summary": "Generates candidate patch within declared scope and budget.",
       "url": "https://example.org/spec",
-      "trust": { "tier": "verified" },
+      "trust": { "tier": "human-reviewed" },
       "sources": [{ "id": "src-1", "title": "Spec PR #27", "url": "https://example.org/pr/27" }],
       "tags": ["proposal"],
       "metrics": { "budget": "max 3 attempts" }
@@ -109,7 +109,7 @@ The validator (`validate`, and every `compile-*` command) reports these errors: 
 
 | `node.status` | Visual Encoding | Intended Domain Use |
 | :--- | :--- | :--- |
-| `"ready"` / `"verified"` | Solid card + green verified pill (when `trust.tier == "verified"`) | Canonical concepts, approved KG entities, winning trajectory turns |
+| `"ready"` / `"verified"` | Solid card + green verified pill (when `trust.tier == "human-reviewed"`) | Canonical concepts, approved KG entities, winning trajectory turns |
 | `"draft"` / `"partial"` | Subtle amber border + draft pill | Unverified OKF drafts, WIP modules |
 | `"blind-alley"` / `"error"` | Dashed coral border + `-45deg` crimson hatch + `✕ BLIND ALLEY` pill | Failed tool calls, dead-end search branches, rejected proposals |
 | `"gate"` | `3px` teal top accent bar + gate pill | Deterministic acceptance gates, human-approval checkpoints, planner routers |
@@ -132,6 +132,8 @@ The validator (`validate`, and every `compile-*` command) reports these errors: 
 | `edges` | `source_entity_id`, `target_entity_id`, `edge_type`, `confidence` |
 
 With a directory instead, `compile-kg` reads `relations.yaml` and `timeline.yaml` (in the directory or its `kg/` subdirectory), plus `entities/<slug>.yaml` for entities named in the relations, when they exist.
+
+**`compile-okf` reserved files, trust, and status.** Files named `index.md` or `log.md` are reserved at every level and never become concept nodes. The trust tier comes only from `verified` (OKF v0.2 section 5.3). A bare mapping counts as a one-item list. The tier is `human-reviewed` when any verifier starts with `human:`, `machine-confirmed` when there are other verifiers, and `unverified` otherwise. Node status follows `status`: `draft` and `deprecated` are kept, and anything else, including no `status`, is `ready` (OKF treats a missing `status` as `stable`). Dates in frontmatter are written to the dataset as ISO strings.
 
 **`compile-okf` section names.** Relation types between wiki sections are chosen from the section folder names. This is an optional naming convention. A link into `patterns` is `composes-pattern`, into `architectures` is `defines-architecture`, to or from `taxonomy` is `defines-term`, to or from `governance` is `governs`, and to or from `projects` is `implements`. A link whose heading mentions `arch` or `pattern` is also `composes-pattern`. All other links are `references`. A wiki with different section names still compiles and gets the generic `references` relation.
 
