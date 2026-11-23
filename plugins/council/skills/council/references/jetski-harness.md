@@ -12,7 +12,7 @@ When the `council` plugin is enabled before a conversation starts and no `~/.con
 
 ### B. Multi-Model Roster Pinning (`~/.config/council/roster.json` + `~/.gemini/config/agents/`)
 
-Native `invoke_subagent` and `run_workflow` request-time `model` strings only accept tier names (`inherit`, `flash_lite`, `flash`, `pro`). However, Jetski declarative JSON agents (`~/.gemini/config/agents/<type_name>/agent.json`) can pin **any** model enum available on the Language Server by setting `"disableModelSelection": true` and `"cascadeConfig": {"plannerConfig": {"planModel": "<MODEL_ENUM>"}}` (with `modelTier` unset). When `ResolveAgentItem` sees `disableModelSelection: true` and no `modelTier`, it leaves `spec.Model` unset so the subagent's baked-in `planModel` executes natively in both `run_workflow` and `invoke_subagent`.
+Native `invoke_subagent` and `run_workflow` request-time `model` strings only accept tier names (`inherit`, `flash_lite`, `flash`, `pro`). However, Jetski declarative JSON agents (`~/.gemini/config/agents/<type_name>/agent.json`) can pin **any** model available in the harness's model list by setting `"disableModelSelection": true` and `"cascadeConfig": {"plannerConfig": {"planModel": "<MODEL_ENUM>"}}` (with `modelTier` unset). When an agent sets `disableModelSelection: true` and no `modelTier`, the harness keeps the agent's pinned `planModel` for both `run_workflow` and `invoke_subagent`, as long as the call does not pass a tier name.
 
 Example `~/.gemini/config/agents/<type_name>/agent.json`:
 
@@ -44,7 +44,6 @@ Example `~/.gemini/config/agents/<type_name>/agent.json`:
         ],
         "tools": [
           {"name": "view_file", "builtin": true},
-          {"name": "moma_search", "builtin": true},
           {"name": "search_web", "builtin": true},
           {"name": "send_message", "builtin": true}
         ],
@@ -99,15 +98,15 @@ Example machine-local `~/.config/council/roster.json` (kept outside public git r
   ],
   "fallback": {
     "label": "<Fallback Model Display Name>",
-    "type_name": "council-seat-3",
-    "agent_json": "<home>/.gemini/config/agents/council-seat-3/agent.json"
+    "type_name": "council-seat-fallback",
+    "agent_json": "<home>/.gemini/config/agents/council-seat-fallback/agent.json"
   }
 }
 ```
 
 ### C. Mid-Session Zero-Restart Staging
 
-If `council` or any `~/.gemini/config/agents/<type_name>/agent.json` was created *during* an already-running conversation (after `CustomizationSnapshot` froze at conversation start), stage the agent files into the conversation's runtime defined-agents directory so `GetDefinedAgentByName` resolves them immediately without restarting:
+If `council` or any `~/.gemini/config/agents/<type_name>/agent.json` was created *during* an already-running conversation (after the conversation started, so the harness cannot see it yet), stage the agent files under the conversation's `.agents/agents/` directory so they resolve immediately without restarting:
 
 ```bash
 ART_DIR="<appDataDir>/brain/<conversation-id>"
@@ -171,8 +170,9 @@ scoring_block = (
    - `blocker` (-2.0 points): broken correctness, security hole, contradiction, or missing core requirement.
    - `major` (-1.0 point): significant ambiguity, missing boundary/failure handling, or unclear architecture.
    - `minor` (-0.5 point): localized wording, edge-case clarity, or polish issue.
-2. Compute `score` out of 10 (integer or half-point, e.g. '8.5/10') starting from 10.0 minus your findings deductions. Do not inflate scores or rubber-stamp 10/10 when real flaws exist.
-3. Set `satisfied` to true ONLY if no blocker or major issues remain and the work is ready to ship."""
+2. For each finding, set `encode` to the lint rule, type, or test that would catch this class of defect mechanically, or `none` if it needs judgment.
+3. Compute `score` out of 10 (integer or half-point, e.g. '8.5/10') starting from 10.0 minus your findings deductions. Do not inflate scores or rubber-stamp 10/10 when real flaws exist.
+4. Set `satisfied` to true ONLY if no blocker or major issues remain and the work is ready to ship."""
     if is_review
     else "Set `score` to 'no score' (this request is exploratory/non-scored)."
 )
@@ -180,7 +180,7 @@ scoring_block = (
 prompt = f"""Independent cold-start Council evaluation (Round {round_num}).
 
 Read the request and target artifacts at: {ctx_path}
-Inspect any referenced files directly with `read_file` to verify claims, boundaries, and edge cases.
+Inspect any referenced files directly with `view_file` to verify claims, boundaries, and edge cases.
 
 {scoring_block}
 Keep recommendations strictly within the requested scope; do not penalize for out-of-scope feature ideas."""
@@ -196,12 +196,13 @@ schema = {
             "type": "array",
             "items": {
                 "type": "object",
-                "required": ["severity", "title", "detail"],
+                "required": ["severity", "title", "detail", "encode"],
                 "properties": {
                     "severity": {"type": "string", "enum": ["blocker", "major", "minor"]},
                     "location": {"type": "string"},
                     "title": {"type": "string"},
-                    "detail": {"type": "string"}
+                    "detail": {"type": "string"},
+                    "encode": {"type": "string", "description": "Lint rule, type, or test that would catch this defect class mechanically, or 'none'."}
                 }
             }
         },

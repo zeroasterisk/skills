@@ -281,6 +281,62 @@ else
   warn "Missing .claude-plugin/marketplace.json"
 fi
 
+info "5. Validating symlinks stay inside the repository"
+repo_real="$(pwd -P)"
+symlink_count=0
+while IFS= read -r -d '' link; do
+  symlink_count=$((symlink_count + 1))
+  resolved="$(python3 -c 'import os,sys;print(os.path.realpath(sys.argv[1]))' "$link")"
+  case "$resolved" in
+    "$repo_real"/*) ;;
+    *) err "Symlink '$link' escapes repository root (resolves to $resolved)" ;;
+  esac
+done < <(find . -type l -not -path './.git/*' -print0)
+ok "Checked $symlink_count symlink(s)"
+
+info "6. Scanning tracked files for internal references"
+# Markers for Google-internal references that must not appear in this public repo.
+# Each entry is "name|grep flags|regex". Flags: -i for case-insensitive.
+leak_markers=(
+  'google3|-i|google3'
+  'corp-domain|-i|\.corp\.google\.com'
+  'googleplex|-i|googleplex'
+  'moma_search|-i|moma_search'
+  'x20|-i|\bx20\b'
+  'cns-path|-i|/cns/'
+  'go-link||(^|[^A-Za-z0-9_./-])go/[a-z0-9_-]+'
+  'bug-or-cl-link||(^|[^A-Za-z0-9_./-])(b|cl)/[0-9]{6,}'
+  'google-email|-i|@google\.com'
+  'service-account-key|-i|-[0-9a-f]{12}\.json'
+)
+# Skipped file: this script holds the marker patterns themselves.
+# Allowed pairs ("file:marker"): .gitignore keeps the machine-local google3/ checkout out of git.
+leak_allowed=(
+  '.gitignore:google3'
+)
+leak_hits=0
+for entry in "${leak_markers[@]}"; do
+  m_name="${entry%%|*}"
+  rest="${entry#*|}"
+  m_flags="${rest%%|*}"
+  m_regex="${rest#*|}"
+  while IFS= read -r hit; do
+    [ -n "$hit" ] || continue
+    hit_file="${hit%%:*}"
+    skip=0
+    for allowed in "${leak_allowed[@]}"; do
+      [ "$allowed" = "$hit_file:$m_name" ] && skip=1
+    done
+    [ "$skip" -eq 1 ] && continue
+    err "Internal reference ($m_name): $(echo "$hit" | cut -c1-160)"
+    leak_hits=$((leak_hits + 1))
+  done < <(git ls-files -z -- . ':(exclude)scripts/validate-plugins.sh' \
+    | xargs -0 grep -InE ${m_flags:+"$m_flags"} -e "$m_regex" 2>/dev/null || true)
+done
+if [ "$leak_hits" -eq 0 ]; then
+  ok "No internal references found in tracked files"
+fi
+
 echo
 if [ "$ERRORS" -eq 0 ]; then
   echo -e "${GREEN}✓ All plugin and skill validations passed successfully!${NC}"

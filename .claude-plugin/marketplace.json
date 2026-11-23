@@ -81,7 +81,7 @@
     {
       "name": "council",
       "source": "./plugins/council",
-      "description": "Convening three independent, cold-start subagent delegates with isolated context and state for multi-round review, scoring, and feedback.",
+      "description": "Convening three independent, cold-start subagent delegates across distinct models with isolated context, findings-first scoring, and multi-round convergence.",
       "skills": [
         "./plugins/council/skills/council"
       ]

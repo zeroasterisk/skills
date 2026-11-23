@@ -40,9 +40,7 @@ for symlink in $(find . -type l -not -path '*/.git/*' 2>/dev/null); do
     continue
   fi
   target="$(readlink "$symlink")"
-  resolved_target="$(cd "$(dirname "$symlink")" && realpath -m "$target")"
-  repo_abs="$(realpath "$REPO_ROOT")"
-  if [[ "$resolved_target" != "$repo_abs"* ]]; then
+  if [[ "$target" == /* ]] || [[ "$target" == ../* ]]; then
     err "Symlink '$symlink' escapes repository root ($target)"
   fi
 done

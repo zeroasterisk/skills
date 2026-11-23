@@ -31,7 +31,7 @@ Unless the user overrides a setting in their prompt, run with these defaults:
 
 ### Shorthand Triggers
 
-* **`/council`** (built-in `/` slash command autocomplete) or **`c9`**: Run pre-audit checks, convene the 3-delegate council, and keep fixing in-scope issues across fresh cold-start rounds until all 3 delegates score **`>= 9/10`** (`satisfied: true`).
+* **`/council`** or **`c9`**: Run pre-audit checks, convene the 3-delegate council, and keep fixing in-scope issues across fresh cold-start rounds until all 3 delegates score **`>= 9/10`** (`satisfied: true`).
 * **`/council <N>`** or **`c<N>`** (e.g., `/council 8`, `/council 9.5`, `/council 10`, `c10`): Same convergence loop with target score bar set to `N/10`.
 * **`/council once`** (or `"one round"`): Run a single 3-delegate review pass and report scores/findings without looping.
 
@@ -60,9 +60,9 @@ Every council round must preserve three strict isolation boundaries so delegates
 
 1. **Check `~/.config/council/roster.json` first**:
    * Read `~/.config/council/roster.json` if present on the local machine. It defines `seats` (3 entries with `label`, `type_name`, and `agent_json`) plus an optional `fallback` seat.
-   * **How model pinning works in Jetski**: Request-time `Model` strings in `invoke_subagent` / `run_workflow` only accept tier names (`pro`, `inherit`, `flash`, `flash_lite`), *not* arbitrary model slugs. To pin distinct models on read-only council delegates, Jetski uses declarative `~/.gemini/config/agents/<type_name>/agent.json` specs setting `"disableModelSelection": true` and `"cascadeConfig": {"plannerConfig": {"planModel": "<MODEL_ENUM>"}}`. When invoked by `type_name` (omitting `model` in `agent()` or passing `Model="inherit"`), Cortex preserves each subagent's baked-in `planModel`.
-   * **Zero-restart staging**: If a model-pinned `agent.json` was added mid-session after the current conversation's `CustomizationSnapshot` froze, copy each seat's `agent_json` into `<artifactDir>/.agents/agents/<type_name>/agent.json` (with `_agents -> .agents` symlink) before running `run_workflow`.
-   * **Automatic fallback seat**: If a requested model is unavailable in the active Language Server catalog or errors out at runtime (e.g., quota/capacity exhaustion), substitute the `fallback` seat from `roster.json` and label the delegate row transparently with the actual model that ran.
+   * **How model pinning works in Jetski**: Request-time `Model` strings in `invoke_subagent` / `run_workflow` only accept tier names (`pro`, `inherit`, `flash`, `flash_lite`), *not* arbitrary model slugs. To pin distinct models on read-only council delegates, Jetski uses declarative `~/.gemini/config/agents/<type_name>/agent.json` specs setting `"disableModelSelection": true` and `"cascadeConfig": {"plannerConfig": {"planModel": "<MODEL_ENUM>"}}`. When invoked by `type_name` (omitting `model` in `agent()` or passing `Model="inherit"`), the harness keeps each subagent's pinned `planModel`.
+   * **Zero-restart staging**: If a model-pinned `agent.json` was added mid-session after the current conversation started (agents added later are not visible until staged), copy each seat's `agent_json` into `<artifactDir>/.agents/agents/<type_name>/agent.json` (with `_agents -> .agents` symlink) before running `run_workflow`.
+   * **Automatic fallback seat**: If a requested model is unavailable in the harness's model list or errors out at runtime (e.g., quota/capacity exhaustion), substitute the `fallback` seat from `roster.json` and label the delegate row transparently with the actual model that ran.
 2. **Default fallback when no `roster.json` exists**:
    * **Jetski / Antigravity**: Run three isolated `council-delegate` subagents on `model="pro"`.
    * **T3 Code**: Use `orchestrator_capabilities` + `delegate_task` to pick three flagship models across providers at high reasoning effort.
