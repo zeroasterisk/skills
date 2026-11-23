@@ -29,13 +29,13 @@ jobs:
       - name: Run validate-plugins.sh
         run: ./scripts/validate-plugins.sh
 
-      - name: Test strata-graph
-        run: python3 -m unittest discover -s plugins/strata-graph/skills/strata-graph/tests -v
-
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+
+      - name: Test strata-graph
+        run: python3 -m unittest discover -s plugins/strata-graph/skills/strata-graph/tests -v
 
       - name: Lint strata-graph viewer (no-undef)
         run: >-

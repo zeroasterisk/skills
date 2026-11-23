@@ -164,12 +164,13 @@ results = await parallel(seats, run_seat)
 
 output = []
 for idx, (seat, res) in enumerate(zip(seats, results)):
-    used_label = seat["label"]
+    # A roster label is the intended model; the harness does not report which model ran.
+    used_label = f'{seat["type_name"]} ({seat.get("model", "inherit")}; intended: {seat["label"]})'
     if isinstance(res, Exception) and fallback_seat and seat["type_name"] != fallback_seat["type_name"]:
         log(f"{used_label} failed ({res}); retrying on fallback {fallback_seat['label']}")
         try:
             res = await spawn_seat(fallback_seat, role_prefix=f"Council Fallback S{idx+1}")
-            used_label = f"{fallback_seat['label']} (fallback for {seat['label']})"
+            used_label = f"{fallback_seat['type_name']} (fallback for {seat['type_name']}; intended: {fallback_seat['label']})"
         except Exception as fb_err:
             res = fb_err
 
@@ -190,7 +191,7 @@ print(json.dumps(output, indent=2))
 
 If `run_workflow` is unavailable:
 
-1. Issue **three `invoke_subagent` calls in the same assistant turn** using the `type_name` values from `~/.config/council/roster.json` (with `Model: "inherit"`, so each seat keeps its own model), or `TypeName: "council-delegate"` with `Model: "pro"` if no `roster.json` exists.
+1. Issue **three `invoke_subagent` calls in the same assistant turn** using the `type_name` values from `~/.config/council/roster.json` (with `Model: "inherit"`, which runs the parent conversation's model unless the harness pins one per agent), or `TypeName: "council-delegate"` with `Model: "pro"` if no `roster.json` exists.
 2. **Stop calling tools** at the end of that turn. Jetski wakes your conversation reactively as each subagent sends its completion message; never sleep or poll in a loop.
 3. For Round 2+, always launch three fresh subagents rather than calling `send_message` on Round 1's `conversationId`s, so Round 2 evaluates the updated work from a clean cold start.
 

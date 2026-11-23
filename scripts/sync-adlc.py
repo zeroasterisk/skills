@@ -3,9 +3,10 @@
 
 Copies a tagged release of https://github.com/voodootikigod/adlc.git into
 plugins/adlc and writes an Agent Plugins v1.0.0 manifest. The plugin version
-comes from the vendored package.json. Keep the CloudCode plugin entry
-(@adlc/opencode@<version>) on that same version, so the vendored skills and the
-runtime plugin match.
+comes from the vendored package.json. CloudCode loads the runtime from npm
+(@adlc/opencode@<version>); a plugin entry that points at plugins/adlc is
+resolved through this package.json, so the runtime files are kept and the tree
+matches the upstream package. Keep any explicit npm pin on the same version.
 
 Usage:
   python3 scripts/sync-adlc.py               # Vendor the newest release CloudCode can load
