@@ -63,7 +63,7 @@ Mirrored and synchronized from [Hussain Chinoy's agent-skills](https://github.co
 
 | Plugin | Version | Description | Included Skills |
 | :--- | :--- | :--- | :--- |
-| **`adlc`** | `1.11.0` | Agentic Development Lifecycle (ADLC) toolkit integration: phase router, rail-guard hooks, slash commands, and prosecutor agents. | `adlc`<br>`adlc-doctrine`<br>`adlc-prosecutor`<br>`adlc-self-orchestrate` |
+| **`adlc`** | `1.12.0` | Agentic Development Lifecycle (ADLC) toolkit integration: phase router, rail-guard hooks, slash commands, and prosecutor agents. | `adlc`<br>`adlc-doctrine`<br>`adlc-prosecutor`<br>`adlc-self-orchestrate` |
 | **`agent-aware-cli`** | `1.0.0` | Best practices and architectural guidelines for CLI tools optimized for both human users and AI coding agents. | `agent-aware-cli` |
 | **`agent-plugin-authoring`**| `1.1.0` | Authoring, migration, and linting tools for packaging Agent Skills into Agent Plugins v1.0.0 spec packages. | `skills-to-plugins` |
 | **`ai-pop`** | `1.0.0` | Virtual music artist production suite: lore planning, audio synthesis, visual design, player compilation, and deployment. | `ai-pop-producer`<br>`ai-pop-concept-planner`<br>`ai-pop-audio-synthesizer`<br>`ai-pop-visual-designer`<br>`ai-pop-compiler`<br>`ai-pop-publisher` |
