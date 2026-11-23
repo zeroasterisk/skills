@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Strata Graph Explorer</title>
+<!-- STRATA:CSS -->
+</head>
+<body>
+<div class="hub-bar" id="hub-bar" hidden role="tablist" aria-label="Datasets"></div>
+<header class="top">
+  <nav class="crumbs" id="crumbs" aria-label="Hierarchy level"></nav>
+  <div class="toolbar">
+    <button type="button" id="mode-toggle" class="tbtn" title="Switch between hierarchical containers and expanded leaf spine">Mode: Hierarchy</button>
+    <button type="button" id="hop-toggle" class="tbtn" title="Toggle 1-hop vs 2-hop neighborhood highlight">Hops: 1</button>
+    <div class="zoom-group" role="group" aria-label="Zoom controls">
+      <button type="button" id="zoom-out" class="tbtn icon-btn" title="Zoom out (-)">−</button>
+      <button type="button" id="zoom-fit" class="tbtn zoom-readout" title="Fit graph to viewport (0)">Fit</button>
+      <button type="button" id="zoom-in" class="tbtn icon-btn" title="Zoom in (+)">+</button>
+    </div>
+    <div class="search">
+      <input id="search-input" type="search" autocomplete="off" spellcheck="false" placeholder="Search blocks, slices, tools… (/)" aria-label="Search graph" role="combobox" aria-expanded="false" aria-controls="search-results">
+      <ul id="search-results" class="results" role="listbox" hidden></ul>
+    </div>
+    <button type="button" id="diag-toggle" class="tbtn" aria-expanded="false" aria-controls="drawer">Diagnostics</button>
+    <button type="button" id="theme-toggle" class="tbtn" title="Toggle Dark / Light theme">Theme: Dark</button>
+    <button type="button" id="panel-toggle" class="tbtn" aria-expanded="true" aria-controls="panel">Inspector</button>
+  </div>
+</header>
+<main class="main" id="main">
+  <section class="stage" aria-labelledby="level-title">
+    <div class="level-head" id="level-head"></div>
+    <div class="legend" id="legend"></div>
+    <div class="trace-bar" id="trace-bar" hidden></div>
+    <div class="path-banner" id="path-banner" hidden></div>
+    <div class="viewport" id="viewport">
+      <div class="sizer" id="sizer">
+        <div class="canvas" id="canvas">
+          <svg class="edges" id="edges" aria-hidden="true"></svg>
+          <div class="blocks" id="blocks" role="group" aria-label="Graph blocks"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <aside class="panel" id="panel" aria-label="Inspector"><div class="panel-body" id="panel-body"></div></aside>
+</main>
+<section class="drawer" id="drawer" aria-label="Compiler Diagnostics" hidden></section>
+<div class="tip" id="tip" role="tooltip" hidden></div>
+<noscript><p class="noscript">Strata Graph requires JavaScript to compute layout and render edges.</p></noscript>
+<!-- STRATA:DATA -->
+<!-- STRATA:JS -->
+</body>
+</html>
