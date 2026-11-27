@@ -150,7 +150,7 @@ publisher = "github.com"
 namespace = "google"
 path = "google-skills/skills"
 audience = "public"
-agents = ["cloudcode"]
+agents = ["cloudcode", "jetski"]
 include = [
   "cloud/gcloud",
   "cloud/gemini-api",

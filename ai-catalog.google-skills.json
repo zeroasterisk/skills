@@ -13,8 +13,9 @@
       "tags": [],
       "metadata": {
         "source": "google/skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "cloudcode,jetski",
         "relativePath": "cloud/agent-platform-deploy"
       },
       "url": "https://github.com/google/skills/tree/main/skills/cloud/agent-platform-deploy"
@@ -27,8 +28,9 @@
       "tags": [],
       "metadata": {
         "source": "google/skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "cloudcode,jetski",
         "relativePath": "cloud/bigquery-basics"
       },
       "url": "https://github.com/google/skills/tree/main/skills/cloud/bigquery-basics"
@@ -41,8 +43,9 @@
       "tags": [],
       "metadata": {
         "source": "google/skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "cloudcode,jetski",
         "relativePath": "cloud/cloud-run-basics"
       },
       "url": "https://github.com/google/skills/tree/main/skills/cloud/cloud-run-basics"
@@ -59,8 +62,9 @@
       ],
       "metadata": {
         "source": "google/skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "cloudcode,jetski",
         "relativePath": "cloud/gcloud"
       },
       "url": "https://github.com/google/skills/tree/main/skills/cloud/gcloud"
@@ -73,8 +77,9 @@
       "tags": [],
       "metadata": {
         "source": "google/skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "cloudcode,jetski",
         "relativePath": "cloud/gemini-agents-api"
       },
       "url": "https://github.com/google/skills/tree/main/skills/cloud/gemini-agents-api"
@@ -87,8 +92,9 @@
       "tags": [],
       "metadata": {
         "source": "google/skills",
+        "tier": "zeroasterisk",
         "audience": "public",
-        "agents": "cloudcode",
+        "agents": "cloudcode,jetski",
         "relativePath": "cloud/gemini-api"
       },
       "url": "https://github.com/google/skills/tree/main/skills/cloud/gemini-api"

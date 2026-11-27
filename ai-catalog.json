@@ -835,6 +835,100 @@
         "relativePath": "adlc/skills/adlc-self-orchestrate"
       },
       "url": "https://github.com/voodootikigod/adlc/tree/main/adlc/skills/adlc-self-orchestrate"
+    },
+    {
+      "identifier": "urn:air:github.com:google:agent-platform-deploy",
+      "displayName": "agent-platform-deploy",
+      "type": "application/ai-skill+md",
+      "description": "Deploy open models or custom weights from Model Garden to Agent Platform endpoints, check deployment status, verify serving endpoints, or clean up resources by undeploying models and deleting endpoints. Use when asked to deploy models on Agent Platform, list available Model Garden models, check if a model is deployable, query deployment cost, troubleshoot deployment errors (like quota limits), or undeploy/clean up endpoints. Also use when copying and deploying a 1P Tuned Model. Don't use for public Vertex AI deployments (use the `vertex-deploy` skill) or for running model evaluations (use the `agent-platform-eval` skill).",
+      "tags": [],
+      "metadata": {
+        "source": "google/skills",
+        "tier": "zeroasterisk",
+        "audience": "public",
+        "agents": "cloudcode,jetski",
+        "relativePath": "cloud/agent-platform-deploy"
+      },
+      "url": "https://github.com/google/skills/tree/main/skills/cloud/agent-platform-deploy"
+    },
+    {
+      "identifier": "urn:air:github.com:google:bigquery-basics",
+      "displayName": "bigquery-basics",
+      "type": "application/ai-skill+md",
+      "description": "Manages datasets, tables, and jobs in BigQuery. Use when you need to interact with BigQuery, run SQL queries, manage BigQuery resources (datasets, tables, views), or perform basic data ingestion and analysis.",
+      "tags": [],
+      "metadata": {
+        "source": "google/skills",
+        "tier": "zeroasterisk",
+        "audience": "public",
+        "agents": "cloudcode,jetski",
+        "relativePath": "cloud/bigquery-basics"
+      },
+      "url": "https://github.com/google/skills/tree/main/skills/cloud/bigquery-basics"
+    },
+    {
+      "identifier": "urn:air:github.com:google:cloud-run-basics",
+      "displayName": "cloud-run-basics",
+      "type": "application/ai-skill+md",
+      "description": "Manages Cloud Run services, jobs, and worker pools. Use when you need to deploy applications responding to HTTP requests (services), run event-triggered or scheduled tasks (jobs), or handle always-on pull-based background processing (worker pools).",
+      "tags": [],
+      "metadata": {
+        "source": "google/skills",
+        "tier": "zeroasterisk",
+        "audience": "public",
+        "agents": "cloudcode,jetski",
+        "relativePath": "cloud/cloud-run-basics"
+      },
+      "url": "https://github.com/google/skills/tree/main/skills/cloud/cloud-run-basics"
+    },
+    {
+      "identifier": "urn:air:github.com:google:gcloud",
+      "displayName": "gcloud",
+      "type": "application/ai-skill+md",
+      "description": "Interacts with Google Cloud services using the gcloud CLI safely and efficiently. Covers command validation, data reduction, safety guardrails with a denylist, and workflows for discovery and investigation. You MUST read this skill before invoking any gcloud command. Use when managing cloud resources, querying configurations, or troubleshooting issues via gcloud. Don't use when writing or debugging Google Cloud client library code or raw REST/gRPC API interactions.",
+      "tags": [
+        "gcloud",
+        "devops",
+        "google-cloud"
+      ],
+      "metadata": {
+        "source": "google/skills",
+        "tier": "zeroasterisk",
+        "audience": "public",
+        "agents": "cloudcode,jetski",
+        "relativePath": "cloud/gcloud"
+      },
+      "url": "https://github.com/google/skills/tree/main/skills/cloud/gcloud"
+    },
+    {
+      "identifier": "urn:air:github.com:google:gemini-agents-api",
+      "displayName": "gemini-agents-api",
+      "type": "application/ai-skill+md",
+      "description": "Manages custom Agent resources on Gemini Enterprise Agent Platform. Use when the user wants to programmatically create, configure, list, update, or delete stateful, server-managed Agent resources (including mounting files, skills, and tools) before executing conversations.",
+      "tags": [],
+      "metadata": {
+        "source": "google/skills",
+        "tier": "zeroasterisk",
+        "audience": "public",
+        "agents": "cloudcode,jetski",
+        "relativePath": "cloud/gemini-agents-api"
+      },
+      "url": "https://github.com/google/skills/tree/main/skills/cloud/gemini-agents-api"
+    },
+    {
+      "identifier": "urn:air:github.com:google:gemini-api",
+      "displayName": "gemini-api",
+      "type": "application/ai-skill+md",
+      "description": "Use when the user asks about using Gemini in an enterprise environment or explicitly mentions Vertex AI, Google Cloud, or Agent Platform. Guides the usage of the Gemini API on Agent Platform with the Google Gen AI SDK. Covers SDK usage (Python, JS/TS, Go, Java, C#), capabilities like multimodal inputs, tools, media generation, caching, batch prediction, and Live API.",
+      "tags": [],
+      "metadata": {
+        "source": "google/skills",
+        "tier": "zeroasterisk",
+        "audience": "public",
+        "agents": "cloudcode,jetski",
+        "relativePath": "cloud/gemini-api"
+      },
+      "url": "https://github.com/google/skills/tree/main/skills/cloud/gemini-api"
     }
   ]
 }
